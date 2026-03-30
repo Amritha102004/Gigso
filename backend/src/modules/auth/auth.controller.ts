@@ -22,32 +22,63 @@ export class AuthController {
     }
   }
 
-  public async verifyRegistration(req: Request, res: Response): Promise<void> {
+  public async verifyOtp(req: Request, res: Response): Promise<void> {
     try {
-      const { email, otp } = req.body;
+      const { email, otp, type } = req.body;
       
-      if (!email || !otp) {
-        res.status(400).json({ error: "Email and OTP are required" });
+      if (!email || !otp || !type) {
+        res.status(400).json({ error: "Email, OTP and type are required" });
         return;
       }
 
-      const user = await this.authService.verifyRegistrationOtp(email, String(otp));
-      
-      // Do not return password hash
-      const userResponse = {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isApproved: user.isApproved,
-        isProfileCompleted: user.isProfileCompleted,
-      };
+      if (type !== 'registration' && type !== 'password-reset') {
+        res.status(400).json({ error: "Invalid OTP type" });
+        return;
+      }
 
-      res.status(201).json({ 
-        message: "User registered successfully",
-        user: userResponse
-      });
+      const result = await this.authService.verifyOtp(email, String(otp), type);
+
+      if (type === 'registration') {
+        const user = result as any; // Type asserts to IUser
+        const userResponse = {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isApproved: user.isApproved,
+          isProfileCompleted: user.isProfileCompleted,
+        };
+
+        res.status(201).json({ 
+          message: "User registered successfully",
+          user: userResponse
+        });
+      } else {
+        res.status(200).json({ message: "OTP verified successfully. Proceed to reset password." });
+      }
     } catch (error: any) {
       res.status(400).json({ error: error.message || "OTP verification failed" });
+    }
+  }
+
+  public async resendOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, type } = req.body;
+
+      if (!email || !type) {
+        res.status(400).json({ error: "Email and type are required" });
+        return;
+      }
+
+      if (type !== 'registration' && type !== 'password-reset') {
+        res.status(400).json({ error: "Invalid OTP type" });
+        return;
+      }
+
+      await this.authService.resendOtp(email, type);
+
+      res.status(200).json({ message: `New OTP sent successfully to ${email}` });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to resend OTP" });
     }
   }
 

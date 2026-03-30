@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
+import authService from '../../services/authService';
 
 const ResetPassword: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,9 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get('email') || '';
+  const otp = searchParams.get('otp') || '';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +38,22 @@ const ResetPassword: React.FC = () => {
         return;
     }
 
+    if (!email || !otp) {
+      setError('Invalid reset link. Please restart the forgot password process.');
+      return;
+    }
+
     setIsSubmitting(true);
-    // Mock API call
-    setTimeout(() => {
-        setIsSubmitting(false);
-        alert('Password reset successful! You can now login.');
+    authService.resetPassword({ email, otp, newPassword: formData.password })
+      .then(() => {
         navigate('/login');
-    }, 1000);
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.message || 'Failed to reset password.');
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (

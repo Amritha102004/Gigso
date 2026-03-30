@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
+import authService from '../../services/authService';
 
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,7 @@ const Signup: React.FC = () => {
   });
 
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = role === 'owner';
 
@@ -40,9 +42,24 @@ const Signup: React.FC = () => {
       return;
     }
 
-    // Mock successful submission
-    alert(`Account created successfully for ${role}! (UI Only)`);
-    // navigate('/dashboard'); // Not connected to backend yet
+    const payload = {
+      name: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      role: role || 'worker',
+    };
+
+    setIsSubmitting(true);
+    authService.sendOtp(payload)
+      .then(() => {
+        navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}&type=registration`);
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
@@ -150,7 +167,7 @@ const Signup: React.FC = () => {
 
           <div className="pt-2">
             <Button type="submit" variant="primary" fullWidth>
-              Create Account
+              {isSubmitting ? 'Creating...' : 'Create Account'}
             </Button>
           </div>
         </form>

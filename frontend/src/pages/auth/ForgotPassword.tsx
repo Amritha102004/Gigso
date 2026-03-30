@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
+import authService from '../../services/authService';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,12 +20,16 @@ const ForgotPassword: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    // Mock API call
-    setTimeout(() => {
+    authService.forgotPassword({ email })
+      .then(() => {
+        navigate(`/verify-otp?email=${encodeURIComponent(email)}&type=password-reset`);
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.message || 'Failed to request password reset. Please try again.');
+      })
+      .finally(() => {
         setIsSubmitting(false);
-        alert('Password reset link sent! Check your email.');
-        // navigate('/login');
-    }, 1000);
+      });
   };
 
   return (

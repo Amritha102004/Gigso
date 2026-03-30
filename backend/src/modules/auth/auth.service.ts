@@ -7,7 +7,8 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from ".
 
 export interface IAuthService {
   sendRegistrationOtp(userData: ICreateUser): Promise<void>;
-  verifyRegistrationOtp(email: string, otp: string): Promise<IUser>;
+  verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void>;
+  resendOtp(email: string, type: "registration" | "password-reset"): Promise<void>;
   login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }>;
   refreshTokens(token: string): Promise<{ accessToken: string; refreshToken: string }>;
   forgotPassword(email: string): Promise<void>;
@@ -49,8 +50,8 @@ export class AuthService implements IAuthService {
     console.log(`[MOCK EMAIL] Registration OTP for ${userData.email} is: ${otp}`);
   }
 
-  async verifyRegistrationOtp(email: string, otp: string): Promise<IUser> {
-    const otpDoc = await this.otpRepo.findOtpByEmailAndType(email, "registration");
+  async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void> {
+    const otpDoc = await this.otpRepo.findOtpByEmailAndType(email, type);
     
     if (!otpDoc) {
       throw new Error("OTP not found or expired");
@@ -61,17 +62,46 @@ export class AuthService implements IAuthService {
       throw new Error("Invalid OTP");
     }
 
-    if (!otpDoc.userData) {
-      throw new Error("User data not found in OTP record");
+    if (type === "registration") {
+      if (!otpDoc.userData) {
+        throw new Error("User data not found in OTP record");
+      }
+      // Create user (password is already hashed)
+      const user = await this.authRepo.createUser(otpDoc.userData as ICreateUser);
+      // Delete OTP
+      await this.otpRepo.deleteOtp(email, "registration");
+      return user;
     }
 
-    // Create user (password is already hashed)
-    const user = await this.authRepo.createUser(otpDoc.userData as ICreateUser);
+    if (type === "password-reset") {
+      // For password-reset, we just want to verify it's correct. 
+      // Do NOT create user and do NOT delete OTP here (it deletes upon actual password reset).
+      return;
+    }
+  }
 
-    // Delete OTP
-    await this.otpRepo.deleteOtp(email, "registration");
+  async resendOtp(email: string, type: "registration" | "password-reset"): Promise<void> {
+    const existingOtp = await this.otpRepo.findOtpByEmailAndType(email, type);
+    
+    if (!existingOtp) {
+      throw new Error(`No pending ${type} request found for this email.`);
+    }
 
-    return user;
+    const otp = generateOtp();
+    const hashedOtp = await hashOtp(otp);
+    const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60000);
+
+    // Upsert safely overwriting the old hash/expiry while preserving user data (critical for registration)
+    await this.otpRepo.upsertOtp(
+      email,
+      hashedOtp,
+      type,
+      expiresAt,
+      existingOtp.userData
+    );
+
+    // Mock sending email
+    console.log(`[MOCK EMAIL] Resent ${type} OTP for ${email} is: ${otp}`);
   }
 
   async login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {

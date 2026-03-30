@@ -1,11 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../../components/Button';
+import authService from '../../services/authService';
 
 const OtpVerification: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const [timeLeft, setTimeLeft] = useState(54);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get('email') || '';
+  const type = searchParams.get('type') || 'registration';
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -48,12 +56,50 @@ const OtpVerification: React.FC = () => {
     inputRefs.current[nextEmpty]?.focus();
   };
 
+  const handleResend = () => {
+    if (!email) {
+      setError('Email missing from URL request.');
+      return;
+    }
+
+    setError('');
+    authService.resendOtp({ email, type })
+      .then(() => {
+        setTimeLeft(60); // Reset timer 
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.message || 'Failed to resend OTP.');
+      });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
     const finalOtp = otp.join('');
     if (finalOtp.length === 6) {
-      alert(`Verifying OTP: ${finalOtp} (UI Only)`);
-      // navigate('/dashboard');
+      if (!email) {
+        setError('Email missing from URL request.');
+        return;
+      }
+      
+      setIsSubmitting(true);
+      authService.verifyOtp({ email, otp: finalOtp, type })
+        .then(() => {
+          if (type === 'registration') {
+            navigate('/login');
+          } else if (type === 'password-reset') {
+            navigate(`/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(finalOtp)}`);
+          }
+        })
+        .catch((err: any) => {
+          setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
+    } else {
+        setError('Please enter all 6 digits.');
     }
   };
 
@@ -85,6 +131,12 @@ const OtpVerification: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           
+          {error && (
+            <div className="p-3 text-sm text-center text-red-600 bg-red-50 rounded-lg">
+                {error}
+            </div>
+          )}
+
           <div className="flex justify-between max-w-sm mx-auto gap-2">
             {otp.map((value, index) => (
               <input
@@ -110,7 +162,7 @@ const OtpVerification: React.FC = () => {
                   type="button" 
                   disabled={timeLeft > 0} 
                   className={`font-semibold ${timeLeft > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-primary hover:underline'}`}
-                  onClick={() => setTimeLeft(60)}
+                  onClick={handleResend}
                 >
                     Resend Code
                 </button>
@@ -121,7 +173,9 @@ const OtpVerification: React.FC = () => {
           </div>
 
           <Button type="submit" variant="primary" fullWidth>
-            Verify Code <span aria-hidden="true" className="ml-2">→</span>
+            {isSubmitting ? 'Verifying...' : (
+                <>Verify Code <span aria-hidden="true" className="ml-2">→</span></>
+            )}
           </Button>
 
         </form>

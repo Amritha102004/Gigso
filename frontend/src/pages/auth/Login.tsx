@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
+import authService from '../../services/authService';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,8 @@ const Login: React.FC = () => {
   });
 
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +23,26 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Mock successful submission
-    alert('Logged in successfully! (UI Only)');
-    // navigate('/dashboard');
+    setIsSubmitting(true);
+    authService.login(formData)
+      .then((res) => {
+        const { accessToken, role } = res;
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+        }
+        
+        if (role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/home');
+        }
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.message || 'Invalid email or password.');
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
@@ -82,7 +102,7 @@ const Login: React.FC = () => {
 
                     <div className="pt-4">
                         <Button type="submit" variant="primary" fullWidth>
-                        Login
+                          {isSubmitting ? 'Logging in...' : 'Login'}
                         </Button>
                     </div>
                 </form>

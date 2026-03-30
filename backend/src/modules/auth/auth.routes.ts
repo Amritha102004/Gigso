@@ -15,7 +15,8 @@ const authController = new AuthController(authService);
 // Routes
 // Note: We use .bind(authController) to preserve `this` context
 router.post("/signup", authController.signup.bind(authController));
-router.post("/verify-otp", authController.verifyRegistration.bind(authController));
+router.post("/verify-otp", authController.verifyOtp.bind(authController));
+router.post("/resend-otp", authController.resendOtp.bind(authController));
 router.post("/login", authController.login.bind(authController));
 router.post("/refresh-token", authController.refreshToken.bind(authController));
 router.post("/forgot-password", authController.forgotPassword.bind(authController));
