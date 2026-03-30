@@ -46,7 +46,7 @@ export class AdminUsersController {
     }
   }
 
-  public async getUserById(req: Request, res: Response): Promise<void> {
+  public async getUserById(req: Request<{ id: string }>,res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const user = await this.usersService.getUserDetails(id);
@@ -57,7 +57,7 @@ export class AdminUsersController {
     }
   }
 
-  public async approveOwner(req: Request, res: Response): Promise<void> {
+  public async approveOwner(req: Request<{ id: string }>,res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const updatedUser = await this.usersService.approveOwner(id);
@@ -71,7 +71,7 @@ export class AdminUsersController {
     }
   }
 
-  public async toggleSuspendUser(req: Request, res: Response): Promise<void> {
+  public async toggleSuspendUser(req: Request<{ id: string }>,res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const updatedUser = await this.usersService.toggleUserSuspension(id);
