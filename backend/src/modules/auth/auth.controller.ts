@@ -39,7 +39,7 @@ export class AuthController {
       const result = await this.authService.verifyOtp(email, String(otp), type);
 
       if (type === 'registration') {
-        const user = result as any; // Type asserts to IUser
+        const user = result as any; 
         const userResponse = {
           name: user.name,
           email: user.email,
@@ -145,7 +145,6 @@ export class AuthController {
 
       res.status(200).json({ message: "If your email is registered, you will receive an OTP." });
     } catch (error: any) {
-      // In production we shouldn't leak user existence, but for now we follow the simple throw logic
       res.status(400).json({ error: error.message || "Forgot password operation failed" });
     }
   }

@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import adminService from '../../services/adminService';
 
 interface Owner {
-  _id: string; // From Mongo
+  _id: string; 
   name: string;
   email: string;
-  status?: string; // e.g. 'approved', 'pending', 'suspended'
-  // Mock data mapping if necessary
+  status?: string; 
   businessName?: string;
   location?: string;
 }

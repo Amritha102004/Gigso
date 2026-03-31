@@ -21,7 +21,6 @@ export class AdminUsersService implements IAdminUsersService {
 
     const filter: any = {};
     
-    // Only fetch actual users, preventing them from catching other admins
     if (role) {
       filter.role = role;
     } else {
@@ -78,7 +77,6 @@ export class AdminUsersService implements IAdminUsersService {
       throw new Error(`User with ID ${id} not found`);
     }
 
-    // Toggle suspension
     const updatedUser = await this.usersRepo.updateUser(id, { 
       isSuspended: !user.isSuspended 
     });

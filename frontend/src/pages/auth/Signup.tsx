@@ -26,16 +26,15 @@ const Signup: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    // Basic Validation
     if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all required fields.');
       return;
     }
 
-    if (isOwner && !formData.businessName) {
-      setError('Business Name is required for Owners.');
-      return;
-    }
+    // if (isOwner && !formData.businessName) {
+    //   setError('Business Name is required for Owners.');
+    //   return;
+    // }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');

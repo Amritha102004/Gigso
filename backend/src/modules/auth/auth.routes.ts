@@ -6,14 +6,11 @@ import { OtpRepository } from "../otp/otp.repository";
 
 const router = Router();
 
-// Manual Dependency Injection Wiring
 const otpRepository = new OtpRepository();
 const authRepository = new AuthRepository();
 const authService = new AuthService(authRepository, otpRepository);
 const authController = new AuthController(authService);
 
-// Routes
-// Note: We use .bind(authController) to preserve `this` context
 router.post("/signup", authController.signup.bind(authController));
 router.post("/verify-otp", authController.verifyOtp.bind(authController));
 router.post("/resend-otp", authController.resendOtp.bind(authController));

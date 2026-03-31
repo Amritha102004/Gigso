@@ -36,7 +36,7 @@ function App() {
 
           {/* General Platform Authenticated Shell placeholder */}
           <Route path="/home" element={<ProtectedRoute />}>
-             <Route index element={<div className="flex bg-[#eeefe9] h-screen items-center justify-center p-8 text-primary font-bold">Standard Authenticated User Portal - To Be Implemented.</div>} />
+             <Route index element={<div className="flex bg-[#eeefe9] h-screen items-center justify-center p-8 text-primary font-bold">User Portal - To Be Implemented.</div>} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -2,7 +2,6 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export type OtpType = "registration" | "password-reset";
 
-// Generic record type for the user data cached during registration
 export type IOtpUserData = Record<string, any>;
 
 export interface IOtp extends Document {
@@ -49,10 +48,8 @@ const otpSchema = new Schema<IOtp>(
   }
 );
 
-// Compound index just in case we need fast lookup by email + type
 otpSchema.index({ email: 1, type: 1 }, { unique: true });
 
-// TTL index to auto-delete the document after expiresAt passes
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const OtpModel = mongoose.model<IOtp>("Otp", otpSchema);

@@ -11,8 +11,7 @@ export class AdminUsersRepository implements IAdminUsersRepository {
   async findUsers(filter: any, skip: number, limit: number): Promise<{ users: IUser[], total: number }> {
     const [users, total] = await Promise.all([
       UserModel.find(filter)
-        .select("-password") // Do not return passwords
-        .skip(skip)
+        .select("-password") 
         .limit(limit)
         .sort({ createdAt: -1 }),
       UserModel.countDocuments(filter)

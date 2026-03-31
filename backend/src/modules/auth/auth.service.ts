@@ -32,7 +32,6 @@ export class AuthService implements IAuthService {
     const otp = generateOtp();
     const hashedOtp = await hashOtp(otp);
     
-    // Hash password before saving to OTP temporary storage
     const hashedPassword = await hashPassword(userData.password);
     const temporaryUserData = { ...userData, password: hashedPassword };
 
@@ -46,8 +45,8 @@ export class AuthService implements IAuthService {
       temporaryUserData
     );
 
-    // Mock sending email
-    console.log(`[MOCK EMAIL] Registration OTP for ${userData.email} is: ${otp}`);
+    // console
+    console.log(`MOCK EMAIL Registration OTP for ${userData.email} is: ${otp}`);
   }
 
   async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void> {
@@ -66,16 +65,15 @@ export class AuthService implements IAuthService {
       if (!otpDoc.userData) {
         throw new Error("User data not found in OTP record");
       }
-      // Create user (password is already hashed)
+      
       const user = await this.authRepo.createUser(otpDoc.userData as ICreateUser);
-      // Delete OTP
+      
       await this.otpRepo.deleteOtp(email, "registration");
       return user;
     }
 
     if (type === "password-reset") {
-      // For password-reset, we just want to verify it's correct. 
-      // Do NOT create user and do NOT delete OTP here (it deletes upon actual password reset).
+      
       return;
     }
   }
@@ -91,7 +89,6 @@ export class AuthService implements IAuthService {
     const hashedOtp = await hashOtp(otp);
     const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60000);
 
-    // Upsert safely overwriting the old hash/expiry while preserving user data (critical for registration)
     await this.otpRepo.upsertOtp(
       email,
       hashedOtp,
@@ -100,8 +97,8 @@ export class AuthService implements IAuthService {
       existingOtp.userData
     );
 
-    // Mock sending email
-    console.log(`[MOCK EMAIL] Resent ${type} OTP for ${email} is: ${otp}`);
+    // console
+    console.log(`MOCK EMAIL Resent ${type} OTP for ${email} is: ${otp}`);
   }
 
   async login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
@@ -143,7 +140,6 @@ export class AuthService implements IAuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.authRepo.findUserByEmail(email);
     if (!user) {
-      // Don't throw error to prevent email enumeration, but in this case we can log or just return
       return; 
     }
 
@@ -158,8 +154,8 @@ export class AuthService implements IAuthService {
       expiresAt
     );
 
-    // Mock sending email
-    console.log(`[MOCK EMAIL] Password Reset OTP for ${email} is: ${otp}`);
+    // console
+    console.log(`MOCK EMAIL Password Reset OTP for ${email} is: ${otp}`);
   }
 
   async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
@@ -181,7 +177,6 @@ export class AuthService implements IAuthService {
       throw new Error("User not found");
     }
 
-    // Delete OTP
     await this.otpRepo.deleteOtp(email, "password-reset");
   }
 }

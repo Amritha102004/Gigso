@@ -125,7 +125,7 @@ const OtpVerification: React.FC = () => {
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-textMain mb-3">Enter OTP</h2>
           <p className="text-secondary text-sm leading-relaxed">
-            We've sent a 6-digit verification code to your registered mobile number for <span className="text-primary font-medium">Gigso Owner access.</span>
+            We've sent a 6-digit verification code to your registered email for <span className="text-primary font-medium">Gigso access.</span>
           </p>
         </div>
 

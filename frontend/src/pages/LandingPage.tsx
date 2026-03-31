@@ -1,10 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Hero from '../components/Hero';
 import FeatureCard from '../components/FeatureCard';
 import Footer from '../components/Footer';
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col pt-12">
       {/* Navbar Placeholder space, could be added later */}
@@ -16,9 +18,9 @@ const LandingPage: React.FC = () => {
             </a>
           </div>
           <div className="flex flex-1 justify-end">
-            <Link to="/role-selection" className="text-sm font-semibold leading-6 text-textMain hover:text-primary transition-colors">
+            <button onClick={() => navigate("/login")} className="text-sm font-semibold leading-6 text-textMain hover:text-primary transition-colors">
               Log in <span aria-hidden="true">&rarr;</span>
-            </Link>
+            </button>
           </div>
         </nav>
       </header>

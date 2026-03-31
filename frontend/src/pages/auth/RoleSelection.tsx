@@ -91,7 +91,7 @@ const RoleSelection: React.FC = () => {
       {/* Footer Info */}
       <div className="mt-20 flex flex-col items-center w-full z-10">
         <p className="text-sm text-secondary mb-6">
-          Already have an account? <a href="#" className="font-semibold text-primary hover:underline">Log in</a>
+          Already have an account? <button onClick={() => navigate('/login')} className="font-semibold text-primary hover:underline">Log in</button>
         </p>
         <div className="flex items-center justify-center space-x-4 sm:space-x-8 text-xs text-gray-400 max-w-md text-center">
           <span>Secure payments</span>

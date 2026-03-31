@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-// Define User shape conservatively matching gigso backend responses
 export interface User {
   name: string;
   email: string;
@@ -25,7 +24,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hydrate from localStorage on hard reload
   useEffect(() => {
     const storedToken = localStorage.getItem('accessToken');
     const storedUser = localStorage.getItem('gigsoUser');
@@ -35,7 +33,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch (err) {
-        // Invalid stored object
         localStorage.removeItem('accessToken');
         localStorage.removeItem('gigsoUser');
       }

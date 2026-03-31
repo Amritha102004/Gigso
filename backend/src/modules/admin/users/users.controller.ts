@@ -23,7 +23,6 @@ export class AdminUsersController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      // Force 'owner' role
       const result = await this.usersService.getPaginatedUsers("owner", page, limit);
 
       res.status(200).json(result);
@@ -37,7 +36,6 @@ export class AdminUsersController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      // Force 'worker' role
       const result = await this.usersService.getPaginatedUsers("worker", page, limit);
 
       res.status(200).json(result);

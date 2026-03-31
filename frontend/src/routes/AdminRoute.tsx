@@ -16,8 +16,7 @@ const AdminRoute: React.FC = () => {
     );
   }
 
-  // Force diversion if missing entirely OR not strictly an admin.
-  // We navigate them home (or /login) preventing any unauthorized rendering whatsoever.
+  
   if (!user || user.role !== 'admin') {
     return <Navigate to="/login" replace />;
   }

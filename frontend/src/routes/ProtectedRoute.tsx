@@ -5,7 +5,6 @@ import React from 'react';
 const ProtectedRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
 
-  // Show nothing while evaluating hydration
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-primary bg-background">
@@ -17,7 +16,6 @@ const ProtectedRoute: React.FC = () => {
     );
   }
 
-  // Kick to login if user state missing entirely
   return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
 

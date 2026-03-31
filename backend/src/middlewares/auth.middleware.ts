@@ -18,8 +18,6 @@ export const authenticateJWT = async (req: AuthRequest, res: Response, next: Nex
 
   try {
     const decoded = verifyAccessToken(token) as { userId: string; role: string };
-    
-    // Optional: we can fetch the user from DB to ensure they still exist and aren't suspended
     const user = await UserModel.findById(decoded.userId);
     
     if (!user) {

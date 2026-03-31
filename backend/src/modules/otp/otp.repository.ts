@@ -20,8 +20,7 @@ export class OtpRepository implements IOtpRepository {
     expiresAt: Date,
     userData?: Record<string, any>
   ): Promise<IOtp | null> {
-    // TTL index uses expiresAt. Also define otpExpiresAt if needed logic-wise, 
-    // but typically they can be the same. 
+  
     return OtpModel.findOneAndUpdate(
       { email, type },
       {

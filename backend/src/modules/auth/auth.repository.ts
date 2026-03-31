@@ -15,7 +15,6 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async findUserByEmail(email: string): Promise<IUser | null> {
-    // Specifically select password since it has select: false in model by default
     return UserModel.findOne({ email }).select("+password");
   }
 
