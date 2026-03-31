@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
@@ -13,6 +14,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { loginState } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +27,15 @@ const Login: React.FC = () => {
 
     setIsSubmitting(true);
     authService.login(formData)
-      .then((res) => {
-        const { accessToken, role } = res;
-        if (accessToken) {
-          localStorage.setItem('accessToken', accessToken);
+      .then((res: any) => {
+        const { accessToken, user } = res;
+        
+        if (accessToken && user) {
+          loginState(user, accessToken);
         }
         
-        if (role === 'admin') {
-          navigate('/admin');
+        if (user?.role === 'admin') {
+          navigate('/admin/owners');
         } else {
           navigate('/home');
         }

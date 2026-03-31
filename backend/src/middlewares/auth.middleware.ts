@@ -3,7 +3,7 @@ import { verifyAccessToken } from "../utils/jwt";
 import { UserModel } from "../models/user.model";
 
 export interface AuthRequest extends Request {
-  user?: any; // Consider typing this explicitly to IUser
+  user?: any; 
 }
 
 export const authenticateJWT = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
