@@ -1,6 +1,20 @@
 import { Request, Response } from "express";
 import { IAuthService } from "./auth.service";
+import { IUser } from "../../interfaces/user.interface";
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../../utils/cookie";
+
+/** Helper to extract a message from an unknown caught value */
+const errMsg = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
+/** Strips password and internal fields before sending to client */
+const toUserResponse = (user: IUser) => ({
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  isApproved: user.isApproved,
+  isProfileCompleted: user.isProfileCompleted,
+});
 
 export class AuthController {
   constructor(private authService: IAuthService) {}
@@ -8,55 +22,47 @@ export class AuthController {
   public async signup(req: Request, res: Response): Promise<void> {
     try {
       const { name, email, password, role } = req.body;
-      
+
       if (!name || !email || !password || !role) {
         res.status(400).json({ error: "All fields are required" });
         return;
       }
 
       await this.authService.sendRegistrationOtp({ name, email, password, role });
-      
+
       res.status(200).json({ message: `OTP sent successfully to ${email}` });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "Failed to initiate signup" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "Failed to initiate signup") });
     }
   }
 
   public async verifyOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email, otp, type } = req.body;
-      
+
       if (!email || !otp || !type) {
         res.status(400).json({ error: "Email, OTP and type are required" });
         return;
       }
 
-      if (type !== 'registration' && type !== 'password-reset') {
+      if (type !== "registration" && type !== "password-reset") {
         res.status(400).json({ error: "Invalid OTP type" });
         return;
       }
 
       const result = await this.authService.verifyOtp(email, String(otp), type);
 
-      if (type === 'registration') {
-        const user = result as any; 
-        const userResponse = {
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isApproved: user.isApproved,
-          isProfileCompleted: user.isProfileCompleted,
-        };
-
-        res.status(201).json({ 
+      if (type === "registration") {
+        const user = result as IUser;
+        res.status(201).json({
           message: "User registered successfully",
-          user: userResponse
+          user: toUserResponse(user),
         });
       } else {
         res.status(200).json({ message: "OTP verified successfully. Proceed to reset password." });
       }
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "OTP verification failed" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "OTP verification failed") });
     }
   }
 
@@ -69,7 +75,7 @@ export class AuthController {
         return;
       }
 
-      if (type !== 'registration' && type !== 'password-reset') {
+      if (type !== "registration" && type !== "password-reset") {
         res.status(400).json({ error: "Invalid OTP type" });
         return;
       }
@@ -77,8 +83,8 @@ export class AuthController {
       await this.authService.resendOtp(email, type);
 
       res.status(200).json({ message: `New OTP sent successfully to ${email}` });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "Failed to resend OTP" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "Failed to resend OTP") });
     }
   }
 
@@ -95,21 +101,13 @@ export class AuthController {
 
       setRefreshTokenCookie(res, refreshToken);
 
-      const userResponse = {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isApproved: user.isApproved,
-        isProfileCompleted: user.isProfileCompleted,
-      };
-
       res.status(200).json({
         message: "Login successful",
         accessToken,
-        user: userResponse,
+        user: toUserResponse(user),
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "Login failed" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "Login failed") });
     }
   }
 
@@ -126,25 +124,18 @@ export class AuthController {
 
       setRefreshTokenCookie(res, refreshToken);
 
-      const userResponse = {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isApproved: user.isApproved,
-        isProfileCompleted: user.isProfileCompleted,
-      };
-
       res.status(200).json({
         message: "Google login successful",
         accessToken,
-        user: userResponse,
+        user: toUserResponse(user),
       });
-    } catch (error: any) {
-      if (error.message === "Role must be selected before Google login.") {
-        res.status(400).json({ error: error.message, requiresRole: true });
+    } catch (error: unknown) {
+      const message = errMsg(error, "Google login failed");
+      if (message === "Role must be selected before Google login.") {
+        res.status(400).json({ error: message, requiresRole: true });
         return;
       }
-      res.status(400).json({ error: error.message || "Google login failed" });
+      res.status(400).json({ error: message });
     }
   }
 
@@ -162,15 +153,15 @@ export class AuthController {
       setRefreshTokenCookie(res, tokens.refreshToken);
 
       res.status(200).json({ accessToken: tokens.accessToken });
-    } catch (error: any) {
-      res.status(403).json({ error: error.message || "Invalid refresh token" });
+    } catch (error: unknown) {
+      res.status(403).json({ error: errMsg(error, "Invalid refresh token") });
     }
   }
 
   public async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      
+
       if (!email) {
         res.status(400).json({ error: "Email is required" });
         return;
@@ -179,15 +170,15 @@ export class AuthController {
       await this.authService.forgotPassword(email);
 
       res.status(200).json({ message: "If your email is registered, you will receive an OTP." });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "Forgot password operation failed" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "Forgot password operation failed") });
     }
   }
 
   public async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, otp, newPassword } = req.body;
-      
+
       if (!email || !otp || !newPassword) {
         res.status(400).json({ error: "Email, OTP and new password are required" });
         return;
@@ -196,8 +187,8 @@ export class AuthController {
       await this.authService.resetPassword(email, String(otp), newPassword);
 
       res.status(200).json({ message: "Password reset successful" });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message || "Reset password failed" });
+    } catch (error: unknown) {
+      res.status(400).json({ error: errMsg(error, "Reset password failed") });
     }
   }
 

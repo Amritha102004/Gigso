@@ -1,8 +1,11 @@
 import axios from 'axios';
+import { ADMIN_ROUTES } from '../constants/apiRoutes';
+import type { PaginatedUsersResponse, UserDTO } from '../types/api.types';
 
-// Authorized Axios Instance capturing the JWT
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
 const adminApi = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -14,24 +17,35 @@ adminApi.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
+export interface GetUsersParams {
+  role?: 'owner' | 'worker';
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
 export const adminService = {
-  getUsersByRole: async (role: 'owner' | 'worker') => {
-    // Assuming backend endpoint exists resolving array of user objects correctly
-    const response = await adminApi.get(`/admin/users?role=${role}`);
+  getUsers: async (params: GetUsersParams): Promise<PaginatedUsersResponse> => {
+    const response = await adminApi.get<PaginatedUsersResponse>(ADMIN_ROUTES.USERS, { params });
     return response.data;
   },
 
-  approveUser: async (userId: string) => {
-    // Modify this if backend route differs
-    const response = await adminApi.patch(`/admin/users/${userId}/approve`);
+  getUsersByRole: async (role: 'owner' | 'worker', params?: Omit<GetUsersParams, 'role'>): Promise<PaginatedUsersResponse> => {
+    const response = await adminApi.get<PaginatedUsersResponse>(ADMIN_ROUTES.USERS, {
+      params: { role, ...params },
+    });
     return response.data;
   },
 
-  suspendUser: async (userId: string, isSuspended: boolean) => {
-    // Send dynamic suspension state natively (assuming PUT standard)
-    const response = await adminApi.patch(`/admin/users/${userId}/suspend`, { suspend: isSuspended });
+  approveUser: async (userId: string): Promise<{ message: string; user: UserDTO }> => {
+    const response = await adminApi.patch<{ message: string; user: UserDTO }>(ADMIN_ROUTES.APPROVE_USER(userId));
     return response.data;
-  }
+  },
+
+  suspendUser: async (userId: string): Promise<{ message: string; user: UserDTO }> => {
+    const response = await adminApi.patch<{ message: string; user: UserDTO }>(ADMIN_ROUTES.SUSPEND_USER(userId));
+    return response.data;
+  },
 };
 
 export default adminService;

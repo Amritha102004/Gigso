@@ -1,8 +1,8 @@
-import { IAdminUsersRepository } from "./users.repository";
+import { IAdminUsersRepository, UserFilter } from "./users.repository";
 import { IUser } from "../../../interfaces/user.interface";
 
 export interface IAdminUsersService {
-  getPaginatedUsers(role?: string, page?: number, limit?: number): Promise<{
+  getPaginatedUsers(role?: string, page?: number, limit?: number, search?: string): Promise<{
     users: IUser[];
     total: number;
     page: number;
@@ -16,15 +16,20 @@ export interface IAdminUsersService {
 export class AdminUsersService implements IAdminUsersService {
   constructor(private usersRepo: IAdminUsersRepository) {}
 
-  async getPaginatedUsers(role?: string, page: number = 1, limit: number = 10) {
+  async getPaginatedUsers(role?: string, page: number = 1, limit: number = 10, search?: string) {
     const skip = (page - 1) * limit;
 
-    const filter: any = {};
-    
+    const filter: UserFilter = {};
+
     if (role) {
       filter.role = role;
     } else {
       filter.role = { $nin: ["admin"] };
+    }
+
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), "i");
+      filter.$or = [{ name: regex }, { email: regex }];
     }
 
     const { users, total } = await this.usersRepo.findUsers(filter, skip, limit);

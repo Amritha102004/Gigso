@@ -1,17 +1,23 @@
 import { UserModel } from "../../../models/user.model";
 import { IUser } from "../../../interfaces/user.interface";
 
+export interface UserFilter {
+  role?: string | { $nin: string[] };
+  $or?: Array<{ name?: RegExp; email?: RegExp }>;
+}
+
 export interface IAdminUsersRepository {
-  findUsers(filter: any, skip: number, limit: number): Promise<{ users: IUser[], total: number }>;
+  findUsers(filter: UserFilter, skip: number, limit: number): Promise<{ users: IUser[], total: number }>;
   findUserById(id: string): Promise<IUser | null>;
   updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
 }
 
 export class AdminUsersRepository implements IAdminUsersRepository {
-  async findUsers(filter: any, skip: number, limit: number): Promise<{ users: IUser[], total: number }> {
+  async findUsers(filter: UserFilter, skip: number, limit: number): Promise<{ users: IUser[], total: number }> {
     const [users, total] = await Promise.all([
       UserModel.find(filter)
-        .select("-password") 
+        .select("-password")
+        .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 }),
       UserModel.countDocuments(filter)

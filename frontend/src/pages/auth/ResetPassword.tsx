@@ -48,8 +48,9 @@ const ResetPassword: React.FC = () => {
       .then(() => {
         navigate('/login');
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.message || 'Failed to reset password.');
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Failed to reset password.');
       })
       .finally(() => {
         setIsSubmitting(false);

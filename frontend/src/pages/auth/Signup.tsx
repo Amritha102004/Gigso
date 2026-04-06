@@ -4,7 +4,8 @@ import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import type { AuthResponse } from '../../types/api.types';
 
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -22,11 +23,16 @@ const Signup: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleGoogleSuccess = (credentialResponse: any) => {
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     setIsSubmitting(true);
     setError('');
 
     const token = credentialResponse.credential;
+    if (!token) {
+      setError('Google signup failed: no credential received.');
+      setIsSubmitting(false);
+      return;
+    }
 
     if (!role) {
       setError('Please select a role from the previous page before signing up with Google.');
@@ -35,20 +41,17 @@ const Signup: React.FC = () => {
     }
 
     authService.googleLogin({ token, role })
-      .then((res: any) => {
-        const { accessToken, user } = res;
-        if (accessToken && user) {
-          loginState(user, accessToken);
-        }
-        
-        if (user?.role === 'admin') {
+      .then((res: AuthResponse) => {
+        loginState(res.user, res.accessToken);
+        if (res.user.role === 'admin') {
           navigate('/admin/owners');
         } else {
           navigate('/home');
         }
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.error || 'Google Signup failed.');
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        setError(axiosErr.response?.data?.error || 'Google Signup failed.');
       })
       .finally(() => {
         setIsSubmitting(false);
@@ -85,8 +88,9 @@ const Signup: React.FC = () => {
       .then(() => {
         navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}&type=registration`);
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Failed to send OTP. Please try again.');
       })
       .finally(() => {
         setIsSubmitting(false);

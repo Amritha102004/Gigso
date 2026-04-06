@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import type { AuthResponse } from '../../types/api.types';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -17,30 +18,32 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { loginState } = useAuth();
 
-  const handleGoogleSuccess = (credentialResponse: any) => {
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     setIsSubmitting(true);
     setError('');
 
     const token = credentialResponse.credential;
+    if (!token) {
+      setError('Google login failed: no credential received.');
+      setIsSubmitting(false);
+      return;
+    }
 
     authService.googleLogin({ token })
-      .then((res: any) => {
-        const { accessToken, user } = res;
-        if (accessToken && user) {
-          loginState(user, accessToken);
-        }
-        
-        if (user?.role === 'admin') {
+      .then((res: AuthResponse) => {
+        loginState(res.user, res.accessToken);
+        if (res.user.role === 'admin') {
           navigate('/admin/owners');
         } else {
           navigate('/home');
         }
       })
-      .catch((err: any) => {
-        if (err.response?.data?.requiresRole) {
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { requiresRole?: boolean; error?: string } } };
+        if (axiosErr.response?.data?.requiresRole) {
           setError('Account not found. Please sign up first.');
         } else {
-          setError(err.response?.data?.error || 'Google Login failed.');
+          setError(axiosErr.response?.data?.error || 'Google Login failed.');
         }
       })
       .finally(() => {
@@ -63,21 +66,17 @@ const Login: React.FC = () => {
 
     setIsSubmitting(true);
     authService.login(formData)
-      .then((res: any) => {
-        const { accessToken, user } = res;
-        
-        if (accessToken && user) {
-          loginState(user, accessToken);
-        }
-        
-        if (user?.role === 'admin') {
+      .then((res: AuthResponse) => {
+        loginState(res.user, res.accessToken);
+        if (res.user.role === 'admin') {
           navigate('/admin/owners');
         } else {
           navigate('/home');
         }
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.message || 'Invalid email or password.');
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Invalid email or password.');
       })
       .finally(() => {
         setIsSubmitting(false);

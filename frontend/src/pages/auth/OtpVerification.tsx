@@ -13,7 +13,8 @@ const OtpVerification: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email') || '';
-  const type = searchParams.get('type') || 'registration';
+  const rawType = searchParams.get('type') || 'registration';
+  const type = (rawType === 'password-reset' ? 'password-reset' : 'registration') as 'registration' | 'password-reset';
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -67,8 +68,9 @@ const OtpVerification: React.FC = () => {
       .then(() => {
         setTimeLeft(60); // Reset timer 
       })
-      .catch((err: any) => {
-        setError(err.response?.data?.message || 'Failed to resend OTP.');
+      .catch((err: unknown) => {
+        const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Failed to resend OTP.');
       });
   };
 
@@ -92,8 +94,9 @@ const OtpVerification: React.FC = () => {
             navigate(`/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(finalOtp)}`);
           }
         })
-        .catch((err: any) => {
-          setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+        .catch((err: unknown) => {
+          const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+          setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Invalid OTP. Please try again.');
         })
         .finally(() => {
           setIsSubmitting(false);

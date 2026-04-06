@@ -9,6 +9,8 @@ import crypto from 'crypto';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const ALLOWED_ROLES: ReadonlyArray<string> = ["worker", "owner"];
+
 export interface IAuthService {
   sendRegistrationOtp(userData: ICreateUser): Promise<void>;
   verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void>;
@@ -29,6 +31,10 @@ export class AuthService implements IAuthService {
   ) {}
 
   async sendRegistrationOtp(userData: ICreateUser): Promise<void> {
+    if (!ALLOWED_ROLES.includes(userData.role)) {
+      throw new Error("Invalid role. Only 'worker' and 'owner' are allowed to register.");
+    }
+
     const existingUser = await this.authRepo.findUserByEmail(userData.email);
     if (existingUser) {
       throw new Error("Email already registered");
@@ -118,6 +124,10 @@ export class AuthService implements IAuthService {
       throw new Error("Invalid email or password");
     }
 
+    if (user.isSuspended) {
+      throw new Error("Your account has been suspended. Please contact support.");
+    }
+
     const accessToken = generateAccessToken(user._id.toString(), user.role);
     const refreshToken = generateRefreshToken(user._id.toString());
 
@@ -143,6 +153,10 @@ export class AuthService implements IAuthService {
         throw new Error("Role must be selected before Google login.");
       }
 
+      if (!ALLOWED_ROLES.includes(role)) {
+        throw new Error("Invalid role. Only 'worker' and 'owner' are allowed to register.");
+      }
+
       // Create new user with fallback credentials
       const randomPassword = crypto.randomBytes(16).toString('hex');
       const hashedPassword = await hashPassword(randomPassword);
@@ -151,10 +165,14 @@ export class AuthService implements IAuthService {
         name: name || "Google User",
         email: email,
         password: hashedPassword,
-        role: role as "worker" | "owner" | "admin",
+        role: role as "worker" | "owner",
       };
 
       user = await this.authRepo.createUser(newUserData);
+    }
+
+    if (user.isSuspended) {
+      throw new Error("Your account has been suspended. Please contact support.");
     }
 
     const accessToken = generateAccessToken(user._id.toString(), user.role);
