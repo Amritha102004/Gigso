@@ -8,6 +8,8 @@ interface Owner {
   status?: string; 
   businessName?: string;
   location?: string;
+  isApproved?: boolean;
+  isSuspended?: boolean;
 }
 
 const OwnersPage: React.FC = () => {
@@ -24,7 +26,12 @@ const OwnersPage: React.FC = () => {
       setIsLoading(true);
       const data = await adminService.getUsersByRole('owner');
       // Assume mapping is data.users or directly an array based on standard controllers
-      setOwners(data.users || data || []);
+      const userList = data.users || data || [];
+      const mappedOwners = userList.map((u: any) => ({
+        ...u,
+        status: u.isSuspended ? 'suspended' : (u.isApproved ? 'approved' : 'pending')
+      }));
+      setOwners(mappedOwners);
       setError('');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch owners');
@@ -37,7 +44,7 @@ const OwnersPage: React.FC = () => {
     try {
       await adminService.approveUser(id);
       // Optimistic update
-      setOwners((prev) => prev.map(o => o._id === id ? { ...o, status: 'approved' } : o));
+      setOwners((prev) => prev.map(o => o._id === id ? { ...o, isApproved: true, status: o.isSuspended ? 'suspended' : 'approved' } : o));
     } catch (err) {
       alert('Action failed. Check console.');
       console.error(err);
@@ -48,7 +55,7 @@ const OwnersPage: React.FC = () => {
     try {
       const isSuspended = currentStatus === 'suspended';
       await adminService.suspendUser(id, !isSuspended); // Toggle
-      setOwners((prev) => prev.map(o => o._id === id ? { ...o, status: isSuspended ? 'approved' : 'suspended' } : o));
+      setOwners((prev) => prev.map(o => o._id === id ? { ...o, isSuspended: !isSuspended, status: !isSuspended ? 'suspended' : (o.isApproved ? 'approved' : 'pending') } : o));
     } catch (err) {
       alert('Action failed.');
       console.error(err);

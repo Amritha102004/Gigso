@@ -23,13 +23,13 @@ export const adminService = {
 
   approveUser: async (userId: string) => {
     // Modify this if backend route differs
-    const response = await adminApi.put(`/admin/users/${userId}/approve`);
+    const response = await adminApi.patch(`/admin/users/${userId}/approve`);
     return response.data;
   },
 
   suspendUser: async (userId: string, isSuspended: boolean) => {
     // Send dynamic suspension state natively (assuming PUT standard)
-    const response = await adminApi.put(`/admin/users/${userId}/suspend`, { suspend: isSuspended });
+    const response = await adminApi.patch(`/admin/users/${userId}/suspend`, { suspend: isSuspended });
     return response.data;
   }
 };

@@ -4,6 +4,10 @@ import { ICreateUser, IUser } from "../../interfaces/user.interface";
 import { hashPassword, comparePasswords, hashOtp, compareOtp } from "../../utils/hash";
 import { generateOtp } from "../../utils/otp";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt";
+import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export interface IAuthService {
   sendRegistrationOtp(userData: ICreateUser): Promise<void>;
@@ -13,6 +17,7 @@ export interface IAuthService {
   refreshTokens(token: string): Promise<{ accessToken: string; refreshToken: string }>;
   forgotPassword(email: string): Promise<void>;
   resetPassword(email: string, otp: string, newPassword: string): Promise<void>;
+  googleLogin(token: string, role?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }>;
 }
 
 export class AuthService implements IAuthService {
@@ -111,6 +116,45 @@ export class AuthService implements IAuthService {
     const isValidPassword = await comparePasswords(password, user.password);
     if (!isValidPassword) {
       throw new Error("Invalid email or password");
+    }
+
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    return { user, accessToken, refreshToken };
+  }
+
+  async googleLogin(token: string, role?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      throw new Error("Invalid Google token");
+    }
+
+    const { email, name } = payload;
+    let user = await this.authRepo.findUserByEmail(email);
+
+    if (!user) {
+      if (!role) {
+        throw new Error("Role must be selected before Google login.");
+      }
+
+      // Create new user with fallback credentials
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const hashedPassword = await hashPassword(randomPassword);
+
+      const newUserData: ICreateUser = {
+        name: name || "Google User",
+        email: email,
+        password: hashedPassword,
+        role: role as "worker" | "owner" | "admin",
+      };
+
+      user = await this.authRepo.createUser(newUserData);
     }
 
     const accessToken = generateAccessToken(user._id.toString(), user.role);

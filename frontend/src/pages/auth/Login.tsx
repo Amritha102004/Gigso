@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,41 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { loginState } = useAuth();
+
+  const handleGoogleSuccess = (credentialResponse: any) => {
+    setIsSubmitting(true);
+    setError('');
+
+    const token = credentialResponse.credential;
+
+    authService.googleLogin({ token })
+      .then((res: any) => {
+        const { accessToken, user } = res;
+        if (accessToken && user) {
+          loginState(user, accessToken);
+        }
+        
+        if (user?.role === 'admin') {
+          navigate('/admin/owners');
+        } else {
+          navigate('/home');
+        }
+      })
+      .catch((err: any) => {
+        if (err.response?.data?.requiresRole) {
+          setError('Account not found. Please sign up first.');
+        } else {
+          setError(err.response?.data?.error || 'Google Login failed.');
+        }
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Login failed.');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,9 +155,16 @@ const Login: React.FC = () => {
                     </div>
                 </div>
 
-                <Button variant="google" fullWidth>
-                    Continue with Google
-                </Button>
+                <div className="flex justify-center w-full">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="outline"
+                        size="large"
+                        width="100%"
+                        text="continue_with"
+                    />
+                </div>
 
                 <p className="mt-10 text-center text-sm text-secondary">
                     Don't have an account? <Link to="/role-selection" className="font-semibold text-primary hover:underline">Sign Up</Link>

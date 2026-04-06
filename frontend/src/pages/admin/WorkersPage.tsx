@@ -6,6 +6,7 @@ interface Worker {
   name: string;
   email: string;
   status?: string;
+  isSuspended?: boolean;
 }
 
 const WorkersPage: React.FC = () => {
@@ -21,7 +22,12 @@ const WorkersPage: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await adminService.getUsersByRole('worker');
-      setWorkers(data.users || data || []);
+      const userList = data.users || data || [];
+      const mappedWorkers = userList.map((w: any) => ({
+        ...w,
+        status: w.isSuspended ? 'suspended' : 'active'
+      }));
+      setWorkers(mappedWorkers);
       setError('');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch workers');
@@ -34,7 +40,7 @@ const WorkersPage: React.FC = () => {
     try {
       const isSuspended = currentStatus === 'suspended';
       await adminService.suspendUser(id, !isSuspended); // Toggle API Call
-      setWorkers((prev) => prev.map(w => w._id === id ? { ...w, status: isSuspended ? 'active' : 'suspended' } : w));
+      setWorkers((prev) => prev.map(w => w._id === id ? { ...w, isSuspended: !isSuspended, status: !isSuspended ? 'suspended' : 'active' } : w));
     } catch (err) {
       alert('Action failed.');
       console.error(err);

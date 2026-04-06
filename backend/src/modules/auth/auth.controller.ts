@@ -113,6 +113,41 @@ export class AuthController {
     }
   }
 
+  public async googleLogin(req: Request, res: Response): Promise<void> {
+    try {
+      const { token, role } = req.body;
+
+      if (!token) {
+        res.status(400).json({ error: "Google token is required" });
+        return;
+      }
+
+      const { user, accessToken, refreshToken } = await this.authService.googleLogin(token, role);
+
+      setRefreshTokenCookie(res, refreshToken);
+
+      const userResponse = {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isApproved: user.isApproved,
+        isProfileCompleted: user.isProfileCompleted,
+      };
+
+      res.status(200).json({
+        message: "Google login successful",
+        accessToken,
+        user: userResponse,
+      });
+    } catch (error: any) {
+      if (error.message === "Role must be selected before Google login.") {
+        res.status(400).json({ error: error.message, requiresRole: true });
+        return;
+      }
+      res.status(400).json({ error: error.message || "Google login failed" });
+    }
+  }
+
   public async refreshToken(req: Request, res: Response): Promise<void> {
     try {
       const { refreshToken } = req.cookies;

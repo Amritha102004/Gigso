@@ -3,24 +3,61 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const role = searchParams.get('role');
+  const { loginState } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    businessName: '',
   });
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isOwner = role === 'owner';
+  const handleGoogleSuccess = (credentialResponse: any) => {
+    setIsSubmitting(true);
+    setError('');
+
+    const token = credentialResponse.credential;
+
+    if (!role) {
+      setError('Please select a role from the previous page before signing up with Google.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    authService.googleLogin({ token, role })
+      .then((res: any) => {
+        const { accessToken, user } = res;
+        if (accessToken && user) {
+          loginState(user, accessToken);
+        }
+        
+        if (user?.role === 'admin') {
+          navigate('/admin/owners');
+        } else {
+          navigate('/home');
+        }
+      })
+      .catch((err: any) => {
+        setError(err.response?.data?.error || 'Google Signup failed.');
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Signup failed.');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,11 +67,6 @@ const Signup: React.FC = () => {
       setError('Please fill in all required fields.');
       return;
     }
-
-    // if (isOwner && !formData.businessName) {
-    //   setError('Business Name is required for Owners.');
-    //   return;
-    // }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
@@ -94,9 +126,16 @@ const Signup: React.FC = () => {
         </div>
 
         {/* Google Signup Button */}
-        <Button variant="google" fullWidth>
-          Sign up with Google
-        </Button>
+        <div className="flex justify-center w-full">
+            <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                width="100%"
+                text="signup_with"
+            />
+        </div>
 
         {/* Divider */}
         <div className="relative my-8">
@@ -134,17 +173,6 @@ const Signup: React.FC = () => {
             placeholder="name@company.com"
             required
           />
-
-          {isOwner && (
-            <InputField
-              label="Business Name"
-              type="text"
-              value={formData.businessName}
-              onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-              placeholder="e.g. Acme Studio"
-              required
-            />
-          )}
 
           <InputField
             label="Password"
