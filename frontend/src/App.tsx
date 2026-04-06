@@ -12,6 +12,7 @@ import AdminRoute from './routes/AdminRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import OwnersPage from './pages/admin/OwnersPage';
 import WorkersPage from './pages/admin/WorkersPage';
+import HomePage from './pages/user/HomePage';
 
 function App() {
   return (
@@ -34,9 +35,8 @@ function App() {
             </Route>
           </Route>
 
-          {/* General Platform Authenticated Shell placeholder */}
           <Route path="/home" element={<ProtectedRoute />}>
-             <Route index element={<div className="flex bg-[#eeefe9] h-screen items-center justify-center p-8 text-primary font-bold">User Portal - To Be Implemented.</div>} />
+             <Route index element={<HomePage />} />
           </Route>
         </Routes>
       </BrowserRouter>
