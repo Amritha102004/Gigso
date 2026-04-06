@@ -86,7 +86,12 @@ const Signup: React.FC = () => {
     setIsSubmitting(true);
     authService.sendOtp(payload)
       .then(() => {
-        navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}&type=registration`);
+        navigate('/verify-otp', { 
+          state: { 
+            email: formData.email, 
+            type: 'registration' 
+          } 
+        });
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };

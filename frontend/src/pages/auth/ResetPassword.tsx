@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
@@ -13,9 +13,16 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get('email') || '';
-  const otp = searchParams.get('otp') || '';
+  const location = useLocation();
+  const state = location.state as { email?: string; isOtpVerified?: boolean; otp?: string } | null;
+  const email = state?.email || '';
+  const otp = state?.otp || '';
+
+  React.useEffect(() => {
+    if (!state?.email || state?.isOtpVerified !== true) {
+      navigate('/login');
+    }
+  }, [state, navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

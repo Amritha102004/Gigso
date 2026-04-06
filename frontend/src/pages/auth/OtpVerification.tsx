@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../../components/Button';
 import authService from '../../services/authService';
 
@@ -11,10 +11,16 @@ const OtpVerification: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get('email') || '';
-  const rawType = searchParams.get('type') || 'registration';
-  const type = (rawType === 'password-reset' ? 'password-reset' : 'registration') as 'registration' | 'password-reset';
+  const location = useLocation();
+  const state = location.state as { email?: string; type?: 'registration' | 'password-reset' } | null;
+  const email = state?.email || '';
+  const type = state?.type || 'registration';
+
+  useEffect(() => {
+    if (!state?.email || !state?.type) {
+      navigate('/login');
+    }
+  }, [state, navigate]);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -91,7 +97,13 @@ const OtpVerification: React.FC = () => {
           if (type === 'registration') {
             navigate('/login');
           } else if (type === 'password-reset') {
-            navigate(`/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(finalOtp)}`);
+            navigate('/reset-password', {
+              state: {
+                email,
+                otp: finalOtp,
+                isOtpVerified: true
+              }
+            });
           }
         })
         .catch((err: unknown) => {

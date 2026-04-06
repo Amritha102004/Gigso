@@ -22,7 +22,12 @@ const ForgotPassword: React.FC = () => {
     setIsSubmitting(true);
     authService.forgotPassword({ email })
       .then(() => {
-        navigate(`/verify-otp?email=${encodeURIComponent(email)}&type=password-reset`);
+        navigate('/verify-otp', {
+          state: {
+            email,
+            type: 'password-reset'
+          }
+        });
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
