@@ -2,7 +2,7 @@
 
 export type UserRole = 'worker' | 'owner' | 'admin';
 
-/** Shape of a user object returned from the backend (no password) */
+// user object returned from backend
 export interface UserDTO {
   _id?: string;
   name: string;
@@ -15,14 +15,14 @@ export interface UserDTO {
   updatedAt?: string;
 }
 
-/** Auth response returned on login / google login */
+//Auth response returned on login, google login
 export interface AuthResponse {
   message: string;
   accessToken: string;
   user: UserDTO;
 }
 
-/** Paginated response returned from admin user list endpoints */
+//Paginated response returned from admin user list endpoints
 export interface PaginatedUsersResponse {
   users: UserDTO[];
   total: number;
@@ -30,12 +30,12 @@ export interface PaginatedUsersResponse {
   totalPages: number;
 }
 
-/** Signup / OTP response */
+// Signup, OTP response
 export interface SignupOtpResponse {
   message: string;
 }
 
-/** OTP verify (registration) response */
+//OTP verify (registration) response
 export interface VerifyOtpResponse {
   message: string;
   user?: UserDTO;

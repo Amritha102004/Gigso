@@ -1,5 +1,3 @@
-// Centralized API route constants — update paths here if the backend changes
-
 export const AUTH_ROUTES = {
   SIGNUP:         '/auth/signup',
   VERIFY_OTP:     '/auth/verify-otp',

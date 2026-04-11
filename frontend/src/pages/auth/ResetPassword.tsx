@@ -38,7 +38,6 @@ const ResetPassword: React.FC = () => {
       return;
     }
 
-    // Basic strength check (matches hint)
     const strongRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/;
     if (!strongRegex.test(formData.password)) {
         setError('Password does not meet the security requirements.');

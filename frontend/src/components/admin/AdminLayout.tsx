@@ -22,7 +22,6 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-background text-textMain font-sans">
       
-      {/* Left Sidebar Layout exactly matching the screenshot style */}
       <aside className="w-64 bg-background border-r border-[#E5E7EB] flex flex-col justify-between hidden md:flex">
         <div>
           {/* Logo / Header */}

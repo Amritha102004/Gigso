@@ -23,11 +23,11 @@ export interface IAuthService {
 }
 
 export class AuthService implements IAuthService {
-  private readonly OTP_EXPIRY_MINUTES = 5;
+  private readonly _OTP_EXPIRY_MINUTES = 5;
 
   constructor(
-    private authRepo: IAuthRepository,
-    private otpRepo: IOtpRepository
+    private _authRepo: IAuthRepository,
+    private _otpRepo: IOtpRepository
   ) {}
 
   async sendRegistrationOtp(userData: ICreateUser): Promise<void> {
@@ -35,7 +35,7 @@ export class AuthService implements IAuthService {
       throw new Error("Invalid role. Only 'worker' and 'owner' are allowed to register.");
     }
 
-    const existingUser = await this.authRepo.findUserByEmail(userData.email);
+    const existingUser = await this._authRepo.findUserByEmail(userData.email);
     if (existingUser) {
       throw new Error("Email already registered");
     }
@@ -46,9 +46,9 @@ export class AuthService implements IAuthService {
     const hashedPassword = await hashPassword(userData.password);
     const temporaryUserData = { ...userData, password: hashedPassword };
 
-    const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60000);
+    const expiresAt = new Date(Date.now() + this._OTP_EXPIRY_MINUTES * 60000);
 
-    await this.otpRepo.upsertOtp(
+    await this._otpRepo.upsertOtp(
       userData.email,
       hashedOtp,
       "registration",
@@ -61,7 +61,7 @@ export class AuthService implements IAuthService {
   }
 
   async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void> {
-    const otpDoc = await this.otpRepo.findOtpByEmailAndType(email, type);
+    const otpDoc = await this._otpRepo.findOtpByEmailAndType(email, type);
     
     if (!otpDoc) {
       throw new Error("OTP not found or expired");
@@ -77,9 +77,9 @@ export class AuthService implements IAuthService {
         throw new Error("User data not found in OTP record");
       }
       
-      const user = await this.authRepo.createUser(otpDoc.userData as ICreateUser);
+      const user = await this._authRepo.createUser(otpDoc.userData as ICreateUser);
       
-      await this.otpRepo.deleteOtp(email, "registration");
+      await this._otpRepo.deleteOtp(email, "registration");
       return user;
     }
 
@@ -90,7 +90,7 @@ export class AuthService implements IAuthService {
   }
 
   async resendOtp(email: string, type: "registration" | "password-reset"): Promise<void> {
-    const existingOtp = await this.otpRepo.findOtpByEmailAndType(email, type);
+    const existingOtp = await this._otpRepo.findOtpByEmailAndType(email, type);
     
     if (!existingOtp) {
       throw new Error(`No pending ${type} request found for this email.`);
@@ -98,9 +98,9 @@ export class AuthService implements IAuthService {
 
     const otp = generateOtp();
     const hashedOtp = await hashOtp(otp);
-    const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60000);
+    const expiresAt = new Date(Date.now() + this._OTP_EXPIRY_MINUTES * 60000);
 
-    await this.otpRepo.upsertOtp(
+    await this._otpRepo.upsertOtp(
       email,
       hashedOtp,
       type,
@@ -113,7 +113,7 @@ export class AuthService implements IAuthService {
   }
 
   async login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
-    const user = await this.authRepo.findUserByEmail(email);
+    const user = await this._authRepo.findUserByEmail(email);
     
     if (!user) {
       throw new Error("Invalid email or password");
@@ -146,7 +146,7 @@ export class AuthService implements IAuthService {
     }
 
     const { email, name } = payload;
-    let user = await this.authRepo.findUserByEmail(email);
+    let user = await this._authRepo.findUserByEmail(email);
 
     if (!user) {
       if (!role) {
@@ -168,7 +168,7 @@ export class AuthService implements IAuthService {
         role: role as "worker" | "owner",
       };
 
-      user = await this.authRepo.createUser(newUserData);
+      user = await this._authRepo.createUser(newUserData);
     }
 
     if (user.isSuspended) {
@@ -184,7 +184,7 @@ export class AuthService implements IAuthService {
   async refreshTokens(token: string): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const decoded = verifyRefreshToken(token) as { userId: string };
-      const user = await this.authRepo.findUserById(decoded.userId);
+      const user = await this._authRepo.findUserById(decoded.userId);
 
       if (!user) {
         throw new Error("User not found");
@@ -200,16 +200,16 @@ export class AuthService implements IAuthService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const user = await this.authRepo.findUserByEmail(email);
+    const user = await this._authRepo.findUserByEmail(email);
     if (!user) {
       return; 
     }
 
     const otp = generateOtp();
     const hashedOtp = await hashOtp(otp);
-    const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60000);
+    const expiresAt = new Date(Date.now() + this._OTP_EXPIRY_MINUTES * 60000);
 
-    await this.otpRepo.upsertOtp(
+    await this._otpRepo.upsertOtp(
       email,
       hashedOtp,
       "password-reset",
@@ -221,7 +221,7 @@ export class AuthService implements IAuthService {
   }
 
   async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
-    const otpDoc = await this.otpRepo.findOtpByEmailAndType(email, "password-reset");
+    const otpDoc = await this._otpRepo.findOtpByEmailAndType(email, "password-reset");
     
     if (!otpDoc) {
       throw new Error("OTP not found or expired");
@@ -233,12 +233,12 @@ export class AuthService implements IAuthService {
     }
 
     const hashedPassword = await hashPassword(newPassword);
-    const user = await this.authRepo.updateUserPassword(email, hashedPassword);
+    const user = await this._authRepo.updateUserPassword(email, hashedPassword);
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    await this.otpRepo.deleteOtp(email, "password-reset");
+    await this._otpRepo.deleteOtp(email, "password-reset");
   }
 }

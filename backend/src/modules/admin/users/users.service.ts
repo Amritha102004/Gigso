@@ -14,7 +14,7 @@ export interface IAdminUsersService {
 }
 
 export class AdminUsersService implements IAdminUsersService {
-  constructor(private usersRepo: IAdminUsersRepository) {}
+  constructor(private _usersRepo: IAdminUsersRepository) {}
 
   async getPaginatedUsers(role?: string, page: number = 1, limit: number = 10, search?: string) {
     const skip = (page - 1) * limit;
@@ -32,7 +32,7 @@ export class AdminUsersService implements IAdminUsersService {
       filter.$or = [{ name: regex }, { email: regex }];
     }
 
-    const { users, total } = await this.usersRepo.findUsers(filter, skip, limit);
+    const { users, total } = await this._usersRepo.findUsers(filter, skip, limit);
     const totalPages = Math.ceil(total / limit);
 
     return {
@@ -44,7 +44,7 @@ export class AdminUsersService implements IAdminUsersService {
   }
 
   async getUserDetails(id: string): Promise<IUser> {
-    const user = await this.usersRepo.findUserById(id);
+    const user = await this._usersRepo.findUserById(id);
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
@@ -52,7 +52,7 @@ export class AdminUsersService implements IAdminUsersService {
   }
 
   async approveOwner(id: string): Promise<IUser> {
-    const user = await this.usersRepo.findUserById(id);
+    const user = await this._usersRepo.findUserById(id);
     
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
@@ -66,7 +66,7 @@ export class AdminUsersService implements IAdminUsersService {
       throw new Error("Owner is already approved.");
     }
 
-    const updatedUser = await this.usersRepo.updateUser(id, { isApproved: true });
+    const updatedUser = await this._usersRepo.updateUser(id, { isApproved: true });
     
     if (!updatedUser) {
       throw new Error("Failed to update user approval status");
@@ -76,13 +76,13 @@ export class AdminUsersService implements IAdminUsersService {
   }
 
   async toggleUserSuspension(id: string): Promise<IUser> {
-    const user = await this.usersRepo.findUserById(id);
+    const user = await this._usersRepo.findUserById(id);
 
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
 
-    const updatedUser = await this.usersRepo.updateUser(id, { 
+    const updatedUser = await this._usersRepo.updateUser(id, { 
       isSuspended: !user.isSuspended 
     });
 
