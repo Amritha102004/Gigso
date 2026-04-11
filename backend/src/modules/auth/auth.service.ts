@@ -3,6 +3,7 @@ import { IOtpRepository } from "../otp/otp.repository";
 import { ICreateUser, IUser } from "../../interfaces/user.interface";
 import { hashPassword, comparePasswords, hashOtp, compareOtp } from "../../utils/hash";
 import { generateOtp } from "../../utils/otp";
+import { sendEmail } from "../../utils/sendEmail";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt";
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
@@ -55,7 +56,12 @@ export class AuthService implements IAuthService {
       expiresAt,
       temporaryUserData
     );
-
+    
+    await sendEmail(
+      userData.email,
+      "Your OTP Code",
+      `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`
+    );
     // console
     console.log(`MOCK EMAIL Registration OTP for ${userData.email} is: ${otp}`);
   }
@@ -108,7 +114,12 @@ export class AuthService implements IAuthService {
       existingOtp.userData
     );
 
-    // console
+    await sendEmail(
+      email,
+      "Your OTP Code",
+      `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`    
+    );
+     // console
     console.log(`MOCK EMAIL Resent ${type} OTP for ${email} is: ${otp}`);
   }
 
@@ -202,7 +213,7 @@ export class AuthService implements IAuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this._authRepo.findUserByEmail(email);
     if (!user) {
-      return; 
+      throw new Error("User not found");
     }
 
     const otp = generateOtp();
@@ -216,6 +227,11 @@ export class AuthService implements IAuthService {
       expiresAt
     );
 
+    await sendEmail(
+      email,
+      "Your OTP Code",
+      `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`
+    );
     // console
     console.log(`MOCK EMAIL Password Reset OTP for ${email} is: ${otp}`);
   }
