@@ -18,9 +18,13 @@ const ResetPassword: React.FC = () => {
   const email = state?.email || '';
   const otp = state?.otp || '';
 
+  const [isValid, setIsValid] = useState(false);
+
   React.useEffect(() => {
     if (!state?.email || state?.isOtpVerified !== true) {
-      navigate('/login');
+      navigate('/login', { replace: true });
+    } else {
+      setIsValid(true);
     }
   }, [state, navigate]);
 
@@ -52,7 +56,7 @@ const ResetPassword: React.FC = () => {
     setIsSubmitting(true);
     authService.resetPassword({ email, otp, newPassword: formData.password })
       .then(() => {
-        navigate('/login');
+        navigate('/login', { replace: true });
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
@@ -62,6 +66,8 @@ const ResetPassword: React.FC = () => {
         setIsSubmitting(false);
       });
   };
+
+  if (!isValid) return null;
 
   return (
     <div className="min-h-screen flex flex-col pt-12">
@@ -94,7 +100,6 @@ const ResetPassword: React.FC = () => {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder="........"
-                        required
                     />
 
                     <InputField
@@ -103,7 +108,6 @@ const ResetPassword: React.FC = () => {
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                         placeholder="........"
-                        required
                     />
 
                     {/* Password Requirements Hint Box */}

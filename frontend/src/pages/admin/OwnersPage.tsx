@@ -71,6 +71,11 @@ const OwnersPage: React.FC = () => {
   };
 
   const handleSuspendToggle = async (id: string) => {
+    const owner = owners.find(o => o._id === id);
+    const action = owner?.status === 'suspended' ? 'unsuspend' : 'suspend';
+    const isConfirmed = window.confirm(`Are you sure you want to ${action} this user?`);
+    if (!isConfirmed) return;
+
     try {
       await adminService.suspendUser(id);
       setOwners((prev) =>

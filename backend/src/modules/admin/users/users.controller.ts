@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { IAdminUsersService } from "./users.service";
 import { HttpStatus } from "../../../utils/http-status.enum";
+import { MESSAGES } from "../../../constants/messages";
+import { ApiResponse } from "../../../types/api-response.type";
+import { toUserResponse } from "../../../mappers/user.mapper";
+import { IUser } from "../../../interfaces/user.interface";
 
 export class AdminUsersController {
   constructor(private _usersService: IAdminUsersService) {}
@@ -13,11 +17,21 @@ export class AdminUsersController {
       const search = req.query.search as string | undefined;
 
       const result = await this._usersService.getPaginatedUsers(role, page, limit, search);
+      const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
-      res.status(HttpStatus.OK).json(result);
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.USERS_FETCHED,
+        data: {
+          ...result,
+          users: mappedUsers
+        }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to fetch users";
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.SERVER_ERROR;
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message });
     }
   }
 
@@ -28,11 +42,21 @@ export class AdminUsersController {
       const search = req.query.search as string | undefined;
 
       const result = await this._usersService.getPaginatedUsers("owner", page, limit, search);
+      const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
-      res.status(HttpStatus.OK).json(result);
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.USERS_FETCHED,
+        data: {
+          ...result,
+          users: mappedUsers
+        }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to fetch owners";
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.SERVER_ERROR;
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message });
     }
   }
 
@@ -43,11 +67,21 @@ export class AdminUsersController {
       const search = req.query.search as string | undefined;
 
       const result = await this._usersService.getPaginatedUsers("worker", page, limit, search);
+      const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
-      res.status(HttpStatus.OK).json(result);
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.USERS_FETCHED,
+        data: {
+          ...result,
+          users: mappedUsers
+        }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to fetch workers";
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.SERVER_ERROR;
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message });
     }
   }
 
@@ -55,10 +89,17 @@ export class AdminUsersController {
     try {
       const { id } = req.params;
       const user = await this._usersService.getUserDetails(id);
-      res.status(HttpStatus.OK).json({ user });
+      
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.DETAILS_FETCHED,
+        data: { user: toUserResponse(user as IUser) }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "User not found";
-      res.status(HttpStatus.NOT_FOUND).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.USER_NOT_FOUND;
+      res.status(HttpStatus.NOT_FOUND).json({ success: false, message });
     }
   }
 
@@ -66,10 +107,17 @@ export class AdminUsersController {
     try {
       const { id } = req.params;
       const updatedUser = await this._usersService.approveOwner(id);
-      res.status(HttpStatus.OK).json({ message: "Owner approved successfully", user: updatedUser });
+      
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.OWNER_APPROVED,
+        data: { user: toUserResponse(updatedUser) }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Approval failed";
-      res.status(HttpStatus.BAD_REQUEST).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.SERVER_ERROR;
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -77,11 +125,17 @@ export class AdminUsersController {
     try {
       const { id } = req.params;
       const updatedUser = await this._usersService.toggleUserSuspension(id);
-      const status = updatedUser.isSuspended ? "suspended" : "unsuspended";
-      res.status(HttpStatus.OK).json({ message: `User ${status} successfully`, user: updatedUser });
+      
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.USER_STATUS_UPDATED,
+        data: { user: toUserResponse(updatedUser) }
+      };
+
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Toggle suspension failed";
-      res.status(HttpStatus.BAD_REQUEST).json({ error: message });
+      const message = error instanceof Error ? error.message : MESSAGES.SERVER_ERROR;
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 }

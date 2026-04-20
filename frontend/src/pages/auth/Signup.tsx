@@ -76,6 +76,12 @@ const Signup: React.FC = () => {
       return;
     }
 
+    const strongRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/;
+    if (!strongRegex.test(formData.password)) {
+        setError('Password does not meet the security requirements. Must be at least 8 characters, include a number and a special character.');
+        return;
+    }
+
     const payload = {
       name: formData.fullName,
       email: formData.email,
@@ -90,12 +96,13 @@ const Signup: React.FC = () => {
           state: { 
             email: formData.email, 
             type: 'registration' 
-          } 
+          },
+          replace:true
         });
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
-        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Failed to send OTP. Please try again.');
+        setError(axiosErr.response?.data?.error || 'Failed to send OTP. Please try again.');
       })
       .finally(() => {
         setIsSubmitting(false);
@@ -170,8 +177,7 @@ const Signup: React.FC = () => {
             type="text"
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            placeholder="Enter your full name"
-            required
+            placeholder="Enter your full name" 
           />
 
           <InputField
@@ -180,7 +186,6 @@ const Signup: React.FC = () => {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="name@company.com"
-            required
           />
 
           <InputField
@@ -189,7 +194,6 @@ const Signup: React.FC = () => {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             placeholder="Min. 8 characters"
-            required
           />
 
           <InputField
@@ -198,7 +202,6 @@ const Signup: React.FC = () => {
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             placeholder="Min. 8 characters"
-            required
           />
 
           <div className="pt-2">

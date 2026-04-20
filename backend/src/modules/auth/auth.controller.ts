@@ -3,19 +3,22 @@ import { IAuthService } from "./auth.service";
 import { IUser } from "../../interfaces/user.interface";
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../../utils/cookie";
 import { HttpStatus } from "../../utils/http-status.enum";
+import { toUserResponse } from "../../mappers/user.mapper";
+import { MESSAGES } from "../../constants/messages";
+import { ApiResponse } from "../../types/api-response.type";
 
 /** Helper to extract a message from an unknown caught value */
 const errMsg = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
 /** Strips password and internal fields before sending to client */
-const toUserResponse = (user: IUser) => ({
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  isApproved: user.isApproved,
-  isProfileCompleted: user.isProfileCompleted,
-});
+// const toUserResponse = (user: IUser) => ({
+//   name: user.name,
+//   email: user.email,
+//   role: user.role,
+//   isApproved: user.isApproved,
+//   isProfileCompleted: user.isProfileCompleted,
+// });
 
 export class AuthController {
   constructor(private _authService: IAuthService) {}
@@ -25,15 +28,20 @@ export class AuthController {
       const { name, email, password, role } = req.body;
 
       if (!name || !email || !password || !role) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "All fields are required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "All fields are required" });
         return;
       }
 
       await this._authService.sendRegistrationOtp({ name, email, password, role });
 
-      res.status(HttpStatus.OK).json({ message: `OTP sent successfully to ${email}` });
+      const response: ApiResponse = {
+        success: true,
+        message: `${MESSAGES.OTP_SENT} to ${email}`,
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "Failed to initiate signup") });
+      const message = errMsg(error, "Failed to initiate signup");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -42,12 +50,12 @@ export class AuthController {
       const { email, otp, type } = req.body;
 
       if (!email || !otp || !type) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Email, OTP and type are required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Email, OTP and type are required" });
         return;
       }
 
       if (type !== "registration" && type !== "password-reset") {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid OTP type" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Invalid OTP type" });
         return;
       }
 
@@ -55,15 +63,22 @@ export class AuthController {
 
       if (type === "registration") {
         const user = result as IUser;
-        res.status(HttpStatus.CREATED).json({
-          message: "User registered successfully",
-          user: toUserResponse(user),
-        });
+        const response: ApiResponse = {
+          success: true,
+          message: MESSAGES.USER_CREATED,
+          data: { user: toUserResponse(user) },
+        };
+        res.status(HttpStatus.CREATED).json(response);
       } else {
-        res.status(HttpStatus.OK).json({ message: "OTP verified successfully. Proceed to reset password." });
+        const response: ApiResponse = {
+          success: true,
+          message: "OTP verified successfully. Proceed to reset password.",
+        };
+        res.status(HttpStatus.OK).json(response);
       }
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "OTP verification failed") });
+      const message = errMsg(error, "OTP verification failed");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -72,20 +87,25 @@ export class AuthController {
       const { email, type } = req.body;
 
       if (!email || !type) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Email and type are required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Email and type are required" });
         return;
       }
 
       if (type !== "registration" && type !== "password-reset") {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid OTP type" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Invalid OTP type" });
         return;
       }
 
       await this._authService.resendOtp(email, type);
 
-      res.status(HttpStatus.OK).json({ message: `New OTP sent successfully to ${email}` });
+      const response: ApiResponse = {
+        success: true,
+        message: `New OTP sent successfully to ${email}`,
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "Failed to resend OTP") });
+      const message = errMsg(error, "Failed to resend OTP");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -94,7 +114,7 @@ export class AuthController {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Email and password are required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Email and password are required" });
         return;
       }
 
@@ -102,13 +122,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, refreshToken);
 
-      res.status(HttpStatus.OK).json({
-        message: "Login successful",
-        accessToken,
-        user: toUserResponse(user),
-      });
+      const response: ApiResponse = {
+        success: true,
+        message: MESSAGES.LOGIN_SUCCESS,
+        data: { accessToken, user: toUserResponse(user) },
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "Login failed") });
+      const message = errMsg(error, "Login failed");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -117,7 +139,7 @@ export class AuthController {
       const { token, role } = req.body;
 
       if (!token) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Google token is required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Google token is required" });
         return;
       }
 
@@ -125,18 +147,19 @@ export class AuthController {
 
       setRefreshTokenCookie(res, refreshToken);
 
-      res.status(HttpStatus.OK).json({
+      const response: ApiResponse = {
+        success: true,
         message: "Google login successful",
-        accessToken,
-        user: toUserResponse(user),
-      });
+        data: { accessToken, user: toUserResponse(user) },
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
       const message = errMsg(error, "Google login failed");
       if (message === "Role must be selected before Google login.") {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: message, requiresRole: true });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message, data: { requiresRole: true } });
         return;
       }
-      res.status(HttpStatus.BAD_REQUEST).json({ error: message });
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -145,7 +168,7 @@ export class AuthController {
       const { refreshToken } = req.cookies;
 
       if (!refreshToken) {
-        res.status(HttpStatus.UNAUTHORIZED).json({ error: "No refresh token provided" });
+        res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: "No refresh token provided" });
         return;
       }
 
@@ -153,9 +176,15 @@ export class AuthController {
 
       setRefreshTokenCookie(res, tokens.refreshToken);
 
-      res.status(HttpStatus.OK).json({ accessToken: tokens.accessToken });
+      const response: ApiResponse = {
+        success: true,
+        message: "Token refreshed successfully",
+        data: { accessToken: tokens.accessToken },
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.FORBIDDEN).json({ error: errMsg(error, "Invalid refresh token") });
+      const message = errMsg(error, "Invalid refresh token");
+      res.status(HttpStatus.FORBIDDEN).json({ success: false, message });
     }
   }
 
@@ -164,15 +193,20 @@ export class AuthController {
       const { email } = req.body;
 
       if (!email) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Email is required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Email is required" });
         return;
       }
 
       await this._authService.forgotPassword(email);
 
-      res.status(HttpStatus.OK).json({ message: "If your email is registered, you will receive an OTP." });
+      const response: ApiResponse = {
+        success: true,
+        message: "If your email is registered, you will receive an OTP.",
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "Forgot password operation failed") });
+      const message = errMsg(error, "Forgot password operation failed");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
@@ -181,20 +215,29 @@ export class AuthController {
       const { email, otp, newPassword } = req.body;
 
       if (!email || !otp || !newPassword) {
-        res.status(HttpStatus.BAD_REQUEST).json({ error: "Email, OTP and new password are required" });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: "Email, OTP and new password are required" });
         return;
       }
 
       await this._authService.resetPassword(email, String(otp), newPassword);
 
-      res.status(HttpStatus.OK).json({ message: "Password reset successful" });
+      const response: ApiResponse = {
+        success: true,
+        message: "Password reset successful",
+      };
+      res.status(HttpStatus.OK).json(response);
     } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({ error: errMsg(error, "Reset password failed") });
+      const message = errMsg(error, "Reset password failed");
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   }
 
   public async logout(req: Request, res: Response): Promise<void> {
     clearRefreshTokenCookie(res);
-    res.status(HttpStatus.OK).json({ message: "Logged out successfully" });
+    const response: ApiResponse = {
+      success: true,
+      message: "Logged out successfully",
+    };
+    res.status(HttpStatus.OK).json(response);
   }
 }

@@ -118,7 +118,6 @@ const Login: React.FC = () => {
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="owner@Gigso.com"
-                        required
                     />
 
                     <div className="relative">
@@ -134,7 +133,6 @@ const Login: React.FC = () => {
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             placeholder="........"
-                            required
                         />
                     </div>
 

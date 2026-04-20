@@ -63,7 +63,7 @@ export class AuthService implements IAuthService {
       `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`
     );
     // console
-    console.log(`MOCK EMAIL Registration OTP for ${userData.email} is: ${otp}`);
+    console.log(`Registration OTP for ${userData.email} is: ${otp}`);
   }
 
   async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void> {
@@ -120,7 +120,7 @@ export class AuthService implements IAuthService {
       `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`    
     );
      // console
-    console.log(`MOCK EMAIL Resent ${type} OTP for ${email} is: ${otp}`);
+    console.log(`Resent ${type} OTP for ${email} is: ${otp}`);
   }
 
   async login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
@@ -233,7 +233,7 @@ export class AuthService implements IAuthService {
       `Your OTP is: ${otp}<br>This OTP will expire in 5 minutes`
     );
     // console
-    console.log(`MOCK EMAIL Password Reset OTP for ${email} is: ${otp}`);
+    console.log(`Password Reset OTP for ${email} is: ${otp}`);
   }
 
   async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {

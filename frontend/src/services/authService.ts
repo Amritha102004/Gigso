@@ -51,40 +51,46 @@ export interface ResetPasswordPayload {
   newPassword: string;
 }
 
+interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
 export const authService = {
   sendOtp: async (data: SignupPayload): Promise<SignupOtpResponse> => {
-    const response = await authApi.post<SignupOtpResponse>(AUTH_ROUTES.SIGNUP, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse>(AUTH_ROUTES.SIGNUP, data);
+    return { message: response.data.message };
   },
 
   verifyOtp: async (data: OtpPayload): Promise<VerifyOtpResponse> => {
-    const response = await authApi.post<VerifyOtpResponse>(AUTH_ROUTES.VERIFY_OTP, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse<{ user?: any }>>(AUTH_ROUTES.VERIFY_OTP, data);
+    return { message: response.data.message, user: response.data.data?.user };
   },
 
   resendOtp: async (data: ResendOtpPayload): Promise<SignupOtpResponse> => {
-    const response = await authApi.post<SignupOtpResponse>(AUTH_ROUTES.RESEND_OTP, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse>(AUTH_ROUTES.RESEND_OTP, data);
+    return { message: response.data.message };
   },
 
   login: async (data: LoginPayload): Promise<AuthResponse> => {
-    const response = await authApi.post<AuthResponse>(AUTH_ROUTES.LOGIN, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse<{ user: any; accessToken: string }>>(AUTH_ROUTES.LOGIN, data);
+    return { message: response.data.message, ...response.data.data! };
   },
 
   googleLogin: async (data: GoogleLoginPayload): Promise<AuthResponse> => {
-    const response = await authApi.post<AuthResponse>(AUTH_ROUTES.GOOGLE_LOGIN, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse<{ user: any; accessToken: string; requiresRole?: boolean }>>(AUTH_ROUTES.GOOGLE_LOGIN, data);
+    return { message: response.data.message, ...response.data.data! };
   },
 
   forgotPassword: async (data: ForgotPasswordPayload): Promise<SignupOtpResponse> => {
-    const response = await authApi.post<SignupOtpResponse>(AUTH_ROUTES.FORGOT_PASSWORD, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse>(AUTH_ROUTES.FORGOT_PASSWORD, data);
+    return { message: response.data.message };
   },
 
   resetPassword: async (data: ResetPasswordPayload): Promise<SignupOtpResponse> => {
-    const response = await authApi.post<SignupOtpResponse>(AUTH_ROUTES.RESET_PASSWORD, data);
-    return response.data;
+    const response = await authApi.post<ApiResponse>(AUTH_ROUTES.RESET_PASSWORD, data);
+    return { message: response.data.message };
   },
 };
 

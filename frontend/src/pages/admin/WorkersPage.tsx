@@ -54,6 +54,11 @@ const WorkersPage: React.FC = () => {
   }, [search, fetchWorkers]);
 
   const handleSuspendToggle = async (id: string) => {
+    const worker = workers.find(w => w._id === id);
+    const action = worker?.status === 'suspended' ? 'unsuspend' : 'suspend';
+    const isConfirmed = window.confirm(`Are you sure you want to ${action} this user?`);
+    if (!isConfirmed) return;
+
     try {
       await adminService.suspendUser(id);
       setWorkers((prev) =>

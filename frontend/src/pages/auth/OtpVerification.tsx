@@ -16,9 +16,13 @@ const OtpVerification: React.FC = () => {
   const email = state?.email || '';
   const type = state?.type || 'registration';
 
+  const [isValid, setIsValid] = useState(false);
+
   useEffect(() => {
     if (!state?.email || !state?.type) {
-      navigate('/login');
+      navigate('/login', { replace: true });
+    } else {
+      setIsValid(true);
     }
   }, [state, navigate]);
 
@@ -95,14 +99,15 @@ const OtpVerification: React.FC = () => {
       authService.verifyOtp({ email, otp: finalOtp, type })
         .then(() => {
           if (type === 'registration') {
-            navigate('/login');
+            navigate('/login', { replace: true });
           } else if (type === 'password-reset') {
             navigate('/reset-password', {
               state: {
                 email,
                 otp: finalOtp,
                 isOtpVerified: true
-              }
+              },
+              replace:true
             });
           }
         })
@@ -123,6 +128,8 @@ const OtpVerification: React.FC = () => {
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
+
+  if (!isValid) return null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative">
@@ -165,7 +172,6 @@ const OtpVerification: React.FC = () => {
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 onPaste={handlePaste}
                 className="w-12 h-14 text-center text-xl font-bold bg-white border border-gray-200 rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm hover:border-gray-300 transition-colors"
-                required
               />
             ))}
           </div>

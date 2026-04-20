@@ -26,7 +26,8 @@ const ForgotPassword: React.FC = () => {
           state: {
             email,
             type: 'password-reset'
-          }
+          },
+          replace:true
         });
       })
       .catch((err: unknown) => {
@@ -69,7 +70,6 @@ const ForgotPassword: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="name@company.com"
-                        required
                     />
 
                     <div className="pt-2">

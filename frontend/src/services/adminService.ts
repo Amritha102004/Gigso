@@ -24,27 +24,33 @@ export interface GetUsersParams {
   search?: string;
 }
 
+interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
 export const adminService = {
   getUsers: async (params: GetUsersParams): Promise<PaginatedUsersResponse> => {
-    const response = await adminApi.get<PaginatedUsersResponse>(ADMIN_ROUTES.USERS, { params });
-    return response.data;
+    const response = await adminApi.get<ApiResponse<PaginatedUsersResponse>>(ADMIN_ROUTES.USERS, { params });
+    return response.data.data!;
   },
 
   getUsersByRole: async (role: 'owner' | 'worker', params?: Omit<GetUsersParams, 'role'>): Promise<PaginatedUsersResponse> => {
-    const response = await adminApi.get<PaginatedUsersResponse>(ADMIN_ROUTES.USERS, {
+    const response = await adminApi.get<ApiResponse<PaginatedUsersResponse>>(ADMIN_ROUTES.USERS, {
       params: { role, ...params },
     });
-    return response.data;
+    return response.data.data!;
   },
 
   approveUser: async (userId: string): Promise<{ message: string; user: UserDTO }> => {
-    const response = await adminApi.patch<{ message: string; user: UserDTO }>(ADMIN_ROUTES.APPROVE_USER(userId));
-    return response.data;
+    const response = await adminApi.patch<ApiResponse<{ user: UserDTO }>>(ADMIN_ROUTES.APPROVE_USER(userId));
+    return { message: response.data.message, user: response.data.data!.user };
   },
 
   suspendUser: async (userId: string): Promise<{ message: string; user: UserDTO }> => {
-    const response = await adminApi.patch<{ message: string; user: UserDTO }>(ADMIN_ROUTES.SUSPEND_USER(userId));
-    return response.data;
+    const response = await adminApi.patch<ApiResponse<{ user: UserDTO }>>(ADMIN_ROUTES.SUSPEND_USER(userId));
+    return { message: response.data.message, user: response.data.data!.user };
   },
 };
 
