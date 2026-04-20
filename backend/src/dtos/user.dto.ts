@@ -1,7 +1,7 @@
 import { UserRole } from "../interfaces/user.interface";
 
 export interface UserResponseDTO {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: UserRole;
