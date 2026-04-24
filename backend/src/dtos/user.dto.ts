@@ -7,4 +7,7 @@ export interface UserResponseDTO {
   role: UserRole;
   isApproved: boolean;
   isSuspended: boolean;
+  isProfileCompleted: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -1,18 +1,18 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import RoleSelection from './pages/auth/RoleSelection';
-import Signup from './pages/auth/Signup';
-import Login from './pages/auth/Login';
-import OtpVerification from './pages/auth/OtpVerification';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
+import LandingPage from './features/user/pages/LandingPage';
+import RoleSelection from './features/auth/pages/RoleSelection';
+import Signup from './features/auth/pages/Signup';
+import Login from './features/auth/pages/Login';
+import OtpVerification from './features/auth/pages/OtpVerification';
+import ForgotPassword from './features/auth/pages/ForgotPassword';
+import ResetPassword from './features/auth/pages/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoute from './routes/AdminRoute';
-import AdminLayout from './components/admin/AdminLayout';
-import OwnersPage from './pages/admin/OwnersPage';
-import WorkersPage from './pages/admin/WorkersPage';
-import HomePage from './pages/user/HomePage';
+import AdminLayout from './features/admin/components/AdminLayout';
+import OwnersPage from './features/admin/pages/OwnersPage';
+import WorkersPage from './features/admin/pages/WorkersPage';
+import HomePage from './features/user/pages/HomePage';
 
 function App() {
   return (

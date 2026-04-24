@@ -9,5 +9,8 @@ export const toUserResponse = (user: IUser): UserResponseDTO => {
     role: user.role,
     isApproved: user.isApproved,
     isSuspended: user.isSuspended,
+    isProfileCompleted: user.isProfileCompleted,
+    createdAt: user.createdAt?.toISOString(),
+    updatedAt: user.updatedAt?.toISOString(),
   };
 };

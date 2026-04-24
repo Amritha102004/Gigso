@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
 import app from "./app";
+import { ENV } from "./config/env.config";
+import { connectDB } from "./config/db";
 
-mongoose.connect(process.env.MONGO_URI!)
-    .then(() => {
-        app.listen(process.env.PORT, () => {
-            console.log("Server running...");
-        });
-    });
+connectDB().then(() => {
+  app.listen(ENV.PORT, () => {
+    console.log(`Server running on port ${ENV.PORT}...`);
+  });
+});
