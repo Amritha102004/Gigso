@@ -39,7 +39,7 @@ export class AuthController {
     } else {
       const response: ApiResponse = {
         success: true,
-        message: "OTP verified successfully. Proceed to reset password.",
+        message: MESSAGES.OTP_VERIFY_SUCCESS,
       };
       res.status(HttpStatus.OK).json(response);
     }
@@ -52,7 +52,7 @@ export class AuthController {
 
     const response: ApiResponse = {
       success: true,
-      message: `New OTP sent successfully to ${email}`,
+      message: `${MESSAGES.OTP_RESEND_SUCCESS} to ${email}`,
     };
     res.status(HttpStatus.OK).json(response);
   });
@@ -82,12 +82,12 @@ export class AuthController {
 
       const response: ApiResponse = {
         success: true,
-        message: "Google login successful",
+        message: MESSAGES.GOOGLE_LOGIN_SUCCESS,
         data: { accessToken, user: toUserResponse(user) },
       };
       res.status(HttpStatus.OK).json(response);
     } catch (error: any) {
-      if (error.message === "Role must be selected before Google login.") {
+      if (error.message === MESSAGES.ROLE_REQUIRED) {
         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: error.message, data: { requiresRole: true } });
         return;
       }
@@ -99,7 +99,7 @@ export class AuthController {
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
-      res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: "No refresh token provided" });
+      res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: MESSAGES.NO_REFRESH_TOKEN });
       return;
     }
 
@@ -109,7 +109,7 @@ export class AuthController {
 
     const response: ApiResponse = {
       success: true,
-      message: "Token refreshed successfully",
+      message: MESSAGES.TOKEN_REFRESHED,
       data: { accessToken: tokens.accessToken },
     };
     res.status(HttpStatus.OK).json(response);
@@ -122,7 +122,7 @@ export class AuthController {
 
     const response: ApiResponse = {
       success: true,
-      message: "If your email is registered, you will receive an OTP.",
+      message: MESSAGES.FORGOT_PASSWORD_SENT,
     };
     res.status(HttpStatus.OK).json(response);
   });
@@ -134,7 +134,7 @@ export class AuthController {
 
     const response: ApiResponse = {
       success: true,
-      message: "Password reset successful",
+      message: MESSAGES.PASSWORD_RESET_SUCCESS,
     };
     res.status(HttpStatus.OK).json(response);
   });
@@ -143,7 +143,7 @@ export class AuthController {
     clearRefreshTokenCookie(res);
     const response: ApiResponse = {
       success: true,
-      message: "Logged out successfully",
+      message: MESSAGES.LOGOUT_SUCCESS,
     };
     res.status(HttpStatus.OK).json(response);
   });

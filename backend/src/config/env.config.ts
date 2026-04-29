@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
 export const ENV = {
@@ -7,6 +6,9 @@ export const ENV = {
   MONGO_URI: process.env.MONGO_URI || "",
   JWT_SECRET: process.env.JWT_SECRET || "access_secret_dev",
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "refresh_secret_dev",
+  JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || "15m",
+  JWT_REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY || "7d",
+  REFRESH_TOKEN_MAX_AGE_DAYS: parseInt(process.env.REFRESH_TOKEN_MAX_AGE_DAYS || "7", 10),
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   NODEMAILER_EMAIL: process.env.NODEMAILER_EMAIL || "",
   NODEMAILER_PASSWORD: process.env.NODEMAILER_PASSWORD || "",
