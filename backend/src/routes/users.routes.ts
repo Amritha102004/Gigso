@@ -1,25 +1,19 @@
 import { Router } from "express";
-import { UserRepository } from "../repositories/user.repository";
-import { UsersService } from "../services/users.service";
-import { AdminUsersController } from "../controllers/users.controller";
+import { adminUsersController } from "../config/container";
 import { authenticateJWT } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/role.middleware";
 
 const router = Router();
 
-const usersRepository = new UserRepository();
-const usersService = new UsersService(usersRepository);
-const usersController = new AdminUsersController(usersService);
-
 router.use(authenticateJWT);
 router.use(authorizeRoles("admin"));
 
-router.get("/users", usersController.getAllUsers.bind(usersController));
-router.get("/owners", usersController.getOwners.bind(usersController));
-router.get("/workers", usersController.getWorkers.bind(usersController));
-router.get("/users/:id", usersController.getUserById.bind(usersController));
+router.get("/users", adminUsersController.getAllUsers.bind(adminUsersController));
+router.get("/owners", adminUsersController.getOwners.bind(adminUsersController));
+router.get("/workers", adminUsersController.getWorkers.bind(adminUsersController));
+router.get("/users/:id", adminUsersController.getUserById.bind(adminUsersController));
 
-router.patch("/users/:id/approve", usersController.approveOwner.bind(usersController));
-router.patch("/users/:id/suspend", usersController.toggleSuspendUser.bind(usersController));
+router.patch("/users/:id/approve", adminUsersController.approveOwner.bind(adminUsersController));
+router.patch("/users/:id/suspend", adminUsersController.toggleSuspendUser.bind(adminUsersController));
 
 export const adminUserRoutes = router;
