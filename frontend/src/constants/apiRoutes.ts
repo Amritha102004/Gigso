@@ -16,3 +16,10 @@ export const ADMIN_ROUTES = {
   APPROVE_USER:   (id: string) => `/admin/users/${id}/approve`,
   SUSPEND_USER:   (id: string) => `/admin/users/${id}/suspend`,
 } as const;
+
+export const PROFILE_ROUTES = {
+  WORKER_SETUP: '/profile/worker/setup',
+  OWNER_SETUP:  '/profile/owner/setup',
+  WORKER_ME:    '/profile/worker/me',
+  OWNER_ME:     '/profile/owner/me',
+} as const;

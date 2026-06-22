@@ -13,6 +13,8 @@ import AdminLayout from './features/admin/components/AdminLayout';
 import OwnersPage from './features/admin/pages/OwnersPage';
 import WorkersPage from './features/admin/pages/WorkersPage';
 import HomePage from './features/user/pages/HomePage';
+import SetupWorkerProfile from './features/worker/pages/SetupWorkerProfile';
+import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
 
 function App() {
   return (
@@ -35,7 +37,15 @@ function App() {
             </Route>
           </Route>
 
-          <Route path="/home" element={<ProtectedRoute />}>
+          <Route path="/setup-worker-profile" element={<ProtectedRoute />}>
+            <Route index element={<SetupWorkerProfile />} />
+          </Route>
+          
+          <Route path="/setup-owner-profile" element={<ProtectedRoute />}>
+            <Route index element={<SetupOwnerProfile />} />
+          </Route>
+
+          <Route path="/home" element={<ProtectedRoute requireProfile={true} />}>
              <Route index element={<HomePage />} />
           </Route>
         </Routes>

@@ -1,8 +1,12 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import React from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute: React.FC = () => {
+interface ProtectedRouteProps {
+  requireProfile?: boolean;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireProfile = false }) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -16,7 +20,21 @@ const ProtectedRoute: React.FC = () => {
     );
   }
 
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (requireProfile && !user.isProfileCompleted && user.role !== 'admin') {
+    if (user.role === 'worker') {
+      return <Navigate to="/setup-worker-profile" replace />;
+    } else if (user.role === 'owner') {
+      return <Navigate to="/setup-owner-profile" replace />;
+    }
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
