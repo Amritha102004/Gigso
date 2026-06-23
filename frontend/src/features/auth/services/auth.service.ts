@@ -13,6 +13,14 @@ const authApi = axios.create({
   withCredentials: true,
 });
 
+authApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
 export interface SignupPayload {
   name: string;
   email: string;
@@ -90,6 +98,11 @@ export const authService = {
 
   resetPassword: async (data: ResetPasswordPayload): Promise<SignupOtpResponse> => {
     const response = await authApi.post<ApiResponse>(AUTH_ROUTES.RESET_PASSWORD, data);
+    return { message: response.data.message };
+  },
+
+  changePassword: async (data: any): Promise<SignupOtpResponse> => {
+    const response = await authApi.post<ApiResponse>(AUTH_ROUTES.CHANGE_PASSWORD, data);
     return { message: response.data.message };
   },
 };

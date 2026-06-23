@@ -20,11 +20,6 @@ const SetupOwnerProfile: React.FC = () => {
     e.preventDefault();
     setError('');
     
-    if (!businessName || !industry || !companySize || !description || !location) {
-      setError('Please fill out all required fields.');
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await profileService.setupOwnerProfile({
@@ -42,7 +37,7 @@ const SetupOwnerProfile: React.FC = () => {
         loginState(result.data.user, token);
       }
       
-      navigate('/home');
+      navigate('/owner/profile');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to setup profile');
     } finally {
@@ -78,7 +73,6 @@ const SetupOwnerProfile: React.FC = () => {
                 <input
                   id="businessName"
                   type="text"
-                  required
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -95,7 +89,6 @@ const SetupOwnerProfile: React.FC = () => {
                   <input
                     id="industry"
                     type="text"
-                    required
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     placeholder="e.g. Technology"
@@ -110,7 +103,6 @@ const SetupOwnerProfile: React.FC = () => {
                 <div className="mt-2">
                   <select
                     id="companySize"
-                    required
                     value={companySize}
                     onChange={(e) => setCompanySize(e.target.value)}
                     className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -149,7 +141,6 @@ const SetupOwnerProfile: React.FC = () => {
                 <input
                   id="location"
                   type="text"
-                  required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -165,7 +156,6 @@ const SetupOwnerProfile: React.FC = () => {
                 <textarea
                   id="description"
                   rows={3}
-                  required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"

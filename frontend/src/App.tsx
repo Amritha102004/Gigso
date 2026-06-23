@@ -15,6 +15,10 @@ import WorkersPage from './features/admin/pages/WorkersPage';
 import HomePage from './features/user/pages/HomePage';
 import SetupWorkerProfile from './features/worker/pages/SetupWorkerProfile';
 import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
+import WorkerLayout from './features/worker/components/WorkerLayout';
+import WorkerProfilePage from './features/worker/pages/WorkerProfilePage';
+import OwnerLayout from './features/owner/components/OwnerLayout';
+import OwnerProfilePage from './features/owner/pages/OwnerProfilePage';
 
 function App() {
   return (
@@ -47,6 +51,22 @@ function App() {
 
           <Route path="/home" element={<ProtectedRoute requireProfile={true} />}>
              <Route index element={<HomePage />} />
+          </Route>
+
+          {/* Worker Pathways */}
+          <Route path="/worker" element={<ProtectedRoute requireProfile={true} />}>
+            <Route element={<WorkerLayout />}>
+              {/* Other worker routes will go here later */}
+              <Route path="profile" element={<WorkerProfilePage />} />
+            </Route>
+          </Route>
+
+          {/* Owner Pathways */}
+          <Route path="/owner" element={<ProtectedRoute requireProfile={true} />}>
+            <Route element={<OwnerLayout />}>
+              {/* Other owner routes will go here later */}
+              <Route path="profile" element={<OwnerProfilePage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

@@ -8,6 +8,7 @@ export const AUTH_ROUTES = {
   RESET_PASSWORD: '/auth/reset-password',
   LOGOUT:         '/auth/logout',
   REFRESH_TOKEN:  '/auth/refresh-token',
+  CHANGE_PASSWORD:'/auth/change-password',
 } as const;
 
 export const ADMIN_ROUTES = {

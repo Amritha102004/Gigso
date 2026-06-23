@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware";
 import { IAuthService } from "../interfaces/services/auth.service.interface";
 import { IUser } from "../interfaces/user.interface";
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../utils/cookie";
@@ -144,6 +145,19 @@ export class AuthController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.LOGOUT_SUCCESS,
+    };
+    res.status(HttpStatus.OK).json(response);
+  });
+
+  public changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user._id.toString();
+
+    await this._authService.changePassword(userId, oldPassword, newPassword);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Password changed successfully",
     };
     res.status(HttpStatus.OK).json(response);
   });

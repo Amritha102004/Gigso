@@ -230,4 +230,23 @@ export class AuthService implements IAuthService {
 
     await this._otpRepo.deleteOtp(email, "password-reset");
   }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this._authRepo.findById(userId);
+    if (!user) {
+      throw new Error(MESSAGES.USER_NOT_FOUND);
+    }
+
+    const isValidPassword = await passwordHashService.compare(oldPassword, user.password);
+    if (!isValidPassword) {
+      throw new Error(MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    const hashedPassword = await passwordHashService.hash(newPassword);
+    const updatedUser = await this._authRepo.updateUserPassword(user.email, hashedPassword);
+
+    if (!updatedUser) {
+      throw new Error(MESSAGES.USER_NOT_FOUND);
+    }
+  }
 }

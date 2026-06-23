@@ -9,4 +9,5 @@ export interface IAuthService {
   forgotPassword(email: string): Promise<void>;
   resetPassword(email: string, otp: string, newPassword: string): Promise<void>;
   googleLogin(token: string, role?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }>;
+  changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void>;
 }

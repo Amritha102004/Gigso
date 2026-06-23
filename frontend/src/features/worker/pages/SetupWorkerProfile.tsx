@@ -22,15 +22,6 @@ const SetupWorkerProfile: React.FC = () => {
     const skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
     const portfolio = portfolioStr.split(',').map(s => s.trim()).filter(Boolean);
 
-    if (skills.length === 0) {
-      setError('At least one skill is required.');
-      return;
-    }
-    if (!age || age < 18) {
-      setError('You must be at least 18 years old.');
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await profileService.setupWorkerProfile({
@@ -47,7 +38,7 @@ const SetupWorkerProfile: React.FC = () => {
         loginState(result.data.user, token);
       }
       
-      navigate('/home');
+      navigate('/worker/profile');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to setup profile');
     } finally {
@@ -83,7 +74,6 @@ const SetupWorkerProfile: React.FC = () => {
                 <input
                   id="skills"
                   type="text"
-                  required
                   value={skillsStr}
                   onChange={(e) => setSkillsStr(e.target.value)}
                   placeholder="React, Node.js, Design"
@@ -117,7 +107,6 @@ const SetupWorkerProfile: React.FC = () => {
                   <input
                     id="age"
                     type="number"
-                    required
                     value={age}
                     onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
                     className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -132,7 +121,6 @@ const SetupWorkerProfile: React.FC = () => {
                   <input
                     id="location"
                     type="text"
-                    required
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -149,7 +137,6 @@ const SetupWorkerProfile: React.FC = () => {
                 <textarea
                   id="bio"
                   rows={3}
-                  required
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"

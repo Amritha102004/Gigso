@@ -34,8 +34,10 @@ const Login: React.FC = () => {
         loginState(res.user, res.accessToken);
         if (res.user.role === 'admin') {
           navigate('/admin/owners');
+        } else if (res.user.role === 'worker') {
+          navigate('/worker/profile');
         } else {
-          navigate('/home');
+          navigate('/owner/profile');
         }
       })
       .catch((err: unknown) => {
@@ -70,8 +72,10 @@ const Login: React.FC = () => {
         loginState(res.user, res.accessToken);
         if (res.user.role === 'admin') {
           navigate('/admin/owners');
+        } else if (res.user.role === 'worker') {
+          navigate('/worker/profile');
         } else {
-          navigate('/home');
+          navigate('/owner/profile');
         }
       })
       .catch((err: unknown) => {

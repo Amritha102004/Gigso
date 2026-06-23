@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware";
 import { IProfileService } from "../interfaces/services/profile.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { MESSAGES } from "../constants/messages";
@@ -9,7 +10,7 @@ import { toUserResponse } from "../mappers/user.mapper";
 export class ProfileController {
   constructor(private _profileService: IProfileService) {}
 
-  public setupWorkerProfile = asyncHandler(async (req: Request, res: Response) => {
+  public setupWorkerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user._id.toString();
     const profileData = req.body;
 
@@ -24,7 +25,7 @@ export class ProfileController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public setupOwnerProfile = asyncHandler(async (req: Request, res: Response) => {
+  public setupOwnerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user._id.toString();
     const profileData = req.body;
 
@@ -39,7 +40,7 @@ export class ProfileController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getWorkerProfile = asyncHandler(async (req: Request, res: Response) => {
+  public getWorkerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user._id.toString();
     const profile = await this._profileService.getWorkerProfile(userId);
 
@@ -52,7 +53,7 @@ export class ProfileController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getOwnerProfile = asyncHandler(async (req: Request, res: Response) => {
+  public getOwnerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user._id.toString();
     const profile = await this._profileService.getOwnerProfile(userId);
 
