@@ -4,6 +4,7 @@ import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
 import { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { toCategoryDTO } from "../../mappers/category.mapper";
 
 export class AdminCategoryController {
   constructor(private _categoryService: IAdminCategoryService) {}
@@ -23,11 +24,17 @@ export class AdminCategoryController {
 
     const result = await this._categoryService.getCategories(filter, page, limit);
     const totalPages = Math.ceil(result.total / limit);
+    const mappedCategories = result.categories.map(toCategoryDTO);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.CATEGORIES_FETCHED,
-      data: { ...result, page, totalPages },
+      data: {
+        categories: mappedCategories,
+        total: result.total,
+        page,
+        totalPages
+      },
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -40,7 +47,7 @@ export class AdminCategoryController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.CATEGORIES_FETCHED,
-      data: { category },
+      data: { category: toCategoryDTO(category) },
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -53,7 +60,7 @@ export class AdminCategoryController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.CATEGORY_CREATED,
-      data: { category },
+      data: { category: toCategoryDTO(category) },
     };
 
     res.status(HttpStatus.CREATED).json(response);
@@ -67,7 +74,7 @@ export class AdminCategoryController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.CATEGORY_UPDATED,
-      data: { category },
+      data: { category: toCategoryDTO(category) },
     };
 
     res.status(HttpStatus.OK).json(response);
