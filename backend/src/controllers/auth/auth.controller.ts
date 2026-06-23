@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
-import { IAuthService } from "../interfaces/services/auth.service.interface";
-import { IUser } from "../interfaces/user.interface";
-import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../utils/cookie";
-import { HttpStatus } from "../utils/http-status.enum";
-import { toUserResponse } from "../mappers/user.mapper";
-import { MESSAGES } from "../constants/messages";
-import { ApiResponse } from "../types/api-response.type";
-import { asyncHandler } from "../utils/asyncHandler";
+import { AuthRequest } from "../../middlewares/auth.middleware";
+import { IAuthService } from "../../interfaces/services/auth/auth.service.interface";
+import { IUser } from "../../interfaces/user.interface";
+import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../../utils/cookie";
+import { HttpStatus } from "../../utils/http-status.enum";
+import { toUserResponse } from "../../mappers/user.mapper";
+import { MESSAGES } from "../../constants/messages";
+import { ApiResponse } from "../../types/api-response.type";
+import { asyncHandler } from "../../utils/asyncHandler";
 
 export class AuthController {
   constructor(private _authService: IAuthService) {}

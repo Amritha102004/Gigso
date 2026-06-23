@@ -19,8 +19,8 @@ export const ADMIN_ROUTES = {
 } as const;
 
 export const PROFILE_ROUTES = {
-  WORKER_SETUP: '/profile/worker/setup',
-  OWNER_SETUP:  '/profile/owner/setup',
-  WORKER_ME:    '/profile/worker/me',
-  OWNER_ME:     '/profile/owner/me',
+  WORKER_SETUP: '/worker/profile/setup',
+  OWNER_SETUP:  '/owner/profile/setup',
+  WORKER_ME:    '/worker/profile/me',
+  OWNER_ME:     '/owner/profile/me',
 } as const;

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { adminUsersController } from "../config/container";
-import { authenticateJWT } from "../middlewares/auth.middleware";
-import { authorizeRoles } from "../middlewares/role.middleware";
+import { adminUsersController } from "../../config/container";
+import { authenticateJWT } from "../../middlewares/auth.middleware";
+import { authorizeRoles } from "../../middlewares/role.middleware";
 
 const router = Router();
 

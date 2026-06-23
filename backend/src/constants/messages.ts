@@ -26,6 +26,12 @@ export const MESSAGES = {
   PASSWORD_RESET_SUCCESS: "Password reset successful",
   FORGOT_PASSWORD_SENT: "If your email is registered, you will receive an OTP.",
 
+  // Profile
+  WORKER_PROFILE_SETUP: "Worker profile setup successfully",
+  WORKER_PROFILE_FETCHED: "Worker profile fetched successfully",
+  OWNER_PROFILE_SETUP: "Owner profile setup successfully",
+  OWNER_PROFILE_FETCHED: "Owner profile fetched successfully",
+
   // Admin
   USERS_FETCHED: "Users fetched successfully",
   DETAILS_FETCHED: "Details fetched successfully",

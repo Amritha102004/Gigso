@@ -1,12 +1,19 @@
 import { Router } from "express";
-import { authController } from "../config/container";
-
-import { validate } from "../middlewares/validate.middleware";
-import { authenticateJWT } from "../middlewares/auth.middleware";
-import { signupSchema, loginSchema, verifyOtpSchema, resendOtpSchema, googleLoginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validations/auth.validation";
+import { authController } from "../../config/container";
+import { validate } from "../../middlewares/validate.middleware";
+import { authenticateJWT } from "../../middlewares/auth.middleware";
+import {
+  signupSchema,
+  loginSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
+  googleLoginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+} from "../../validations/auth/auth.validation";
 
 const router = Router();
-
 
 router.post("/signup", validate(signupSchema), authController.signup);
 router.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);

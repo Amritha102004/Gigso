@@ -1,12 +1,12 @@
-import { IUserRepository } from "../interfaces/repositories/user.repository.interface";
-import { IUsersService } from "../interfaces/services/users.service.interface";
-import { UserFilter } from "../interfaces/repositories/user.repository.interface";
-import { IUser } from "../interfaces/user.interface";
+import { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
+import { IUsersService } from "../../interfaces/services/admin/users.service.interface";
+import { UserFilter } from "../../interfaces/repositories/user.repository.interface";
+import { IUser } from "../../interfaces/user.interface";
 
 export class UsersService implements IUsersService {
   constructor(private _usersRepo: IUserRepository) {}
 
-  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: IUser[], total: number }> {
+  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: IUser[]; total: number }> {
     const skip = (page - 1) * limit;
     return this._usersRepo.findUsers(filter, skip, limit);
   }
@@ -32,14 +32,14 @@ export class UsersService implements IUsersService {
     if (!user) {
       throw new Error("User not found");
     }
-    
-    if (user.role !== 'owner') {
+
+    if (user.role !== "owner") {
       throw new Error("Only owners can be approved");
     }
 
     const updatedUser = await this._usersRepo.updateUser(id, { isApproved: true });
     if (!updatedUser) {
-        throw new Error("User not found during update");
+      throw new Error("User not found during update");
     }
     return updatedUser;
   }
