@@ -44,4 +44,17 @@ export const MESSAGES = {
 
   // Server
   SERVER_ERROR: "Internal server error",
+
+  // Gig Module
+  GIG_CREATED: "Gig created successfully",
+  GIG_FETCHED: "Gig fetched successfully",
+  GIGS_FETCHED: "Gigs fetched successfully",
+  GIG_UPDATED: "Gig updated successfully",
+  GIG_DELETED: "Gig deleted successfully",
+  GIG_PUBLISHED: "Gig published successfully",
+  GIG_COMPLETED: "Gig marked as completed successfully",
+  CATEGORIES_FETCHED: "Categories fetched successfully",
+  NOT_APPROVED: "Owner account is not approved to perform this action",
+  GIG_NOT_FOUND: "Gig not found",
+  UNAUTHORIZED_GIG_ACCESS: "Unauthorized access to this gig",
 };

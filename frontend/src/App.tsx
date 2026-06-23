@@ -21,6 +21,10 @@ import WorkerDashboard from './features/worker/pages/WorkerDashboard';
 import OwnerLayout from './features/owner/components/OwnerLayout';
 import OwnerProfilePage from './features/owner/pages/OwnerProfilePage';
 import OwnerDashboard from './features/owner/pages/OwnerDashboard';
+import GigsPage from './features/owner/pages/GigsPage';
+import CreateGigPage from './features/owner/pages/CreateGigPage';
+import ViewGigPage from './features/owner/pages/ViewGigPage';
+import EditGigPage from './features/owner/pages/EditGigPage';
 
 function App() {
   return (
@@ -68,6 +72,10 @@ function App() {
             <Route element={<OwnerLayout />}>
               <Route path="dashboard" element={<OwnerDashboard />} />
               <Route path="profile" element={<OwnerProfilePage />} />
+              <Route path="gigs" element={<GigsPage />} />
+              <Route path="gigs/create" element={<CreateGigPage />} />
+              <Route path="gigs/:gigId" element={<ViewGigPage />} />
+              <Route path="gigs/:gigId/edit" element={<EditGigPage />} />
             </Route>
           </Route>
         </Routes>

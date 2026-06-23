@@ -24,3 +24,12 @@ export const PROFILE_ROUTES = {
   WORKER_ME:    '/worker/profile/me',
   OWNER_ME:     '/owner/profile/me',
 } as const;
+
+export const GIG_ROUTES = {
+  OWNER_GIGS:        '/owner/gigs',
+  OWNER_GIG_BY_ID:   (id: string) => `/owner/gigs/${id}`,
+  OWNER_GIG_PUBLISH: (id: string) => `/owner/gigs/${id}/publish`,
+  OWNER_GIG_COMPLETE:(id: string) => `/owner/gigs/${id}/complete`,
+  CATEGORIES:        '/owner/gigs/categories',
+} as const;
+
