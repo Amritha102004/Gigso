@@ -3,6 +3,7 @@ import { ICategory, IGig, IGigRole } from "../gig.interface";
 
 export interface ICategoryRepository extends IBaseRepository<ICategory> {
   findAll(): Promise<ICategory[]>;
+  findCategories(filter: Record<string, unknown>, skip: number, limit: number): Promise<{ categories: ICategory[]; total: number }>;
 }
 
 export interface IGigRoleRepository extends IBaseRepository<IGigRole> {

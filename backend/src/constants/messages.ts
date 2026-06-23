@@ -57,4 +57,10 @@ export const MESSAGES = {
   NOT_APPROVED: "Owner account is not approved to perform this action",
   GIG_NOT_FOUND: "Gig not found",
   UNAUTHORIZED_GIG_ACCESS: "Unauthorized access to this gig",
+
+  // Admin Category Module
+  CATEGORY_CREATED: "Category created successfully",
+  CATEGORY_UPDATED: "Category updated successfully",
+  CATEGORY_DELETED: "Category deleted successfully",
+  CATEGORY_ALREADY_EXISTS: "Category name already exists",
 };

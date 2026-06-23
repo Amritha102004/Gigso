@@ -12,6 +12,8 @@ import AdminRoute from './routes/AdminRoute';
 import AdminLayout from './features/admin/components/AdminLayout';
 import OwnersPage from './features/admin/pages/OwnersPage';
 import WorkersPage from './features/admin/pages/WorkersPage';
+import CategoriesPage from './features/admin/pages/CategoriesPage';
+import AddCategoryPage from './features/admin/pages/AddCategoryPage';
 import HomePage from './features/user/pages/HomePage';
 import SetupWorkerProfile from './features/worker/pages/SetupWorkerProfile';
 import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
@@ -44,6 +46,9 @@ function App() {
             <Route element={<AdminLayout />}>
               <Route path="owners" element={<OwnersPage />} />
               <Route path="workers" element={<WorkersPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="categories/add" element={<AddCategoryPage />} />
+              <Route path="categories/:categoryId/edit" element={<AddCategoryPage />} />
             </Route>
           </Route>
 

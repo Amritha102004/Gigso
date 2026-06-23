@@ -57,6 +57,13 @@ export interface PaginatedUsersResponse {
   totalPages: number;
 }
 
+export interface PaginatedCategoriesResponse {
+  categories: CategoryDTO[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 // Signup, OTP response
 export interface SignupOtpResponse {
   message: string;

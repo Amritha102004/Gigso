@@ -14,6 +14,7 @@ import { WorkerProfileService } from "../services/worker/profile.service";
 import { OwnerProfileService } from "../services/owner/profile.service";
 import { UsersService } from "../services/admin/users.service";
 import { OwnerGigService } from "../services/owner/gig.service";
+import { AdminCategoryService } from "../services/admin/category.service";
 
 // Controllers
 import { AuthController } from "../controllers/auth/auth.controller";
@@ -21,6 +22,7 @@ import { WorkerProfileController } from "../controllers/worker/profile.controlle
 import { OwnerProfileController } from "../controllers/owner/profile.controller";
 import { AdminUsersController } from "../controllers/admin/users.controller";
 import { OwnerGigController } from "../controllers/owner/gig.controller";
+import { AdminCategoryController } from "../controllers/admin/category.controller";
 
 // Repositories
 export const userRepository = new UserRepository();
@@ -43,6 +45,7 @@ export const workerProfileService = new WorkerProfileService(userRepository, wor
 export const ownerProfileService = new OwnerProfileService(userRepository, ownerProfileRepository);
 export const usersService = new UsersService(userRepository);
 export const ownerGigService = new OwnerGigService(categoryRepository, gigRepository, gigRoleRepository);
+export const adminCategoryService = new AdminCategoryService(categoryRepository);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -50,3 +53,4 @@ export const workerProfileController = new WorkerProfileController(workerProfile
 export const ownerProfileController = new OwnerProfileController(ownerProfileService);
 export const adminUsersController = new AdminUsersController(usersService);
 export const ownerGigController = new OwnerGigController(ownerGigService);
+export const adminCategoryController = new AdminCategoryController(adminCategoryService);

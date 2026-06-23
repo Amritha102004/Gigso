@@ -9,6 +9,18 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
   }
 
   async findAll(): Promise<ICategory[]> {
-    return await CategoryModel.find().exec();
+    return await CategoryModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async findCategories(
+    filter: Record<string, unknown>,
+    skip: number,
+    limit: number
+  ): Promise<{ categories: ICategory[]; total: number }> {
+    const [categories, total] = await Promise.all([
+      CategoryModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      CategoryModel.countDocuments(filter),
+    ]);
+    return { categories, total };
   }
 }

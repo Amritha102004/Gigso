@@ -16,6 +16,8 @@ export const ADMIN_ROUTES = {
   USER_BY_ID:     (id: string) => `/admin/users/${id}`,
   APPROVE_USER:   (id: string) => `/admin/users/${id}/approve`,
   SUSPEND_USER:   (id: string) => `/admin/users/${id}/suspend`,
+  CATEGORIES:     '/admin/categories',
+  CATEGORY_BY_ID: (id: string) => `/admin/categories/${id}`,
 } as const;
 
 export const PROFILE_ROUTES = {
