@@ -9,7 +9,7 @@ export class WorkerProfileService implements IWorkerProfileService {
     private _workerProfileRepo: IWorkerProfileRepository
   ) {}
 
-  async setupWorkerProfile(userId: string, profileData: Partial<IWorkerProfile>): Promise<{ user: IUser; profile: IWorkerProfile }> {
+  async setupWorkerProfile(userId: string, profileData: Partial<IWorkerProfile> & { name?: string; phone?: string; profileImage?: string; }): Promise<{ user: IUser; profile: IWorkerProfile }> {
     const user = await this._userRepo.findById(userId);
     if (!user) {
       throw new Error("User not found");
@@ -19,9 +19,16 @@ export class WorkerProfileService implements IWorkerProfileService {
       throw new Error("Invalid role for worker profile setup");
     }
 
-    const profile = await this._workerProfileRepo.upsertProfile(userId, profileData);
+    const { name, phone, profileImage, ...workerProfileFields } = profileData;
 
-    const updatedUser = await this._userRepo.updateUser(userId, { isProfileCompleted: true });
+    const profile = await this._workerProfileRepo.upsertProfile(userId, workerProfileFields);
+
+    const userUpdate: any = { isProfileCompleted: true };
+    if (name !== undefined) userUpdate.name = name;
+    if (phone !== undefined) userUpdate.phone = phone;
+    if (profileImage !== undefined) userUpdate.profileImage = profileImage;
+
+    const updatedUser = await this._userRepo.updateUser(userId, userUpdate);
     if (!updatedUser) {
       throw new Error("Failed to update user profile status");
     }

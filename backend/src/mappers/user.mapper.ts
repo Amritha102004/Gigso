@@ -7,6 +7,8 @@ export const toUserResponse = (user: IUser): UserResponseDTO => {
     name: user.name,
     email: user.email,
     role: user.role,
+    phone: user.phone || undefined,
+    profileImage: user.profileImage || undefined,
     isApproved: user.isApproved,
     isSuspended: user.isSuspended,
     isProfileCompleted: user.isProfileCompleted,

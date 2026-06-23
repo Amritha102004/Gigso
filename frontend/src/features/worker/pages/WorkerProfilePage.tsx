@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import profileService from '../../user/services/profile.service';
-import type { WorkerProfilePayload } from '../../user/services/profile.service';
+import workerProfileService from '../services/profile.service';
+import type { WorkerProfileResponseDTO } from '../../../types/api.types';
 import authService from '../../auth/services/auth.service';
-import { MapPinIcon, PencilSquareIcon, StarIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon, PencilSquareIcon, StarIcon, CheckCircleIcon, PhoneIcon } from '@heroicons/react/24/solid';
 
 const WorkerProfilePage: React.FC = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<WorkerProfilePayload | null>(null);
+  const { user, loginState } = useAuth();
+  const [profile, setProfile] = useState<WorkerProfileResponseDTO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Edit states
+  const [workerName, setWorkerName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [skillsStr, setSkillsStr] = useState('');
   const [portfolioStr, setPortfolioStr] = useState('');
   const [age, setAge] = useState<number | ''>('');
@@ -32,14 +34,18 @@ const WorkerProfilePage: React.FC = () => {
 
   const fetchProfile = async () => {
     try {
-      const data = await profileService.getWorkerProfile();
+      const data = await workerProfileService.getWorkerProfile();
       if (data) {
         setProfile(data);
         setSkillsStr(data.skills.join(', '));
         setPortfolioStr(data.portfolio?.join(', ') || '');
-        setAge(data.age);
+        setAge(data.age || '');
         setBio(data.bio || '');
         setLocation(data.location || '');
+      }
+      if (user) {
+        setWorkerName(user.name || '');
+        setPhoneNumber(user.phone || '');
       }
     } catch (err) {
       console.error("Failed to load profile", err);
@@ -53,17 +59,31 @@ const WorkerProfilePage: React.FC = () => {
     setError('');
     setSuccess('');
     
+    if (!workerName.trim()) {
+      setError('Name is required');
+      return;
+    }
+
     const skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
     const portfolio = portfolioStr.split(',').map(s => s.trim()).filter(Boolean);
 
     try {
-      await profileService.setupWorkerProfile({
+      const result = await workerProfileService.setupWorkerProfile({
+        name: workerName,
+        phone: phoneNumber,
         skills,
         portfolio,
         age: Number(age),
         bio,
         location
       });
+
+      // Update local auth context
+      const token = localStorage.getItem('accessToken') || '';
+      if (result.data?.user) {
+        loginState(result.data.user, token);
+      }
+
       setSuccess('Profile updated successfully!');
       setIsEditing(false);
       fetchProfile();
@@ -119,8 +139,13 @@ const WorkerProfilePage: React.FC = () => {
                  {profile?.skills[0] ? `• ${profile.skills[0]} Specialist` : ''}
               </p>
               <p className="text-secondary mt-2 flex items-center gap-1 text-sm">
-                <MapPinIcon className="w-4 h-4" /> {profile?.location || 'No location set'}
+                <MapPinIcon className="w-4 h-4 text-gray-400" /> {profile?.location || 'No location set'}
               </p>
+              {user?.phone && (
+                <p className="text-secondary mt-1 flex items-center gap-1 text-sm">
+                  <PhoneIcon className="w-4 h-4 text-gray-400" /> {user.phone}
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -132,14 +157,14 @@ const WorkerProfilePage: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
             {/* About Me */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-textMain mb-4 flex items-center gap-2">
                  About Me
               </h2>
-              <p className="text-secondary text-sm leading-relaxed">
+              <p className="text-secondary text-sm leading-relaxed whitespace-pre-line">
                 {profile?.bio || 'No bio provided.'}
               </p>
             </div>
@@ -171,11 +196,15 @@ const WorkerProfilePage: React.FC = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-textMain mb-4">Skills</h2>
               <div className="flex flex-wrap gap-2">
-                {profile?.skills.map((skill, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-gray-100 text-textMain rounded-lg text-sm">
-                    {skill}
-                  </span>
-                ))}
+                {profile?.skills && profile.skills.length > 0 ? (
+                  profile.skills.map((skill, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-gray-100 text-textMain rounded-lg text-sm">
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-secondary">No skills added.</p>
+                )}
               </div>
             </div>
 
@@ -242,8 +271,31 @@ const WorkerProfilePage: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-lg font-bold text-textMain mb-6">Profile Information</h2>
         <form onSubmit={handleProfileUpdate} className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-             <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-textMain mb-2">Full Name</label>
+              <input
+                type="text"
+                required
+                value={workerName}
+                onChange={(e) => setWorkerName(e.target.value)}
+                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-textMain mb-2">Phone Number</label>
+              <input
+                type="text"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
               <label className="block text-sm font-medium text-textMain mb-2">Age</label>
               <input
                 type="number"
@@ -324,7 +376,7 @@ const WorkerProfilePage: React.FC = () => {
               className="w-full max-w-md rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
             />
           </div>
-          <div className="grid grid-cols-2 gap-6 max-w-2xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
             <div>
               <label className="block text-sm font-medium text-textMain mb-2">New Password</label>
               <input

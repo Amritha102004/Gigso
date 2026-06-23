@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import profileService from '../../user/services/profile.service';
-import type { OwnerProfilePayload } from '../../user/services/profile.service';
+import ownerProfileService from '../services/profile.service';
+import type { OwnerProfileResponseDTO } from '../../../types/api.types';
 import authService from '../../auth/services/auth.service';
 import {
   MapPinIcon,
@@ -20,21 +20,14 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/solid';
 
-const COMPANY_SIZE_OPTIONS = [
-  '1-10 Employees',
-  '11-50 Employees',
-  '50-200 Employees',
-  '201+ Employees',
-];
-
 const OwnerProfilePage: React.FC = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<OwnerProfilePayload | null>(null);
+  const { user, loginState } = useAuth();
+  const [profile, setProfile] = useState<OwnerProfileResponseDTO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Edit states
+  // Form states
   const [businessName, setBusinessName] = useState('');
   const [industry, setIndustry] = useState('');
   const [companySize, setCompanySize] = useState('');
@@ -42,9 +35,9 @@ const OwnerProfilePage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   
-  // Local Contact info states (simulated / UI only)
+  // Contact info states
   const [ownerName, setOwnerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('+1 (555) 000-0000');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   // Password states
   const [oldPassword, setOldPassword] = useState('');
@@ -60,7 +53,7 @@ const OwnerProfilePage: React.FC = () => {
 
   const fetchProfile = async () => {
     try {
-      const data = await profileService.getOwnerProfile();
+      const data = await ownerProfileService.getOwnerProfile();
       if (data) {
         setProfile(data);
         setBusinessName(data.businessName || '');
@@ -79,6 +72,7 @@ const OwnerProfilePage: React.FC = () => {
       }
       if (user) {
         setOwnerName(user.name || '');
+        setPhoneNumber(user.phone || '');
       }
     } catch (err) {
       console.error('Failed to load profile', err);
@@ -93,6 +87,12 @@ const OwnerProfilePage: React.FC = () => {
     setSuccess('');
     setIsSaving(true);
 
+    if (!ownerName.trim()) {
+      setError('Name is required');
+      setIsSaving(false);
+      return;
+    }
+
     // Format website with https prefix
     let formattedWebsite = website;
     if (website && !website.startsWith('http://') && !website.startsWith('https://')) {
@@ -100,7 +100,9 @@ const OwnerProfilePage: React.FC = () => {
     }
 
     try {
-      await profileService.setupOwnerProfile({
+      const result = await ownerProfileService.setupOwnerProfile({
+        name: ownerName,
+        phone: phoneNumber,
         businessName,
         industry,
         companySize,
@@ -108,6 +110,13 @@ const OwnerProfilePage: React.FC = () => {
         description,
         location,
       });
+
+      // Update local auth context
+      const token = localStorage.getItem('accessToken') || '';
+      if (result.data?.user) {
+        loginState(result.data.user, token);
+      }
+
       setSuccess('Profile updated successfully!');
       setIsEditing(false);
       fetchProfile();
@@ -195,7 +204,7 @@ const OwnerProfilePage: React.FC = () => {
               </span>
             </div>
             <p className="text-secondary text-sm font-medium mt-1">
-              Owned by {user?.name || 'Alex Rivera'}
+              Owned by {user?.name || 'Alex Rivera'} {user?.phone && `• ${user.phone}`}
             </p>
             <div className="flex items-center gap-4 mt-3 flex-wrap text-sm text-secondary">
               {profile?.location && (
@@ -388,6 +397,7 @@ const OwnerProfilePage: React.FC = () => {
               <label className="block text-xs font-bold text-textMain uppercase tracking-wider mb-2">Business Name</label>
               <input
                 type="text"
+                required
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#6b704c] focus:border-[#6b704c] text-sm"
@@ -397,6 +407,7 @@ const OwnerProfilePage: React.FC = () => {
               <label className="block text-xs font-bold text-textMain uppercase tracking-wider mb-2">Industry</label>
               <input
                 type="text"
+                required
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 placeholder="e.g. Technology & SaaS"
@@ -433,6 +444,7 @@ const OwnerProfilePage: React.FC = () => {
               <label className="block text-xs font-bold text-textMain uppercase tracking-wider mb-2">Owner Name</label>
               <input
                 type="text"
+                required
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
                 className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#6b704c] focus:border-[#6b704c] text-sm"
@@ -453,7 +465,7 @@ const OwnerProfilePage: React.FC = () => {
               <label className="block text-xs font-bold text-textMain uppercase tracking-wider mb-2">Phone Number</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary">
-                  <PhoneIcon className="w-4 h-4" />
+                  <PhoneIcon className="w-4 h-4 text-secondary" />
                 </span>
                 <input
                   type="text"
@@ -467,10 +479,11 @@ const OwnerProfilePage: React.FC = () => {
               <label className="block text-xs font-bold text-textMain uppercase tracking-wider mb-2">Location</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary">
-                  <MapPinIcon className="w-4 h-4" />
+                  <MapPinIcon className="w-4 h-4 text-secondary" />
                 </span>
                 <input
                   type="text"
+                  required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:ring-[#6b704c] focus:border-[#6b704c] text-sm"
@@ -491,6 +504,7 @@ const OwnerProfilePage: React.FC = () => {
             <textarea
               rows={4}
               maxLength={500}
+              required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-[#6b704c] focus:border-[#6b704c] text-sm"

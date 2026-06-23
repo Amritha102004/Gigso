@@ -5,6 +5,8 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'owner' | 'worker';
+  phone?: string;
+  profileImage?: string;
   isApproved?: boolean;
   isProfileCompleted?: boolean;
 }

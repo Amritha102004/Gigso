@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import profileService from '../../user/services/profile.service';
+import workerProfileService from '../services/profile.service';
 
 const SetupWorkerProfile: React.FC = () => {
   const { user, loginState } = useAuth();
@@ -9,22 +9,38 @@ const SetupWorkerProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [skillsStr, setSkillsStr] = useState('');
   const [portfolioStr, setPortfolioStr] = useState('');
   const [age, setAge] = useState<number | ''>('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
 
+  useEffect(() => {
+    if (user) {
+      setFullName(user.name || '');
+      setPhone(user.phone || '');
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!fullName.trim()) {
+      setError('Name is required');
+      return;
+    }
     
     const skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
     const portfolio = portfolioStr.split(',').map(s => s.trim()).filter(Boolean);
 
     setIsLoading(true);
     try {
-      const result = await profileService.setupWorkerProfile({
+      const result = await workerProfileService.setupWorkerProfile({
+        name: fullName,
+        phone,
         skills,
         portfolio,
         age: Number(age),
@@ -38,7 +54,7 @@ const SetupWorkerProfile: React.FC = () => {
         loginState(result.data.user, token);
       }
       
-      navigate('/worker/profile');
+      navigate('/worker/home');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to setup profile');
     } finally {
@@ -65,6 +81,39 @@ const SetupWorkerProfile: React.FC = () => {
                 {error}
               </div>
             )}
+
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium leading-6 text-textMain">
+                Full Name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="fullName"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium leading-6 text-textMain">
+                Phone Number (optional)
+              </label>
+              <div className="mt-2">
+                <input
+                  id="phone"
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                  className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
 
             <div>
               <label htmlFor="skills" className="block text-sm font-medium leading-6 text-textMain">

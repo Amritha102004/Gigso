@@ -6,6 +6,7 @@ import { MESSAGES } from "../../constants/messages";
 import { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toUserResponse } from "../../mappers/user.mapper";
+import { toWorkerProfileResponse } from "../../mappers/workerProfile.mapper";
 
 export class WorkerProfileController {
   constructor(private _profileService: IWorkerProfileService) {}
@@ -19,7 +20,7 @@ export class WorkerProfileController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.WORKER_PROFILE_SETUP,
-      data: { user: toUserResponse(user), profile },
+      data: { user: toUserResponse(user), profile: toWorkerProfileResponse(profile) },
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -32,7 +33,7 @@ export class WorkerProfileController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.WORKER_PROFILE_FETCHED,
-      data: { profile },
+      data: { profile: profile ? toWorkerProfileResponse(profile) : null },
     };
 
     res.status(HttpStatus.OK).json(response);

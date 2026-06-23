@@ -11,9 +11,9 @@ const HomePage: React.FC = () => {
       if (user.role === 'admin') {
         navigate('/admin/owners', { replace: true });
       } else if (user.role === 'worker') {
-        navigate('/worker/profile', { replace: true });
+        navigate('/worker/home', { replace: true });
       } else {
-        navigate('/owner/profile', { replace: true });
+        navigate('/owner/dashboard', { replace: true });
       }
     } else {
       navigate('/login', { replace: true });

@@ -8,9 +8,36 @@ export interface UserDTO {
   name: string;
   email: string;
   role: UserRole;
+  phone?: string;
+  profileImage?: string;
   isApproved: boolean;
   isSuspended: boolean;
   isProfileCompleted: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface WorkerProfileResponseDTO {
+  id: string;
+  userId: string;
+  skills: string[];
+  portfolio: string[];
+  age?: number;
+  bio?: string;
+  location?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface OwnerProfileResponseDTO {
+  id: string;
+  userId: string;
+  businessName?: string;
+  industry?: string;
+  companySize?: string;
+  website?: string;
+  description?: string;
+  location?: string;
   createdAt?: string;
   updatedAt?: string;
 }

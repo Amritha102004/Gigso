@@ -6,6 +6,7 @@ import { MESSAGES } from "../../constants/messages";
 import { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toUserResponse } from "../../mappers/user.mapper";
+import { toOwnerProfileResponse } from "../../mappers/ownerProfile.mapper";
 
 export class OwnerProfileController {
   constructor(private _profileService: IOwnerProfileService) {}
@@ -19,7 +20,7 @@ export class OwnerProfileController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.OWNER_PROFILE_SETUP,
-      data: { user: toUserResponse(user), profile },
+      data: { user: toUserResponse(user), profile: toOwnerProfileResponse(profile) },
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -32,7 +33,7 @@ export class OwnerProfileController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.OWNER_PROFILE_FETCHED,
-      data: { profile },
+      data: { profile: profile ? toOwnerProfileResponse(profile) : null },
     };
 
     res.status(HttpStatus.OK).json(response);

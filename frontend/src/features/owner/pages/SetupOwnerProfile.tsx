@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import profileService from '../../user/services/profile.service';
+import ownerProfileService from '../services/profile.service';
 
 const SetupOwnerProfile: React.FC = () => {
   const { user, loginState } = useAuth();
@@ -9,6 +9,8 @@ const SetupOwnerProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [industry, setIndustry] = useState('');
   const [companySize, setCompanySize] = useState('');
@@ -16,13 +18,27 @@ const SetupOwnerProfile: React.FC = () => {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
 
+  useEffect(() => {
+    if (user) {
+      setFullName(user.name || '');
+      setPhone(user.phone || '');
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!fullName.trim()) {
+      setError('Name is required');
+      return;
+    }
     
     setIsLoading(true);
     try {
-      const result = await profileService.setupOwnerProfile({
+      const result = await ownerProfileService.setupOwnerProfile({
+        name: fullName,
+        phone,
         businessName,
         industry,
         companySize,
@@ -37,7 +53,7 @@ const SetupOwnerProfile: React.FC = () => {
         loginState(result.data.user, token);
       }
       
-      navigate('/owner/profile');
+      navigate('/owner/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to setup profile');
     } finally {
@@ -66,6 +82,39 @@ const SetupOwnerProfile: React.FC = () => {
             )}
 
             <div>
+              <label htmlFor="fullName" className="block text-sm font-medium leading-6 text-textMain">
+                Full Name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="fullName"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium leading-6 text-textMain">
+                Phone Number (optional)
+              </label>
+              <div className="mt-2">
+                <input
+                  id="phone"
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                  className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="businessName" className="block text-sm font-medium leading-6 text-textMain">
                 Business Name
               </label>
@@ -73,6 +122,7 @@ const SetupOwnerProfile: React.FC = () => {
                 <input
                   id="businessName"
                   type="text"
+                  required
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -89,6 +139,7 @@ const SetupOwnerProfile: React.FC = () => {
                   <input
                     id="industry"
                     type="text"
+                    required
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     placeholder="e.g. Technology"
@@ -103,6 +154,7 @@ const SetupOwnerProfile: React.FC = () => {
                 <div className="mt-2">
                   <select
                     id="companySize"
+                    required
                     value={companySize}
                     onChange={(e) => setCompanySize(e.target.value)}
                     className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -141,6 +193,7 @@ const SetupOwnerProfile: React.FC = () => {
                 <input
                   id="location"
                   type="text"
+                  required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
@@ -156,6 +209,7 @@ const SetupOwnerProfile: React.FC = () => {
                 <textarea
                   id="description"
                   rows={3}
+                  required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 px-3 text-textMain shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
