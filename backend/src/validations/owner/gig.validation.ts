@@ -1,16 +1,31 @@
 import { z } from "zod";
 
+const alphanumericRegex = /[\p{L}\p{N}]/u;
+
+const validateString = (fieldName: string, minLength = 1) =>
+  z.string()
+    .trim()
+    .min(minLength, `${fieldName} is required`)
+    .refine((val) => alphanumericRegex.test(val), `${fieldName} must contain at least one letter or digit`);
+
+const validateStringOptional = (fieldName: string, minLength = 1) =>
+  z.string()
+    .trim()
+    .min(minLength, `${fieldName} is required`)
+    .refine((val) => alphanumericRegex.test(val), `${fieldName} must contain at least one letter or digit`)
+    .optional();
+
 export const createGigSchema = z.object({
   body: z.object({
-    title: z.string().min(1, "Title is required"),
-    description: z.string().min(1, "Description is required"),
-    categoryId: z.string().min(1, "Category is required"),
-    location: z.string().min(1, "Location is required"),
+    title: validateString("Title"),
+    description: validateString("Description"),
+    categoryId: z.string().trim().min(1, "Category is required"),
+    location: validateString("Location"),
     eventDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date format"),
-    startTime: z.string().min(1, "Start time is required"),
+    startTime: validateString("Start time"),
     roles: z.array(
       z.object({
-        roleName: z.string().min(1, "Role name is required"),
+        roleName: validateString("Role name"),
         spots: z.number().min(1, "Spots must be at least 1"),
         payPerPerson: z.number().min(0, "Pay must be at least 0"),
       })
@@ -21,15 +36,15 @@ export const createGigSchema = z.object({
 
 export const updateGigSchema = z.object({
   body: z.object({
-    title: z.string().min(1, "Title is required").optional(),
-    description: z.string().min(1, "Description is required").optional(),
-    categoryId: z.string().min(1, "Category is required").optional(),
-    location: z.string().min(1, "Location is required").optional(),
+    title: validateStringOptional("Title"),
+    description: validateStringOptional("Description"),
+    categoryId: z.string().trim().min(1, "Category is required").optional(),
+    location: validateStringOptional("Location"),
     eventDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date format").optional(),
-    startTime: z.string().min(1, "Start time is required").optional(),
+    startTime: validateStringOptional("Start time"),
     roles: z.array(
       z.object({
-        roleName: z.string().min(1, "Role name is required"),
+        roleName: validateString("Role name"),
         spots: z.number().min(1, "Spots must be at least 1"),
         payPerPerson: z.number().min(0, "Pay must be at least 0"),
       })
