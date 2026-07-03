@@ -12,10 +12,12 @@ import {
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { GigResponseDTO } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 const ViewGigPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,12 +55,13 @@ const ViewGigPage: React.FC = () => {
       const res = await gigService.publishGig(gig.id);
       if (res.success && res.data) {
         setGig(res.data);
+        showToast('Gig published successfully!', 'success');
       } else {
-        alert(res.message || 'Failed to publish gig.');
+        showToast(res.message || 'Failed to publish gig.', 'error');
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Error publishing gig.');
+      showToast(err.response?.data?.message || 'Error publishing gig.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -74,12 +77,13 @@ const ViewGigPage: React.FC = () => {
       const res = await gigService.markAsCompleted(gig.id);
       if (res.success && res.data) {
         setGig(res.data);
+        showToast('Gig marked as completed.', 'success');
       } else {
-        alert(res.message || 'Failed to complete gig.');
+        showToast(res.message || 'Failed to complete gig.', 'error');
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Error completing gig.');
+      showToast(err.response?.data?.message || 'Error completing gig.', 'error');
     } finally {
       setActionLoading(false);
     }

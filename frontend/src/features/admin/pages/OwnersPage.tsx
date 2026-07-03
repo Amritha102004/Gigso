@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import adminService from '../services/admin.service';
 import type { UserDTO } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 interface OwnerRow extends UserDTO {
   status: 'pending' | 'approved' | 'suspended';
@@ -21,6 +22,7 @@ const OwnersPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const LIMIT = 10;
+  const { showToast } = useToast();
 
   const fetchOwners = useCallback(async (searchTerm: string, currentPage: number) => {
     try {
@@ -66,7 +68,7 @@ const OwnersPage: React.FC = () => {
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Approval failed';
-      alert(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -87,7 +89,7 @@ const OwnersPage: React.FC = () => {
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Action failed';
-      alert(msg);
+      showToast(msg, 'error');
     }
   };
 

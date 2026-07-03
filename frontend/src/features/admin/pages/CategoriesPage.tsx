@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import categoryService from '../services/category.service';
 import type { CategoryDTO } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 // SVG Icon list mapped for display
 export const categoryIconMap: Record<string, (className?: string) => React.ReactNode> = {
@@ -72,6 +73,7 @@ export const renderCategoryIcon = (iconName: string, className = "w-5 h-5") => {
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -130,7 +132,7 @@ const CategoriesPage: React.FC = () => {
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Failed to delete category';
-      alert(msg);
+      showToast(msg, 'error');
     }
   };
 

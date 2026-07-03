@@ -7,6 +7,8 @@ import OtpVerification from './features/auth/pages/OtpVerification';
 import ForgotPassword from './features/auth/pages/ForgotPassword';
 import ResetPassword from './features/auth/pages/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { ToastContainer } from './components/Toast';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoute from './routes/AdminRoute';
 import AdminLayout from './features/admin/components/AdminLayout';
@@ -30,6 +32,7 @@ import EditGigPage from './features/owner/pages/EditGigPage';
 
 function App() {
   return (
+    <ToastProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -86,6 +89,8 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    <ToastContainer />
+    </ToastProvider>
   );
 }
 

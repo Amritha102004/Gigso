@@ -6,13 +6,14 @@ import authService from '../services/auth.service';
 import { useAuth } from '../../../context/AuthContext';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import type { AuthResponse } from '../../../types/api.types';
-import { isStrongPassword } from '../../../utils/validators';
+import { useToast } from '../../../context/ToastContext';
 
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const role = searchParams.get('role');
   const { loginState } = useAuth();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -21,69 +22,81 @@ const Signup: React.FC = () => {
     confirmPassword: '',
   });
 
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validate = () => {
+    const errors: typeof fieldErrors = {};
+    if (!formData.fullName.trim()) {
+      errors.fullName = 'Full name is required';
+    } else if (!/^[\p{L}\s'\-.]+$/u.test(formData.fullName.trim())) {
+      errors.fullName = 'Name can only contain letters, spaces, hyphens, or apostrophes';
+    }
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Enter a valid email address';
+    }
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    } else if (!/[0-9]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one number';
+    } else if (!/[A-Z]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[!@#$%^&*]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one special character (!@#$%^&*)';
+    }
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    return errors;
+  };
 
   const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     setIsSubmitting(true);
-    setError('');
-
     const token = credentialResponse.credential;
     if (!token) {
-      setError('Google signup failed: no credential received.');
+      showToast('Google signup failed: no credential received.', 'error');
       setIsSubmitting(false);
       return;
     }
-
     if (!role) {
-      setError('Please select a role from the previous page before signing up with Google.');
+      showToast('Please select a role from the previous page before signing up with Google.', 'warning');
       setIsSubmitting(false);
       return;
     }
-
     authService.googleLogin({ token, role })
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
-        if (res.user.role === 'admin') {
-          navigate('/admin/owners');
-        } else {
-          navigate('/home');
-        }
+        if (res.user.role === 'admin') navigate('/admin/owners');
+        else navigate('/home');
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string } } };
-        setError(axiosErr.response?.data?.error || 'Google Signup failed.');
+        showToast(axiosErr.response?.data?.error || 'Google Signup failed.', 'error');
       })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .finally(() => setIsSubmitting(false));
   };
 
-  const handleGoogleError = () => {
-    setError('Google Signup failed.');
-  };
+  const handleGoogleError = () => showToast('Google Signup failed.', 'error');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
-    if (!isStrongPassword(formData.password)) {
-        setError('Password does not meet the security requirements. Must be at least 8 characters, include a number and a special character.');
-        return;
-    }
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     const payload = {
-      name: formData.fullName,
+      name: formData.fullName.trim(),
       email: formData.email,
       password: formData.password,
       role: role || 'worker',
@@ -92,21 +105,16 @@ const Signup: React.FC = () => {
     setIsSubmitting(true);
     authService.sendOtp(payload)
       .then(() => {
-        navigate('/verify-otp', { 
-          state: { 
-            email: formData.email, 
-            type: 'registration' 
-          },
-          replace:true
+        navigate('/verify-otp', {
+          state: { email: formData.email, type: 'registration' },
+          replace: true,
         });
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
-        setError(axiosErr.response?.data?.error || 'Failed to send OTP. Please try again.');
+        showToast(axiosErr.response?.data?.error || 'Failed to send OTP. Please try again.', 'error');
       })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
@@ -164,44 +172,49 @@ const Signup: React.FC = () => {
         </div>
 
         {/* Signup Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          
-          {error && (
-            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg">
-              {error}
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <InputField
+            id="signup-fullname"
             label="Full Name"
             type="text"
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            placeholder="Enter your full name" 
+            placeholder="Enter your full name"
+            error={fieldErrors.fullName}
+            required
           />
 
           <InputField
+            id="signup-email"
             label="Email"
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="name@company.com"
+            error={fieldErrors.email}
+            required
           />
 
           <InputField
+            id="signup-password"
             label="Password"
             type="password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             placeholder="Min. 8 characters"
+            error={fieldErrors.password}
+            required
           />
 
           <InputField
+            id="signup-confirm-password"
             label="Confirm Password"
             type="password"
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             placeholder="Min. 8 characters"
+            error={fieldErrors.confirmPassword}
+            required
           />
 
           <div className="pt-2">
@@ -216,7 +229,7 @@ const Signup: React.FC = () => {
         </p>
 
         <p className="mt-6 text-center text-sm text-textMain font-medium">
-          Already have an account? <a href="#" className="text-primary hover:underline">Log in</a>
+          Already have an account? <a href="/login" className="text-primary hover:underline">Log in</a>
         </p>
 
       </div>

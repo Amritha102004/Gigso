@@ -13,9 +13,11 @@ import {
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { GigListItemDTO } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 const GigsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [gigs, setGigs] = useState<GigListItemDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,12 +55,13 @@ const GigsPage: React.FC = () => {
       const response = await gigService.deleteGig(id);
       if (response.success) {
         setGigs(prev => prev.filter(g => g.id !== id));
+        showToast('Gig deleted successfully.', 'success');
       } else {
-        alert(response.message || 'Failed to delete gig.');
+        showToast(response.message || 'Failed to delete gig.', 'error');
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Error deleting gig.');
+      showToast(err.response?.data?.message || 'Error deleting gig.', 'error');
     }
   };
 

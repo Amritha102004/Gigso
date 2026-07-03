@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import adminService from '../services/admin.service';
 import type { UserDTO } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 interface WorkerRow extends UserDTO {
   status: 'active' | 'suspended';
@@ -18,6 +19,7 @@ const WorkersPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const LIMIT = 10;
+  const { showToast } = useToast();
 
   const fetchWorkers = useCallback(async (searchTerm: string, currentPage: number) => {
     try {
@@ -70,7 +72,7 @@ const WorkersPage: React.FC = () => {
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Action failed';
-      alert(msg);
+      showToast(msg, 'error');
     }
   };
 

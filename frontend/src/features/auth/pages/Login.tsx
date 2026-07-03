@@ -6,25 +6,29 @@ import Button from '../../../components/Button';
 import authService from '../services/auth.service';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import type { AuthResponse } from '../../../types/api.types';
+import { useToast } from '../../../context/ToastContext';
 
 const Login: React.FC = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { loginState } = useAuth();
+  const { showToast } = useToast();
+
+  const validate = () => {
+    const errors: { email?: string; password?: string } = {};
+    if (!formData.email) errors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Enter a valid email address';
+    if (!formData.password) errors.password = 'Password is required';
+    return errors;
+  };
 
   const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     setIsSubmitting(true);
-    setError('');
-
     const token = credentialResponse.credential;
     if (!token) {
-      setError('Google login failed: no credential received.');
+      showToast('Google login failed: no credential received.', 'error');
       setIsSubmitting(false);
       return;
     }
@@ -32,59 +36,42 @@ const Login: React.FC = () => {
     authService.googleLogin({ token })
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
-        if (res.user.role === 'admin') {
-          navigate('/admin/owners');
-        } else if (res.user.role === 'worker') {
-          navigate('/worker/profile');
-        } else {
-          navigate('/owner/profile');
-        }
+        if (res.user.role === 'admin') navigate('/admin/owners');
+        else if (res.user.role === 'worker') navigate('/worker/profile');
+        else navigate('/owner/profile');
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { requiresRole?: boolean; error?: string } } };
         if (axiosErr.response?.data?.requiresRole) {
-          setError('Account not found. Please sign up first.');
+          showToast('Account not found. Please sign up first.', 'warning');
         } else {
-          setError(axiosErr.response?.data?.error || 'Google Login failed.');
+          showToast(axiosErr.response?.data?.error || 'Google Login failed.', 'error');
         }
       })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .finally(() => setIsSubmitting(false));
   };
 
-  const handleGoogleError = () => {
-    setError('Google Login failed.');
-  };
+  const handleGoogleError = () => showToast('Google Login failed.', 'error');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!formData.email || !formData.password) {
-      setError('Please fill in both email and password.');
-      return;
-    }
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setIsSubmitting(true);
     authService.login(formData)
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
-        if (res.user.role === 'admin') {
-          navigate('/admin/owners');
-        } else if (res.user.role === 'worker') {
-          navigate('/worker/profile');
-        } else {
-          navigate('/owner/profile');
-        }
+        if (res.user.role === 'admin') navigate('/admin/owners');
+        else if (res.user.role === 'worker') navigate('/worker/profile');
+        else navigate('/owner/profile');
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
-        setError(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Invalid email or password.');
+        showToast(axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Invalid email or password.', 'error');
       })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
@@ -94,7 +81,6 @@ const Login: React.FC = () => {
         </header>
         
         <div className="min-h-[calc(100vh-6rem)] bg-background flex flex-col items-center justify-center p-6 relative w-full">
-            {/* Outline Box mapping to Figma */}
             <div className="w-full max-w-[440px] bg-white rounded-3xl p-10 shadow-xl shadow-gray-200/50 ring-1 ring-black/5 relative z-10">
                 <div className="text-center mb-8 pt-2">
                     <span className="text-xl font-bold text-primary tracking-tight">Gigso</span>
@@ -109,34 +95,31 @@ const Login: React.FC = () => {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                        <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg">
-                        {error}
-                        </div>
-                    )}
-
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                     <InputField
+                        id="login-email"
                         label="Email Address"
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="owner@Gigso.com"
+                        error={fieldErrors.email}
                     />
 
                     <div className="relative">
-                        {/* Nested labels logic to keep "Forgot Password?" properly aligned */}
                         <div className="absolute right-0 top-0 text-right pr-1 pb-1">
                              <Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">
                                 Forgot Password?
                             </Link>
                         </div>
                         <InputField
+                            id="login-password"
                             label="Password"
                             type="password"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             placeholder="........"
+                            error={fieldErrors.password}
                         />
                     </div>
 
