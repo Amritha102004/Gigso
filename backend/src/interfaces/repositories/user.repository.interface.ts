@@ -11,5 +11,6 @@ export interface IUserRepository extends IBaseRepository<IUser> {
   findUserByEmail(email: string): Promise<IUser | null>;
   updateUserPassword(email: string, hashedPass: string): Promise<IUser | null>;
   findUsers(filter: UserFilter, skip: number, limit: number): Promise<{ users: IUser[], total: number }>;
+  findUserByIdWithPassword(id: string): Promise<IUser | null>;
   updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
 }

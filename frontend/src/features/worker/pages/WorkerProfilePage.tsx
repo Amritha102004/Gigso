@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import workerProfileService from '../services/profile.service';
 import type { WorkerProfileResponseDTO } from '../../../types/api.types';
 import authService from '../../auth/services/auth.service';
+import InputField from '../../../components/InputField';
+import { useToast } from '../../../context/ToastContext';
 import { MapPinIcon, PencilSquareIcon, StarIcon, CheckCircleIcon, PhoneIcon } from '@heroicons/react/24/solid';
 
 const WorkerProfilePage: React.FC = () => {
   const { user, loginState } = useAuth();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<WorkerProfileResponseDTO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Edit states
   const [workerName, setWorkerName] = useState('');
@@ -19,14 +25,31 @@ const WorkerProfilePage: React.FC = () => {
   const [age, setAge] = useState<number | ''>('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
+  const [profileImage, setProfileImage] = useState('');
+
+  const [profileErrors, setProfileErrors] = useState<{
+    workerName?: string;
+    phoneNumber?: string;
+    age?: string;
+    location?: string;
+    skillsStr?: string;
+    portfolioStr?: string;
+    bio?: string;
+  }>({});
 
   // Password states
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState<{
+    oldPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
 
   useEffect(() => {
     fetchProfile();
@@ -46,6 +69,7 @@ const WorkerProfilePage: React.FC = () => {
       if (user) {
         setWorkerName(user.name || '');
         setPhoneNumber(user.phone || '');
+        setProfileImage(user.profileImage || '');
       }
     } catch (err) {
       console.error("Failed to load profile", err);
@@ -54,13 +78,81 @@ const WorkerProfilePage: React.FC = () => {
     }
   };
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Only JPEG, PNG, WEBP, and GIF images are allowed', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size cannot exceed 5MB', 'error');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const res = await authService.uploadImage(file);
+      setProfileImage(res.url);
+      showToast('Profile image uploaded successfully!', 'success');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to upload image', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const resetFormFields = () => {
+    setError('');
+    setSuccess('');
+    setProfileErrors({});
+    if (profile) {
+      setSkillsStr(profile.skills.join(', '));
+      setPortfolioStr(profile.portfolio?.join(', ') || '');
+      setAge(profile.age || '');
+      setBio(profile.bio || '');
+      setLocation(profile.location || '');
+    }
+    if (user) {
+      setWorkerName(user.name || '');
+      setPhoneNumber(user.phone || '');
+      setProfileImage(user.profileImage || '');
+    }
+  };
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setProfileErrors({});
+    setIsSaving(true);
     
+    const errors: typeof profileErrors = {};
     if (!workerName.trim()) {
-      setError('Name is required');
+      errors.workerName = 'Full name is required';
+    }
+    if (age !== '' && (isNaN(Number(age)) || Number(age) < 18 || Number(age) > 100)) {
+      errors.age = 'Age must be between 18 and 100';
+    }
+    if (phoneNumber && !/^\+?[0-9\s-()]{10,20}$/.test(phoneNumber)) {
+      errors.phoneNumber = 'Enter a valid phone number';
+    }
+    if (!skillsStr.trim()) {
+      errors.skillsStr = 'Skills are required';
+    }
+    if (!location.trim()) {
+      errors.location = 'Location is required';
+    }
+    if (!bio.trim()) {
+      errors.bio = 'Bio is required';
+    }
+
+    setProfileErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setIsSaving(false);
       return;
     }
 
@@ -70,9 +162,10 @@ const WorkerProfilePage: React.FC = () => {
     try {
       const result = await workerProfileService.setupWorkerProfile({
         name: workerName,
-        phone: phoneNumber,
+        phone: phoneNumber || undefined,
+        profileImage: profileImage || undefined,
         skills,
-        portfolio,
+        portfolio: portfolio.length > 0 ? portfolio : undefined,
         age: Number(age),
         bio,
         location
@@ -84,32 +177,59 @@ const WorkerProfilePage: React.FC = () => {
         loginState(result.data.user, token);
       }
 
-      setSuccess('Profile updated successfully!');
+      showToast('Profile updated successfully!', 'success');
       setIsEditing(false);
       fetchProfile();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const validatePasswordChange = () => {
+    const errors: typeof passwordErrors = {};
+    if (!oldPassword) {
+      errors.oldPassword = 'Current password is required';
+    }
+    if (!newPassword) {
+      errors.newPassword = 'New password is required';
+    } else {
+      if (newPassword.length < 8) {
+        errors.newPassword = 'Password must be at least 8 characters';
+      } else if (!/[0-9]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one number';
+      } else if (!/[A-Z]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one uppercase letter';
+      } else if (!/[!@#$%^&*]/.test(newPassword)) {
+        errors.newPassword = 'Password must contain at least one special character (!@#$%^&*)';
+      }
+    }
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Confirm password is required';
+    } else if (newPassword !== confirmPassword) {
+      errors.confirmPassword = 'New passwords do not match';
+    }
+    return errors;
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
+    setPasswordErrors({});
+    const errors = validatePasswordChange();
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors);
       return;
     }
 
     try {
       await authService.changePassword({ oldPassword, newPassword });
-      setSuccess('Password changed successfully!');
+      showToast('Password changed successfully!', 'success');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to change password');
+      showToast(err.response?.data?.message || 'Failed to change password', 'error');
     }
   };
 
@@ -149,7 +269,10 @@ const WorkerProfilePage: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              resetFormFields();
+              setIsEditing(true);
+            }}
             className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg font-medium hover:bg-primary/20 transition-colors"
           >
             <PencilSquareIcon className="w-4 h-4" />
@@ -257,7 +380,10 @@ const WorkerProfilePage: React.FC = () => {
           <p className="text-sm text-secondary">Manage your public information and account security.</p>
         </div>
         <button
-          onClick={() => setIsEditing(false)}
+          onClick={() => {
+            resetFormFields();
+            setIsEditing(false);
+          }}
           className="text-sm font-medium text-secondary hover:text-textMain"
         >
           Cancel
@@ -265,85 +391,126 @@ const WorkerProfilePage: React.FC = () => {
       </div>
 
       {error && <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">{error}</div>}
-      {success && <div className="bg-green-50 text-green-600 p-4 rounded-lg text-sm flex items-center gap-2"><CheckCircleIcon className="w-5 h-5"/>{success}</div>}
 
       {/* Profile Form */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-lg font-bold text-textMain mb-6">Profile Information</h2>
         <form onSubmit={handleProfileUpdate} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-textMain mb-2">Full Name</label>
-              <input
-                type="text"
-                required
-                value={workerName}
-                onChange={(e) => setWorkerName(e.target.value)}
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-              />
+          {/* Profile Image Upload */}
+          <div className="flex flex-col items-center mb-6">
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="relative w-24 h-24 rounded-full border border-gray-200 shadow-sm flex items-center justify-center cursor-pointer overflow-hidden group bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary text-3xl font-bold">
+                  {user?.name?.charAt(0)}
+                </div>
+              )}
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 text-white text-[10px] font-semibold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                Upload Photo
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-textMain mb-2">Phone Number</label>
-              <input
-                type="text"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1 (555) 000-0000"
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-              />
-            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleImageChange}
+              accept="image/*" 
+              className="hidden" 
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-textMain mb-2">Age</label>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-textMain mb-2">Location</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-              />
-            </div>
+            <InputField
+              id="worker-name"
+              label="Full Name"
+              type="text"
+              value={workerName}
+              onChange={(e) => setWorkerName(e.target.value)}
+              error={profileErrors.workerName}
+            />
+            <InputField
+              id="worker-phone"
+              label="Phone Number"
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+1 (555) 000-0000"
+              error={profileErrors.phoneNumber}
+            />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-2">Short Bio</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              id="worker-age"
+              label="Age"
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
+              error={profileErrors.age}
+            />
+            <InputField
+              id="worker-location"
+              label="Location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              error={profileErrors.location}
+            />
+          </div>
+
+          <div className="flex flex-col mb-4">
+            <label htmlFor="worker-bio" className="text-sm font-semibold text-textMain mb-1.5 flex justify-between">
+              Short Bio
+            </label>
             <textarea
+              id="worker-bio"
               rows={4}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-1 shadow-sm hover:border-gray-300 disabled:bg-gray-50 disabled:cursor-not-allowed ${
+                profileErrors.bio
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                  : 'border-gray-200 focus:border-primary focus:ring-primary'
+              }`}
             />
+            {profileErrors.bio && (
+              <p id="worker-bio-error" className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                </svg>
+                {profileErrors.bio}
+              </p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-2">Skills (comma separated)</label>
-            <input
-              type="text"
-              value={skillsStr}
-              onChange={(e) => setSkillsStr(e.target.value)}
-              className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-            />
-          </div>
+          <InputField
+            id="worker-skills"
+            label="Skills (comma separated)"
+            type="text"
+            value={skillsStr}
+            onChange={(e) => setSkillsStr(e.target.value)}
+            error={profileErrors.skillsStr}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-2">Portfolio Links (comma separated)</label>
-            <input
-              type="text"
-              value={portfolioStr}
-              onChange={(e) => setPortfolioStr(e.target.value)}
-              className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
-            />
-          </div>
+          <InputField
+            id="worker-portfolio"
+            label="Portfolio Links (comma separated)"
+            type="text"
+            value={portfolioStr}
+            onChange={(e) => setPortfolioStr(e.target.value)}
+            error={profileErrors.portfolioStr}
+          />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
@@ -367,32 +534,38 @@ const WorkerProfilePage: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h2 className="text-lg font-bold text-textMain mb-6">Security & Password</h2>
         <form onSubmit={handlePasswordChange} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-2">Current Password</label>
-            <input
+          <div className="max-w-md">
+            <InputField
+              id="worker-current-password"
+              label="Current Password"
               type="password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full max-w-md rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+              placeholder="Enter current password"
+              error={passwordErrors.oldPassword}
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
             <div>
-              <label className="block text-sm font-medium text-textMain mb-2">New Password</label>
-              <input
+              <InputField
+                id="worker-new-password"
+                label="New Password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+                placeholder="Min. 8 characters"
+                error={passwordErrors.newPassword}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-textMain mb-2">Confirm New Password</label>
-              <input
+              <InputField
+                id="worker-confirm-password"
+                label="Confirm New Password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-lg border-gray-200 shadow-sm focus:ring-primary focus:border-primary text-sm"
+                placeholder="Min. 8 characters"
+                error={passwordErrors.confirmPassword}
               />
             </div>
           </div>

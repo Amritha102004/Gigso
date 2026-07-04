@@ -181,7 +181,6 @@ const Signup: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             placeholder="Enter your full name"
             error={fieldErrors.fullName}
-            required
           />
 
           <InputField
@@ -192,7 +191,6 @@ const Signup: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="name@company.com"
             error={fieldErrors.email}
-            required
           />
 
           <InputField
@@ -203,7 +201,6 @@ const Signup: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             placeholder="Min. 8 characters"
             error={fieldErrors.password}
-            required
           />
 
           <InputField
@@ -214,7 +211,6 @@ const Signup: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             placeholder="Min. 8 characters"
             error={fieldErrors.confirmPassword}
-            required
           />
 
           <div className="pt-2">

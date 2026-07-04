@@ -232,7 +232,7 @@ export class AuthService implements IAuthService {
   }
 
   async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
-    const user = await this._authRepo.findById(userId);
+    const user = await this._authRepo.findUserByIdWithPassword(userId);
     if (!user) {
       throw new Error(MESSAGES.USER_NOT_FOUND);
     }

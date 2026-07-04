@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 interface InputFieldProps {
   label: string;
-  type?: 'text' | 'email' | 'password';
-  value: string;
+  type?: 'text' | 'email' | 'password' | 'number';
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   required?: boolean;
@@ -52,7 +52,6 @@ const InputField: React.FC<InputFieldProps> = ({
               : 'border-gray-200 focus:border-primary focus:ring-primary'
           }`}
           placeholder={placeholder}
-          required={required}
           aria-describedby={error ? `${id}-error` : undefined}
           aria-invalid={!!error}
         />

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import adminService from '../services/admin.service';
 import type { UserDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 interface OwnerRow extends UserDTO {
   status: 'pending' | 'approved' | 'suspended';
@@ -23,6 +24,20 @@ const OwnersPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const LIMIT = 10;
   const { showToast } = useToast();
+
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const fetchOwners = useCallback(async (searchTerm: string, currentPage: number) => {
     try {
@@ -58,39 +73,60 @@ const OwnersPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search, fetchOwners]);
 
-  const handleApprove = async (id: string) => {
-    try {
-      await adminService.approveUser(id);
-      setOwners((prev) =>
-        prev.map((o) =>
-          o._id === id ? { ...o, isApproved: true, status: deriveStatus({ ...o, isApproved: true }) } : o
-        )
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Approval failed';
-      showToast(msg, 'error');
-    }
+  const handleApprove = (id: string) => {
+    const owner = owners.find((o) => o._id === id);
+    setConfirmState({
+      isOpen: true,
+      title: 'Approve User',
+      message: `Are you sure you want to approve ${owner?.name || 'this user'}? They will gain access to post gigs.`,
+      confirmText: 'Approve',
+      type: 'primary',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await adminService.approveUser(id);
+          setOwners((prev) =>
+            prev.map((o) =>
+              o._id === id ? { ...o, isApproved: true, status: deriveStatus({ ...o, isApproved: true }) } : o
+            )
+          );
+          showToast('User approved successfully.', 'success');
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Approval failed';
+          showToast(msg, 'error');
+        }
+      },
+    });
   };
 
-  const handleSuspendToggle = async (id: string) => {
-    const owner = owners.find(o => o._id === id);
+  const handleSuspendToggle = (id: string) => {
+    const owner = owners.find((o) => o._id === id);
     const action = owner?.status === 'suspended' ? 'unsuspend' : 'suspend';
-    const isConfirmed = window.confirm(`Are you sure you want to ${action} this user?`);
-    if (!isConfirmed) return;
-
-    try {
-      await adminService.suspendUser(id);
-      setOwners((prev) =>
-        prev.map((o) => {
-          if (o._id !== id) return o;
-          const updated = { ...o, isSuspended: !o.isSuspended };
-          return { ...updated, status: deriveStatus(updated) };
-        })
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Action failed';
-      showToast(msg, 'error');
-    }
+    
+    setConfirmState({
+      isOpen: true,
+      title: `${action === 'suspend' ? 'Suspend' : 'Unsuspend'} User`,
+      message: `Are you sure you want to ${action} ${owner?.name || 'this user'}?`,
+      confirmText: action === 'suspend' ? 'Suspend' : 'Unsuspend',
+      type: action === 'suspend' ? 'danger' : 'primary',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await adminService.suspendUser(id);
+          setOwners((prev) =>
+            prev.map((o) => {
+              if (o._id !== id) return o;
+              const updated = { ...o, isSuspended: !o.isSuspended };
+              return { ...updated, status: deriveStatus(updated) };
+            })
+          );
+          showToast(`User successfully ${action}ed.`, 'success');
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Action failed';
+          showToast(msg, 'error');
+        }
+      },
+    });
   };
 
   const getStatusBadge = (status: OwnerRow['status']) => {
@@ -213,6 +249,16 @@ const OwnersPage: React.FC = () => {
         </div>
       )}
 
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        type={confirmState.type}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

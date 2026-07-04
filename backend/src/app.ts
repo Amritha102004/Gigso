@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
 import { authRoutes } from "./routes/auth/auth.routes";
 import { adminUserRoutes } from "./routes/admin/users.routes";
 import { adminCategoryRoutes } from "./routes/admin/categories.routes";
@@ -17,6 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminUserRoutes);

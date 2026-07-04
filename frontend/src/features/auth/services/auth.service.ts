@@ -105,6 +105,17 @@ export const authService = {
     const response = await authApi.post<ApiResponse>(AUTH_ROUTES.CHANGE_PASSWORD, data);
     return { message: response.data.message };
   },
+
+  uploadImage: async (file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await authApi.post<ApiResponse<{ url: string }>>('/auth/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data!;
+  },
 };
 
 export default authService;

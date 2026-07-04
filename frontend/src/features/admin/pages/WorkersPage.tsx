@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import adminService from '../services/admin.service';
 import type { UserDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 interface WorkerRow extends UserDTO {
   status: 'active' | 'suspended';
@@ -20,6 +21,20 @@ const WorkersPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const LIMIT = 10;
   const { showToast } = useToast();
+
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const fetchWorkers = useCallback(async (searchTerm: string, currentPage: number) => {
     try {
@@ -55,25 +70,34 @@ const WorkersPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search, fetchWorkers]);
 
-  const handleSuspendToggle = async (id: string) => {
+  const handleSuspendToggle = (id: string) => {
     const worker = workers.find(w => w._id === id);
     const action = worker?.status === 'suspended' ? 'unsuspend' : 'suspend';
-    const isConfirmed = window.confirm(`Are you sure you want to ${action} this user?`);
-    if (!isConfirmed) return;
-
-    try {
-      await adminService.suspendUser(id);
-      setWorkers((prev) =>
-        prev.map((w) => {
-          if (w._id !== id) return w;
-          const updated = { ...w, isSuspended: !w.isSuspended };
-          return { ...updated, status: deriveStatus(updated) };
-        })
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Action failed';
-      showToast(msg, 'error');
-    }
+    
+    setConfirmState({
+      isOpen: true,
+      title: `${action === 'suspend' ? 'Suspend' : 'Unsuspend'} User`,
+      message: `Are you sure you want to ${action} ${worker?.name || 'this user'}?`,
+      confirmText: action === 'suspend' ? 'Suspend' : 'Unsuspend',
+      type: action === 'suspend' ? 'danger' : 'primary',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await adminService.suspendUser(id);
+          setWorkers((prev) =>
+            prev.map((w) => {
+              if (w._id !== id) return w;
+              const updated = { ...w, isSuspended: !w.isSuspended };
+              return { ...updated, status: deriveStatus(updated) };
+            })
+          );
+          showToast(`User successfully ${action}ed.`, 'success');
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Action failed';
+          showToast(msg, 'error');
+        }
+      },
+    });
   };
 
   const getStatusBadge = (status: WorkerRow['status']) => {
@@ -217,6 +241,16 @@ const WorkersPage: React.FC = () => {
         </div>
       )}
 
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        type={confirmState.type}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
