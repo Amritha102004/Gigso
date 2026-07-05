@@ -4,8 +4,9 @@ import workerProfileService from '../services/profile.service';
 import type { WorkerProfileResponseDTO } from '../../../types/api.types';
 import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
-import { MapPinIcon, PencilSquareIcon, StarIcon, CheckCircleIcon, PhoneIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon, PencilSquareIcon, StarIcon, PhoneIcon } from '@heroicons/react/24/solid';
 
 const WorkerProfilePage: React.FC = () => {
   const { user, loginState } = useAuth();
@@ -48,7 +49,6 @@ const WorkerProfilePage: React.FC = () => {
   }>({});
   
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
 
   useEffect(() => {
@@ -107,7 +107,6 @@ const WorkerProfilePage: React.FC = () => {
 
   const resetFormFields = () => {
     setError('');
-    setSuccess('');
     setProfileErrors({});
     if (profile) {
       setSkillsStr(profile.skills.join(', '));
@@ -126,7 +125,6 @@ const WorkerProfilePage: React.FC = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setProfileErrors({});
     setIsSaving(true);
     
@@ -459,12 +457,11 @@ const WorkerProfilePage: React.FC = () => {
               onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
               error={profileErrors.age}
             />
-            <InputField
+            <LocationAutocomplete
               id="worker-location"
               label="Location"
-              type="text"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(val) => setLocation(val)}
               error={profileErrors.location}
             />
           </div>
@@ -522,9 +519,10 @@ const WorkerProfilePage: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90"
+              disabled={isSaving}
+              className="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-60"
             >
-              Save Profile
+              {isSaving ? 'Saving...' : 'Save Profile'}
             </button>
           </div>
         </form>

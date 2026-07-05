@@ -4,19 +4,17 @@ import ownerProfileService from '../services/profile.service';
 import type { OwnerProfileResponseDTO } from '../../../types/api.types';
 import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
 import {
   MapPinIcon,
   CalendarIcon,
   CheckCircleIcon,
-  GlobeAltIcon,
   LightBulbIcon,
   StarIcon,
   PencilIcon,
   BuildingOffice2Icon,
   UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
   LockClosedIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -69,7 +67,6 @@ const OwnerProfilePage: React.FC = () => {
   }>({});
 
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -135,7 +132,6 @@ const OwnerProfilePage: React.FC = () => {
 
   const resetFormFields = () => {
     setError('');
-    setSuccess('');
     setProfileErrors({});
     if (profile) {
       setBusinessName(profile.businessName || '');
@@ -161,7 +157,6 @@ const OwnerProfilePage: React.FC = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setProfileErrors({});
     setIsSaving(true);
 
@@ -616,12 +611,11 @@ const OwnerProfilePage: React.FC = () => {
               onChange={(e) => setPhoneNumber(e.target.value)}
               error={profileErrors.phoneNumber}
             />
-            <InputField
+            <LocationAutocomplete
               id="owner-location"
               label="Location"
-              type="text"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(val) => setLocation(val)}
               error={profileErrors.location}
             />
           </div>

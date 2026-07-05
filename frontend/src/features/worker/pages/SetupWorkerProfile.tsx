@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import workerProfileService from '../services/profile.service';
 import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
 
 const SetupWorkerProfile: React.FC = () => {
@@ -279,12 +280,11 @@ const SetupWorkerProfile: React.FC = () => {
                 error={fieldErrors.age}
               />
 
-              <InputField
+              <LocationAutocomplete
                 id="setup-location"
                 label="Location"
-                type="text"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(val) => setLocation(val)}
                 placeholder="City, Country"
                 error={fieldErrors.location}
               />

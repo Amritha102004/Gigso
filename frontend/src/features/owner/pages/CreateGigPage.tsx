@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { CategoryDTO } from '../../../types/api.types';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 
 interface RoleInput {
   roleName: string;
@@ -237,13 +238,15 @@ const CreateGigPage: React.FC = () => {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-secondary mb-1.5 uppercase">Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Grand Hyatt, Ballroom B"
+                <LocationAutocomplete
+                  id="create-gig-location"
+                  label="Location"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  onChange={(val) => setLocation(val)}
+                  placeholder="e.g. Grand Hyatt, Ballroom B"
+                  wrapperClassName="relative mb-0 flex flex-col"
+                  labelClassName="block text-xs font-bold text-secondary mb-1.5 uppercase"
+                  inputClassName="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
             </div>
