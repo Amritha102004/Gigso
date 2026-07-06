@@ -13,5 +13,12 @@ export interface IGigRoleRepository extends IBaseRepository<IGigRole> {
 
 export interface IGigRepository extends IBaseRepository<IGig> {
   findByOwnerId(ownerId: string, filters?: { status?: string }): Promise<IGig[]>;
+  findActiveGigs(filters?: {
+    search?: string;
+    categoryId?: string;
+    location?: string;
+    minPay?: number;
+    date?: string;
+  }): Promise<IGig[]>;
   softDelete(id: string): Promise<boolean>;
 }

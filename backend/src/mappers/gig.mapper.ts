@@ -51,5 +51,7 @@ export const toGigListItemDTO = (gig: IGig): GigListItemDTO => {
     totalRoles,
     filledSpots,
     totalSpots,
+    location: gig.location,
+    totalBudget: gig.totalBudget,
   };
 };

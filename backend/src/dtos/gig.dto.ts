@@ -34,4 +34,6 @@ export interface GigListItemDTO {
   totalRoles: number;
   filledSpots: number;
   totalSpots: number;
+  location: string;
+  totalBudget: number;
 }

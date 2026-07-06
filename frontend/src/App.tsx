@@ -22,6 +22,8 @@ import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
 import WorkerLayout from './features/worker/components/WorkerLayout';
 import WorkerProfilePage from './features/worker/pages/WorkerProfilePage';
 import WorkerDashboard from './features/worker/pages/WorkerDashboard';
+import BrowseGigsPage from './features/worker/pages/BrowseGigsPage';
+import GigDetailPage from './features/worker/pages/GigDetailPage';
 import OwnerLayout from './features/owner/components/OwnerLayout';
 import OwnerProfilePage from './features/owner/pages/OwnerProfilePage';
 import OwnerDashboard from './features/owner/pages/OwnerDashboard';
@@ -67,11 +69,12 @@ function App() {
              <Route index element={<HomePage />} />
           </Route>
 
-          {/* Worker Pathways */}
           <Route path="/worker" element={<ProtectedRoute requireProfile={true} />}>
             <Route element={<WorkerLayout />}>
               <Route path="home" element={<WorkerDashboard />} />
               <Route path="profile" element={<WorkerProfilePage />} />
+              <Route path="browse" element={<BrowseGigsPage />} />
+              <Route path="gigs/:gigId" element={<GigDetailPage />} />
             </Route>
           </Route>
 
