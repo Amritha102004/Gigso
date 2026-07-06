@@ -21,7 +21,9 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
     ownerId: gig.ownerId.toString(),
     title: gig.title,
     description: gig.description,
-    category: category ? toCategoryDTO(category) : { id: gig.categoryId.toString(), name: "", description: "", icon: "" },
+    category: category && typeof category.name === "string" 
+      ? toCategoryDTO(category) 
+      : { id: gig.categoryId?.toString() || "", name: "Uncategorized", description: "", icon: "" },
     location: gig.location,
     eventDate: gig.eventDate.toISOString(),
     startTime: gig.startTime,
@@ -45,7 +47,9 @@ export const toGigListItemDTO = (gig: IGig): GigListItemDTO => {
   return {
     id: gig._id.toString(),
     title: gig.title,
-    category: category ? toCategoryDTO(category) : { id: gig.categoryId.toString(), name: "", description: "", icon: "" },
+    category: category && typeof category.name === "string" 
+      ? toCategoryDTO(category) 
+      : { id: gig.categoryId?.toString() || "", name: "Uncategorized", description: "", icon: "" },
     eventDate: gig.eventDate.toISOString(),
     status: gig.status,
     totalRoles,

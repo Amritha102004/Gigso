@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ownerGigController } from "../../config/container";
+import { ownerGigController, applicationController } from "../../config/container";
 import { authenticateJWT } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { requireApproved } from "../../middlewares/approved.middleware";
@@ -23,5 +23,9 @@ router.put("/:gigId", validate(updateGigSchema), ownerGigController.updateGig.bi
 router.delete("/:gigId", ownerGigController.deleteGig.bind(ownerGigController));
 router.patch("/:gigId/publish", ownerGigController.publishGig.bind(ownerGigController));
 router.patch("/:gigId/complete", ownerGigController.markAsCompleted.bind(ownerGigController));
+
+// Applications
+router.get("/:gigId/applications", applicationController.getGigApplications.bind(applicationController));
+router.patch("/:gigId/applications/:applicationId", applicationController.updateApplicationStatus.bind(applicationController));
 
 export const ownerGigRoutes = router;

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { GIG_ROUTES } from '../../../constants/apiRoutes';
-import type { GigResponseDTO, GigListItemDTO, CategoryDTO } from '../../../types/api.types';
+import type { GigResponseDTO, GigListItemDTO, CategoryDTO, GigApplicationDTO } from '../../../types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -53,6 +53,18 @@ export const workerGigService = {
 
   getCategories: async () => {
     const response = await gigApi.get<ApiResponse<CategoryDTO[]>>(`${GIG_ROUTES.WORKER_GIGS}/categories`);
+    return response.data;
+  },
+
+  applyForGigRole: async (gigId: string, roleId: string) => {
+    const response = await gigApi.post<ApiResponse<GigApplicationDTO>>(GIG_ROUTES.WORKER_GIG_APPLY(gigId), { roleId });
+    return response.data;
+  },
+
+  getWorkerApplications: async (status?: string) => {
+    const params: Record<string, string> = {};
+    if (status) params.status = status;
+    const response = await gigApi.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.WORKER_MY_GIGS, { params });
     return response.data;
   },
 };

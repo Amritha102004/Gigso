@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { GIG_ROUTES } from '../../../constants/apiRoutes';
-import type { GigResponseDTO, GigListItemDTO, CategoryDTO } from '../../../types/api.types';
+import type { GigResponseDTO, GigListItemDTO, CategoryDTO, GigApplicationDTO } from '../../../types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -91,6 +91,19 @@ export const gigService = {
 
   getCategories: async () => {
     const response = await gigApi.get<ApiResponse<CategoryDTO[]>>(GIG_ROUTES.CATEGORIES);
+    return response.data;
+  },
+
+  getGigApplications: async (gigId: string) => {
+    const response = await gigApi.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.OWNER_GIG_APPLICATIONS(gigId));
+    return response.data;
+  },
+
+  updateApplicationStatus: async (gigId: string, applicationId: string, status: 'accepted' | 'rejected') => {
+    const response = await gigApi.patch<ApiResponse<GigApplicationDTO>>(
+      GIG_ROUTES.OWNER_GIG_APPLICATION_STATUS(gigId, applicationId),
+      { status }
+    );
     return response.data;
   },
 };

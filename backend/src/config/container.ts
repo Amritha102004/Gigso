@@ -5,6 +5,7 @@ import { OwnerProfileRepository } from "../repositories/ownerProfile.repository"
 import { CategoryRepository } from "../repositories/category.repository";
 import { GigRepository } from "../repositories/gig.repository";
 import { GigRoleRepository } from "../repositories/gigRole.repository";
+import { GigApplicationRepository } from "../repositories/application.repository";
 import { ENV } from "./env.config";
 
 // Services
@@ -16,6 +17,7 @@ import { UsersService } from "../services/admin/users.service";
 import { OwnerGigService } from "../services/owner/gig.service";
 import { AdminCategoryService } from "../services/admin/category.service";
 import { WorkerGigService } from "../services/worker/gig.service";
+import { ApplicationService } from "../services/application.service";
 
 // Controllers
 import { AuthController } from "../controllers/auth/auth.controller";
@@ -25,6 +27,7 @@ import { AdminUsersController } from "../controllers/admin/users.controller";
 import { OwnerGigController } from "../controllers/owner/gig.controller";
 import { AdminCategoryController } from "../controllers/admin/category.controller";
 import { WorkerGigController } from "../controllers/worker/gig.controller";
+import { ApplicationController } from "../controllers/application.controller";
 
 // Repositories
 export const userRepository = new UserRepository();
@@ -34,6 +37,7 @@ export const ownerProfileRepository = new OwnerProfileRepository();
 export const categoryRepository = new CategoryRepository();
 export const gigRepository = new GigRepository();
 export const gigRoleRepository = new GigRoleRepository();
+export const gigApplicationRepository = new GigApplicationRepository();
 
 // Services
 export const emailService = new EmailService();
@@ -49,6 +53,7 @@ export const usersService = new UsersService(userRepository);
 export const ownerGigService = new OwnerGigService(categoryRepository, gigRepository, gigRoleRepository);
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
 export const workerGigService = new WorkerGigService(gigRepository, categoryRepository);
+export const applicationService = new ApplicationService(gigApplicationRepository, gigRepository, gigRoleRepository);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -58,3 +63,4 @@ export const adminUsersController = new AdminUsersController(usersService);
 export const ownerGigController = new OwnerGigController(ownerGigService);
 export const adminCategoryController = new AdminCategoryController(adminCategoryService);
 export const workerGigController = new WorkerGigController(workerGigService);
+export const applicationController = new ApplicationController(applicationService);

@@ -9,6 +9,7 @@ import { workerProfileRoutes } from "./routes/worker/profile.routes";
 import { ownerProfileRoutes } from "./routes/owner/profile.routes";
 import { ownerGigRoutes } from "./routes/owner/gig.routes";
 import { workerGigRoutes } from "./routes/worker/gig.routes";
+import { workerMyGigsRoutes } from "./routes/worker/my-gigs.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/api/admin", adminUserRoutes);
 app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/worker/profile", workerProfileRoutes);
 app.use("/api/worker/gigs", workerGigRoutes);
+app.use("/api/worker/my-gigs", workerMyGigsRoutes);
 app.use("/api/owner/profile", ownerProfileRoutes);
 app.use("/api/owner/gigs", ownerGigRoutes);
 

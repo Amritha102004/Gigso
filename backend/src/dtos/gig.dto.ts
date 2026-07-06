@@ -36,4 +36,5 @@ export interface GigListItemDTO {
   totalSpots: number;
   location: string;
   totalBudget: number;
+  pendingApplicationsCount?: number;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import workerGigService from '../services/gig.service';
-import type { GigResponseDTO } from '../../../types/api.types';
+import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import {
   MapPinIcon,
@@ -21,12 +21,25 @@ const GigDetailPage: React.FC = () => {
 
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [userApplications, setUserApplications] = useState<GigApplicationDTO[]>([]);
 
   useEffect(() => {
     if (gigId) {
       fetchGigDetails();
+      fetchUserApplications();
     }
   }, [gigId]);
+
+  const fetchUserApplications = async () => {
+    try {
+      const res = await workerGigService.getWorkerApplications();
+      if (res.success && res.data) {
+        setUserApplications(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+    }
+  };
 
   const fetchGigDetails = async () => {
     try {
@@ -57,9 +70,19 @@ const GigDetailPage: React.FC = () => {
     });
   };
 
-  const handleApplyClick = (roleName: string) => {
-    // Application is in Task 10, let's notify the user beautifully.
-    showToast(`Application to role "${roleName}" will be enabled in Phase 4 - Task 10!`, 'info');
+  const handleApplyClick = async (roleId: string, roleName: string) => {
+    if (!gig) return;
+    try {
+      const res = await workerGigService.applyForGigRole(gig.id, roleId);
+      if (res.success) {
+        showToast(`Successfully requested the role: ${roleName}`, 'success');
+        fetchUserApplications();
+      } else {
+        showToast(res.message || 'Failed to apply.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Error submitting application.', 'error');
+    }
   };
 
   if (loading) {
@@ -181,12 +204,40 @@ const GigDetailPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleApplyClick(role.roleName)}
-                        className="px-4 py-1.5 bg-primary text-white font-bold rounded-lg hover:bg-[#575727] transition-all shadow-sm"
-                      >
-                        Apply
-                      </button>
+                      {(() => {
+                        const app = userApplications.find((a) => a.roleId === role.id);
+                        if (app) {
+                          if (app.status === 'pending') {
+                            return (
+                              <span className="inline-block px-3 py-1.5 bg-gray-100 text-gray-500 font-bold rounded-lg border border-gray-200 cursor-not-allowed">
+                                Requested
+                              </span>
+                            );
+                          }
+                          if (app.status === 'accepted') {
+                            return (
+                              <span className="inline-block px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 cursor-not-allowed">
+                                Accepted
+                              </span>
+                            );
+                          }
+                          if (app.status === 'rejected') {
+                            return (
+                              <span className="inline-block px-3 py-1.5 bg-rose-100 text-rose-800 font-bold rounded-lg border border-rose-200 cursor-not-allowed">
+                                Rejected
+                              </span>
+                            );
+                          }
+                        }
+                        return (
+                          <button
+                            onClick={() => handleApplyClick(role.id, role.roleName)}
+                            className="px-4 py-1.5 bg-primary text-white font-bold rounded-lg hover:bg-[#575727] transition-all shadow-sm active:scale-95"
+                          >
+                            Apply
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

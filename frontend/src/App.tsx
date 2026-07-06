@@ -24,6 +24,7 @@ import WorkerProfilePage from './features/worker/pages/WorkerProfilePage';
 import WorkerDashboard from './features/worker/pages/WorkerDashboard';
 import BrowseGigsPage from './features/worker/pages/BrowseGigsPage';
 import GigDetailPage from './features/worker/pages/GigDetailPage';
+import MyGigsPage from './features/worker/pages/MyGigsPage';
 import OwnerLayout from './features/owner/components/OwnerLayout';
 import OwnerProfilePage from './features/owner/pages/OwnerProfilePage';
 import OwnerDashboard from './features/owner/pages/OwnerDashboard';
@@ -74,6 +75,7 @@ function App() {
               <Route path="home" element={<WorkerDashboard />} />
               <Route path="profile" element={<WorkerProfilePage />} />
               <Route path="browse" element={<BrowseGigsPage />} />
+              <Route path="my-gigs" element={<MyGigsPage />} />
               <Route path="gigs/:gigId" element={<GigDetailPage />} />
             </Route>
           </Route>

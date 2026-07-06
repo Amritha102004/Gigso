@@ -9,7 +9,8 @@ import {
   BriefcaseIcon,
   CheckCircleIcon,
   DocumentTextIcon,
-  CalendarIcon
+  CalendarIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { GigListItemDTO } from '../../../types/api.types';
@@ -28,8 +29,7 @@ const GigsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const statusParam = activeTab === 'all' ? undefined : activeTab;
-      const response = await gigService.getMyGigs(statusParam);
+      const response = await gigService.getMyGigs(); // Always fetch all to keep dashboard counts intact
       if (response.success && response.data) {
         setGigs(response.data);
       } else {
@@ -45,7 +45,7 @@ const GigsPage: React.FC = () => {
 
   useEffect(() => {
     fetchGigs();
-  }, [activeTab]);
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this gig? This action cannot be undone.')) {
@@ -65,10 +65,13 @@ const GigsPage: React.FC = () => {
     }
   };
 
-  const filteredGigs = gigs.filter(gig => 
-    gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    gig.category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredGigs = gigs.filter(gig => {
+    const matchesSearch = 
+      gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      gig.category.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = activeTab === 'all' || gig.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
 
   const totalGigs = gigs.length;
   const activeCount = gigs.filter(g => g.status === 'active').length;
@@ -233,13 +236,25 @@ const GigsPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="inline-flex gap-2">
+                        <div className="inline-flex gap-2 items-center">
                           <button
                             onClick={() => navigate(`/owner/gigs/${gig.id}`)}
                             title="View Detail"
                             className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
                           >
                             <EyeIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => navigate(`/owner/gigs/${gig.id}`, { state: { activeTab: 'applications' } })}
+                            title="View Applications"
+                            className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all relative"
+                          >
+                            <UserGroupIcon className="w-4 h-4" />
+                            {gig.pendingApplicationsCount !== undefined && gig.pendingApplicationsCount > 0 ? (
+                              <span className="absolute top-0 right-0 bg-red-500 text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center border border-white">
+                                {gig.pendingApplicationsCount}
+                              </span>
+                            ) : null}
                           </button>
                           {gig.status === 'draft' && (
                             <button

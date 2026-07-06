@@ -35,5 +35,9 @@ export const GIG_ROUTES = {
   CATEGORIES:        '/owner/gigs/categories',
   WORKER_GIGS:       '/worker/gigs',
   WORKER_GIG_BY_ID:  (id: string) => `/worker/gigs/${id}`,
+  WORKER_GIG_APPLY:  (gigId: string) => `/worker/gigs/${gigId}/apply`,
+  WORKER_MY_GIGS:    '/worker/my-gigs',
+  OWNER_GIG_APPLICATIONS: (gigId: string) => `/owner/gigs/${gigId}/applications`,
+  OWNER_GIG_APPLICATION_STATUS: (gigId: string, appId: string) => `/owner/gigs/${gigId}/applications/${appId}`,
 } as const;
 
