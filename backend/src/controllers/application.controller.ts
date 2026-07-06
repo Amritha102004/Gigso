@@ -1,11 +1,10 @@
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import type { IApplicationService } from "../interfaces/services/application.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import type { ApiResponse } from "../types/api-response.type";
 import { asyncHandler } from "../utils/asyncHandler";
 import { toGigApplicationDTO } from "../mappers/application.mapper";
-import { WorkerProfileModel } from "../models/workerProfile.model";
 
 export class ApplicationController {
   constructor(private _applicationService: IApplicationService) {}
@@ -53,20 +52,14 @@ export class ApplicationController {
     const ownerId = req.user._id.toString();
     const gigId = req.params.gigId as string;
 
-    const applications = await this._applicationService.getGigApplications(gigId, ownerId);
-
-    // Fetch profiles of applicants to attach bio, rating info to owner dashboard cards
-    const workerIds = applications.map((app) => app.workerId._id || app.workerId);
-    const profiles = await WorkerProfileModel.find({ userId: { $in: workerIds } }).exec();
+    const applicationsWithProfiles = await this._applicationService.getGigApplications(gigId, ownerId);
 
     const response: ApiResponse = {
       success: true,
       message: "Gig applications fetched successfully",
-      data: applications.map((app) => {
-        const applicantId = app.workerId._id?.toString() || app.workerId.toString();
-        const profile = profiles.find((p) => p.userId.toString() === applicantId);
-        return toGigApplicationDTO(app, profile);
-      }),
+      data: applicationsWithProfiles.map(({ application, profile }) => 
+        toGigApplicationDTO(application, profile)
+      ),
     };
 
     res.status(HttpStatus.OK).json(response);

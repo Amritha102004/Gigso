@@ -57,4 +57,28 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
       status: "accepted"
     }).exec();
   }
+
+  async getCountsForGigs(gigIds: string[]): Promise<{ gigId: string; pendingCount: number; acceptedCount: number }[]> {
+    const objectIds = gigIds.map((id) => new Types.ObjectId(id));
+
+    const pendingCounts = await GigApplicationModel.aggregate([
+      { $match: { gigId: { $in: objectIds }, status: "pending" } },
+      { $group: { _id: "$gigId", count: { $sum: 1 } } }
+    ]);
+
+    const acceptedCounts = await GigApplicationModel.aggregate([
+      { $match: { gigId: { $in: objectIds }, status: "accepted" } },
+      { $group: { _id: "$gigId", count: { $sum: 1 } } }
+    ]);
+
+    return gigIds.map((id) => {
+      const pendingObj = pendingCounts.find((c) => c._id.toString() === id);
+      const acceptedObj = acceptedCounts.find((c) => c._id.toString() === id);
+      return {
+        gigId: id,
+        pendingCount: pendingObj ? pendingObj.count : 0,
+        acceptedCount: acceptedObj ? acceptedObj.count : 0,
+      };
+    });
+  }
 }

@@ -2,6 +2,8 @@ import type { IApplicationService } from "../interfaces/services/application.ser
 import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
 import type { IGigRepository, IGigRoleRepository } from "../interfaces/repositories/gig.repository.interface";
 import type { IGigApplication } from "../interfaces/application.interface";
+import type { IWorkerProfile } from "../interfaces/user.interface";
+import { WorkerProfileModel } from "../models/workerProfile.model";
 import { Types } from "mongoose";
 
 export class ApplicationService implements IApplicationService {
@@ -45,7 +47,10 @@ export class ApplicationService implements IApplicationService {
     return await this._applicationRepo.findByWorkerId(workerId, status);
   }
 
-  async getGigApplications(gigId: string, ownerId: string): Promise<IGigApplication[]> {
+  async getGigApplications(
+    gigId: string,
+    ownerId: string
+  ): Promise<{ application: IGigApplication; profile: IWorkerProfile | null }[]> {
     // Verify owner owns the gig
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId || gig.isDeleted) {
@@ -54,7 +59,20 @@ export class ApplicationService implements IApplicationService {
       throw error;
     }
 
-    return await this._applicationRepo.findByGigId(gigId);
+    const applications = await this._applicationRepo.findByGigId(gigId);
+
+    // Fetch profiles of applicants to attach bio, rating info to owner dashboard cards
+    const workerIds = applications.map((app) => app.workerId._id || app.workerId);
+    const profiles = await WorkerProfileModel.find({ userId: { $in: workerIds } }).exec();
+
+    return applications.map((app) => {
+      const applicantId = app.workerId._id?.toString() || app.workerId.toString();
+      const profile = profiles.find((p) => p.userId.toString() === applicantId) || null;
+      return {
+        application: app,
+        profile,
+      };
+    });
   }
 
   async updateApplicationStatus(

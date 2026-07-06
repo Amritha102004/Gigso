@@ -50,7 +50,12 @@ export const authService = new AuthService(
 export const workerProfileService = new WorkerProfileService(userRepository, workerProfileRepository);
 export const ownerProfileService = new OwnerProfileService(userRepository, ownerProfileRepository);
 export const usersService = new UsersService(userRepository);
-export const ownerGigService = new OwnerGigService(categoryRepository, gigRepository, gigRoleRepository);
+export const ownerGigService = new OwnerGigService(
+  categoryRepository,
+  gigRepository,
+  gigRoleRepository,
+  gigApplicationRepository
+);
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
 export const workerGigService = new WorkerGigService(gigRepository, categoryRepository);
 export const applicationService = new ApplicationService(gigApplicationRepository, gigRepository, gigRoleRepository);

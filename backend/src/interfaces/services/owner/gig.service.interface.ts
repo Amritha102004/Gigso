@@ -27,9 +27,15 @@ export interface IUpdateGigInput {
   roles?: ICreateGigRoleInput[];
 }
 
+export interface IOwnerGigWithCounts {
+  gig: IGig;
+  pendingCount: number;
+  acceptedCount: number;
+}
+
 export interface IOwnerGigService {
   createGig(ownerId: string, input: ICreateGigInput): Promise<IGig>;
-  getOwnerGigs(ownerId: string, status?: string): Promise<IGig[]>;
+  getOwnerGigs(ownerId: string, status?: string): Promise<IOwnerGigWithCounts[]>;
   getGigById(gigId: string, ownerId: string): Promise<IGig>;
   updateGig(gigId: string, ownerId: string, input: IUpdateGigInput): Promise<IGig>;
   softDeleteGig(gigId: string, ownerId: string): Promise<boolean>;

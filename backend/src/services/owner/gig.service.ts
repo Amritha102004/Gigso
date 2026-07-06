@@ -1,13 +1,15 @@
 import { Types } from "mongoose";
-import type { IOwnerGigService, ICreateGigInput, IUpdateGigInput } from "../../interfaces/services/owner/gig.service.interface";
+import type { IOwnerGigService, ICreateGigInput, IUpdateGigInput, IOwnerGigWithCounts } from "../../interfaces/services/owner/gig.service.interface";
 import type { ICategoryRepository, IGigRepository, IGigRoleRepository } from "../../interfaces/repositories/gig.repository.interface";
+import type { IGigApplicationRepository } from "../../interfaces/repositories/application.repository.interface";
 import type { ICategory, IGig } from "../../interfaces/gig.interface";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
     private _categoryRepo: ICategoryRepository,
     private _gigRepo: IGigRepository,
-    private _gigRoleRepo: IGigRoleRepository
+    private _gigRoleRepo: IGigRoleRepository,
+    private _applicationRepo: IGigApplicationRepository
   ) {}
 
   async createGig(ownerId: string, input: ICreateGigInput): Promise<IGig> {
@@ -56,8 +58,19 @@ export class OwnerGigService implements IOwnerGigService {
     return gig;
   }
 
-  async getOwnerGigs(ownerId: string, status?: string): Promise<IGig[]> {
-    return await this._gigRepo.findByOwnerId(ownerId, status ? { status } : undefined);
+  async getOwnerGigs(ownerId: string, status?: string): Promise<IOwnerGigWithCounts[]> {
+    const gigs = await this._gigRepo.findByOwnerId(ownerId, status ? { status } : undefined);
+    const gigIds = gigs.map((g) => g._id.toString());
+    const counts = await this._applicationRepo.getCountsForGigs(gigIds);
+
+    return gigs.map((gig) => {
+      const gigCount = counts.find((c) => c.gigId === gig._id.toString());
+      return {
+        gig,
+        pendingCount: gigCount ? gigCount.pendingCount : 0,
+        acceptedCount: gigCount ? gigCount.acceptedCount : 0,
+      };
+    });
   }
 
   async getGigById(gigId: string, ownerId: string): Promise<IGig> {

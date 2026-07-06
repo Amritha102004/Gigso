@@ -7,7 +7,6 @@ import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
 import { toCategoryDTO } from "../../mappers/category.mapper";
-import { GigApplicationModel } from "../../models/application.model";
 
 export class OwnerGigController {
   constructor(private _gigService: IOwnerGigService) {}
@@ -28,32 +27,17 @@ export class OwnerGigController {
   public getMyGigs = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user._id.toString();
     const status = req.query.status as string | undefined;
-    const gigs = await this._gigService.getOwnerGigs(ownerId, status);
-
-    const gigIds = gigs.map((g) => g._id);
-
-    // Dynamic counts
-    const pendingCounts = await GigApplicationModel.aggregate([
-      { $match: { gigId: { $in: gigIds }, status: "pending" } },
-      { $group: { _id: "$gigId", count: { $sum: 1 } } }
-    ]);
-
-    const filledCounts = await GigApplicationModel.aggregate([
-      { $match: { gigId: { $in: gigIds }, status: "accepted" } },
-      { $group: { _id: "$gigId", count: { $sum: 1 } } }
-    ]);
+    const gigsWithCounts = await this._gigService.getOwnerGigs(ownerId, status);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIGS_FETCHED,
-      data: gigs.map((gig) => {
-        const pendingObj = pendingCounts.find((c) => c._id.toString() === gig._id.toString());
-        const filledObj = filledCounts.find((c) => c._id.toString() === gig._id.toString());
+      data: gigsWithCounts.map(({ gig, pendingCount, acceptedCount }) => {
         const d = toGigListItemDTO(gig);
-        d.filledSpots = filledObj ? filledObj.count : 0;
+        d.filledSpots = acceptedCount;
         return {
           ...d,
-          pendingApplicationsCount: pendingObj ? pendingObj.count : 0,
+          pendingApplicationsCount: pendingCount,
         };
       }),
     };
