@@ -1,5 +1,5 @@
-import { IWorkerProfile } from "../interfaces/user.interface";
-import { WorkerProfileResponseDTO } from "../dtos/workerProfile.dto";
+import type { IWorkerProfile } from "../interfaces/user.interface";
+import type { WorkerProfileResponseDTO } from "../dtos/workerProfile.dto";
 
 export const toWorkerProfileResponse = (profile: IWorkerProfile): WorkerProfileResponseDTO => {
   return {

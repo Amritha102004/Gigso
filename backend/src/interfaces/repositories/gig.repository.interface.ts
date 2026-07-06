@@ -1,5 +1,5 @@
-import { IBaseRepository } from "./base.repository.interface";
-import { ICategory, IGig, IGigRole } from "../gig.interface";
+import type { IBaseRepository } from "./base.repository.interface";
+import type { ICategory, IGig, IGigRole } from "../gig.interface";
 
 export interface ICategoryRepository extends IBaseRepository<ICategory> {
   findAll(): Promise<ICategory[]>;

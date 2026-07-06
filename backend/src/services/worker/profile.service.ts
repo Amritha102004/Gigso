@@ -1,7 +1,7 @@
-import { IWorkerProfileService } from "../../interfaces/services/worker/profile.service.interface";
-import { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
-import { IWorkerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
-import { IWorkerProfile, IUser } from "../../interfaces/user.interface";
+import type { IWorkerProfileService } from "../../interfaces/services/worker/profile.service.interface";
+import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
+import type { IWorkerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
+import type { IWorkerProfile, IUser } from "../../interfaces/user.interface";
 
 export class WorkerProfileService implements IWorkerProfileService {
   constructor(

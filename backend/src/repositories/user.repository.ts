@@ -1,6 +1,6 @@
 import { UserModel } from "../models/user.model";
-import { IUser, ICreateUser } from "../interfaces/user.interface";
-import { IUserRepository, UserFilter } from "../interfaces/repositories/user.repository.interface";
+import type { IUser, ICreateUser } from "../interfaces/user.interface";
+import type { IUserRepository, UserFilter } from "../interfaces/repositories/user.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class UserRepository extends BaseRepository<IUser> implements IUserRepository {

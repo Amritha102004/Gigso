@@ -1,5 +1,5 @@
-import { IGig, IGigRole, ICategory } from "../interfaces/gig.interface";
-import { GigResponseDTO, GigListItemDTO, GigRoleDTO } from "../dtos/gig.dto";
+import type { IGig, IGigRole, ICategory } from "../interfaces/gig.interface";
+import type { GigResponseDTO, GigListItemDTO, GigRoleDTO } from "../dtos/gig.dto";
 import { toCategoryDTO } from "./category.mapper";
 
 export const toGigRoleDTO = (role: IGigRole): GigRoleDTO => {

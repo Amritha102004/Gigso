@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import { IAdminCategoryService } from "../../interfaces/services/admin/category.service.interface";
+import type { Request, Response } from "express";
+import type { IAdminCategoryService } from "../../interfaces/services/admin/category.service.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
-import { ApiResponse } from "../../types/api-response.type";
+import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toCategoryDTO } from "../../mappers/category.mapper";
 

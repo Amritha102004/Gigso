@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { HttpStatus } from "../utils/http-status.enum";
 
 export const errorMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {

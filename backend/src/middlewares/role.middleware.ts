@@ -1,5 +1,5 @@
-import { Response, NextFunction } from "express";
-import { AuthRequest } from "./auth.middleware";
+import type { Response, NextFunction } from "express";
+import type { AuthRequest } from "./auth.middleware";
 import { HttpStatus } from "../utils/http-status.enum";
 
 export const authorizeRoles = (...allowedRoles: string[]) => {

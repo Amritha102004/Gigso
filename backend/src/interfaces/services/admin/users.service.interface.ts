@@ -1,5 +1,5 @@
-import { IUser } from "../../user.interface";
-import { UserFilter } from "../../repositories/user.repository.interface";
+import type { IUser } from "../../user.interface";
+import type { UserFilter } from "../../repositories/user.repository.interface";
 
 export interface IUsersService {
   getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: IUser[]; total: number }>;

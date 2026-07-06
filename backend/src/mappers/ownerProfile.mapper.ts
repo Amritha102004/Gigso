@@ -1,5 +1,5 @@
-import { IOwnerProfile } from "../interfaces/user.interface";
-import { OwnerProfileResponseDTO } from "../dtos/ownerProfile.dto";
+import type { IOwnerProfile } from "../interfaces/user.interface";
+import type { OwnerProfileResponseDTO } from "../dtos/ownerProfile.dto";
 
 export const toOwnerProfileResponse = (profile: IOwnerProfile): OwnerProfileResponseDTO => {
   return {

@@ -1,4 +1,4 @@
-import { CategoryDTO } from "./category.dto";
+import type { CategoryDTO } from "./category.dto";
 
 export interface GigRoleDTO {
   id: string;

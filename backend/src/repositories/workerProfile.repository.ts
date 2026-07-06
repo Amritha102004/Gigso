@@ -1,6 +1,6 @@
 import { WorkerProfileModel } from "../models/workerProfile.model";
-import { IWorkerProfile } from "../interfaces/user.interface";
-import { IWorkerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
+import type { IWorkerProfile } from "../interfaces/user.interface";
+import type { IWorkerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class WorkerProfileRepository extends BaseRepository<IWorkerProfile> implements IWorkerProfileRepository {

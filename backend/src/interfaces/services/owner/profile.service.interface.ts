@@ -1,4 +1,4 @@
-import { IOwnerProfile, IUser } from "../../user.interface";
+import type { IOwnerProfile, IUser } from "../../user.interface";
 
 export interface IOwnerProfileService {
   setupOwnerProfile(userId: string, profileData: Partial<IOwnerProfile> & { name?: string; phone?: string; profileImage?: string; }): Promise<{ user: IUser; profile: IOwnerProfile }>;

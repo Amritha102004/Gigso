@@ -1,9 +1,9 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middlewares/auth.middleware";
-import { IWorkerProfileService } from "../../interfaces/services/worker/profile.service.interface";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middlewares/auth.middleware";
+import type { IWorkerProfileService } from "../../interfaces/services/worker/profile.service.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
-import { ApiResponse } from "../../types/api-response.type";
+import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toUserResponse } from "../../mappers/user.mapper";
 import { toWorkerProfileResponse } from "../../mappers/workerProfile.mapper";

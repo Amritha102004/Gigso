@@ -1,6 +1,6 @@
 import { OwnerProfileModel } from "../models/ownerProfile.model";
-import { IOwnerProfile } from "../interfaces/user.interface";
-import { IOwnerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
+import type { IOwnerProfile } from "../interfaces/user.interface";
+import type { IOwnerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class OwnerProfileRepository extends BaseRepository<IOwnerProfile> implements IOwnerProfileRepository {

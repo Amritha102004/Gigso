@@ -15,16 +15,13 @@ const OtpVerification: React.FC = () => {
   const state = location.state as { email?: string; type?: 'registration' | 'password-reset' } | null;
   const email = state?.email || '';
   const type = state?.type || 'registration';
-
-  const [isValid, setIsValid] = useState(false);
+  const isValid = !!(state?.email && state?.type);
 
   useEffect(() => {
-    if (!state?.email || !state?.type) {
+    if (!isValid) {
       navigate('/login', { replace: true });
-    } else {
-      setIsValid(true);
     }
-  }, [state, navigate]);
+  }, [isValid, navigate]);
 
   useEffect(() => {
     if (timeLeft <= 0) return;

@@ -1,7 +1,7 @@
-import { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
-import { IUsersService } from "../../interfaces/services/admin/users.service.interface";
-import { UserFilter } from "../../interfaces/repositories/user.repository.interface";
-import { IUser } from "../../interfaces/user.interface";
+import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
+import type { IUsersService } from "../../interfaces/services/admin/users.service.interface";
+import type { UserFilter } from "../../interfaces/repositories/user.repository.interface";
+import type { IUser } from "../../interfaces/user.interface";
 
 export class UsersService implements IUsersService {
   constructor(private _usersRepo: IUserRepository) {}

@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
-import { IUsersService } from "../../interfaces/services/admin/users.service.interface";
+import type { Request, Response } from "express";
+import type { IUsersService } from "../../interfaces/services/admin/users.service.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
-import { ApiResponse } from "../../types/api-response.type";
+import type { ApiResponse } from "../../types/api-response.type";
 import { toUserResponse } from "../../mappers/user.mapper";
-import { IUser } from "../../interfaces/user.interface";
+import type { IUser } from "../../interfaces/user.interface";
 import { asyncHandler } from "../../utils/asyncHandler";
 
 export class AdminUsersController {

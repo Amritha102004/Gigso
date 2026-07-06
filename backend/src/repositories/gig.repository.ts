@@ -1,6 +1,6 @@
 import { GigModel } from "../models/gig.model";
-import { IGig } from "../interfaces/gig.interface";
-import { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IGig } from "../interfaces/gig.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class GigRepository extends BaseRepository<IGig> implements IGigRepository {

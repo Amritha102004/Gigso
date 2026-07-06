@@ -1,7 +1,7 @@
-import { IOwnerProfileService } from "../../interfaces/services/owner/profile.service.interface";
-import { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
-import { IOwnerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
-import { IOwnerProfile, IUser } from "../../interfaces/user.interface";
+import type { IOwnerProfileService } from "../../interfaces/services/owner/profile.service.interface";
+import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
+import type { IOwnerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
+import type { IOwnerProfile, IUser } from "../../interfaces/user.interface";
 
 export class OwnerProfileService implements IOwnerProfileService {
   constructor(

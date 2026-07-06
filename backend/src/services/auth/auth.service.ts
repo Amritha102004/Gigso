@@ -1,13 +1,13 @@
-import { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
-import { IOtpRepository } from "../../interfaces/repositories/otp.repository.interface";
-import { ICreateUser, IUser } from "../../interfaces/user.interface";
+import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
+import type { IOtpRepository } from "../../interfaces/repositories/otp.repository.interface";
+import type { ICreateUser, IUser } from "../../interfaces/user.interface";
 import { passwordHashService, otpHashService } from "../../utils/hash";
 import { generateOtp } from "../../utils/otp";
-import { IEmailService } from "../../interfaces/services/auth/email.service.interface";
+import type { IEmailService } from "../../interfaces/services/auth/email.service.interface";
 import { jwtService } from "../../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
-import { IAuthService } from "../../interfaces/services/auth/auth.service.interface";
+import type { IAuthService } from "../../interfaces/services/auth/auth.service.interface";
 import { ENV } from "../../config/env.config";
 import { MESSAGES } from "../../constants/messages";
 import { EmailTemplates } from "../../constants/email.templates";

@@ -1,6 +1,6 @@
 import { GigRoleModel } from "../models/gigRole.model";
-import { IGigRole } from "../interfaces/gig.interface";
-import { IGigRoleRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IGigRole } from "../interfaces/gig.interface";
+import type { IGigRoleRepository } from "../interfaces/repositories/gig.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class GigRoleRepository extends BaseRepository<IGigRole> implements IGigRoleRepository {

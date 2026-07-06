@@ -1,4 +1,4 @@
-import { ICreateUser, IUser } from "../../user.interface";
+import type { ICreateUser, IUser } from "../../user.interface";
 
 export interface IAuthService {
   sendRegistrationOtp(userData: ICreateUser): Promise<void>;

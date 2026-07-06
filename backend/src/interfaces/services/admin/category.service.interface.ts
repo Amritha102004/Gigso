@@ -1,4 +1,4 @@
-import { ICategory } from "../../gig.interface";
+import type { ICategory } from "../../gig.interface";
 
 export interface IAdminCategoryService {
   createCategory(name: string, description: string, icon: string): Promise<ICategory>;

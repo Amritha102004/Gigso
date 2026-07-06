@@ -1,6 +1,6 @@
-import { ICategoryRepository } from "../../interfaces/repositories/gig.repository.interface";
-import { IAdminCategoryService } from "../../interfaces/services/admin/category.service.interface";
-import { ICategory } from "../../interfaces/gig.interface";
+import type { ICategoryRepository } from "../../interfaces/repositories/gig.repository.interface";
+import type { IAdminCategoryService } from "../../interfaces/services/admin/category.service.interface";
+import type { ICategory } from "../../interfaces/gig.interface";
 
 export class AdminCategoryService implements IAdminCategoryService {
   constructor(private _categoryRepo: ICategoryRepository) {}

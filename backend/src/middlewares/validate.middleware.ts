@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { ZodTypeAny, ZodError } from "zod";
+import type { Request, Response, NextFunction } from "express";
+import type { ZodTypeAny} from "zod";
+import { ZodError } from "zod";
 import { HttpStatus } from "../utils/http-status.enum";
 
 export const validate = (schema: ZodTypeAny) => {

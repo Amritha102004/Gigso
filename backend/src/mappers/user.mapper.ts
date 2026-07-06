@@ -1,5 +1,5 @@
-import { IUser } from "../interfaces/user.interface";
-import { UserResponseDTO } from "../dtos/user.dto";
+import type { IUser } from "../interfaces/user.interface";
+import type { UserResponseDTO } from "../dtos/user.dto";
 
 export const toUserResponse = (user: IUser): UserResponseDTO => {
   return {

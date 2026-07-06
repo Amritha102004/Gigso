@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IGigRole } from "../interfaces/gig.interface";
+import type { IGigRole } from "../interfaces/gig.interface";
 
 const gigRoleSchema: Schema<IGigRole> = new Schema<IGigRole>(
   {

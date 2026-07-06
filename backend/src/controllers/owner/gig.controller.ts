@@ -1,9 +1,9 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middlewares/auth.middleware";
-import { IOwnerGigService } from "../../interfaces/services/owner/gig.service.interface";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middlewares/auth.middleware";
+import type { IOwnerGigService } from "../../interfaces/services/owner/gig.service.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
-import { ApiResponse } from "../../types/api-response.type";
+import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
 import { toCategoryDTO } from "../../mappers/category.mapper";

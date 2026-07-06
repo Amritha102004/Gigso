@@ -1,5 +1,5 @@
-import { Model, Document } from "mongoose";
-import { IBaseRepository } from "../interfaces/repositories/base.repository.interface";
+import type { Model, Document } from "mongoose";
+import type { IBaseRepository } from "../interfaces/repositories/base.repository.interface";
 
 export class BaseRepository<T extends Document> implements IBaseRepository<T> {
   protected _model: Model<T>;

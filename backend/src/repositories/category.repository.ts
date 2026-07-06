@@ -1,6 +1,6 @@
 import { CategoryModel } from "../models/category.model";
-import { ICategory } from "../interfaces/gig.interface";
-import { ICategoryRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { ICategory } from "../interfaces/gig.interface";
+import type { ICategoryRepository } from "../interfaces/repositories/gig.repository.interface";
 import { BaseRepository } from "./base.repository";
 
 export class CategoryRepository extends BaseRepository<ICategory> implements ICategoryRepository {

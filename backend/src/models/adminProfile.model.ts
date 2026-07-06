@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IAdminProfile } from "../interfaces/user.interface";
+import type { IAdminProfile } from "../interfaces/user.interface";
 
 const adminProfileSchema: Schema<IAdminProfile> =
   new Schema<IAdminProfile>(

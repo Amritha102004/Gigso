@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireProfile = false }) => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -19,8 +20,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireProfile = false 
       </div>
     );
   }
-
-  const location = useLocation();
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;

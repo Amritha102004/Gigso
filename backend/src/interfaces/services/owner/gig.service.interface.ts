@@ -1,4 +1,4 @@
-import { ICategory, IGig } from "../../gig.interface";
+import type { ICategory, IGig } from "../../gig.interface";
 
 export interface ICreateGigRoleInput {
   roleName: string;

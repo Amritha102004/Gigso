@@ -6,7 +6,6 @@ import {
   CalendarIcon, 
   ClockIcon,
   UserGroupIcon,
-  BriefcaseIcon,
   CheckIcon,
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';

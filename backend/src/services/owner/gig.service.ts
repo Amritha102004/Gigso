@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { IOwnerGigService, ICreateGigInput, IUpdateGigInput } from "../../interfaces/services/owner/gig.service.interface";
-import { ICategoryRepository, IGigRepository, IGigRoleRepository } from "../../interfaces/repositories/gig.repository.interface";
-import { ICategory, IGig } from "../../interfaces/gig.interface";
+import type { IOwnerGigService, ICreateGigInput, IUpdateGigInput } from "../../interfaces/services/owner/gig.service.interface";
+import type { ICategoryRepository, IGigRepository, IGigRoleRepository } from "../../interfaces/repositories/gig.repository.interface";
+import type { ICategory, IGig } from "../../interfaces/gig.interface";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(

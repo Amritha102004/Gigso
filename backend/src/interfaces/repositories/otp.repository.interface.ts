@@ -1,5 +1,5 @@
-import { IOtp, OtpType } from "../../models/otp.model";
-import { IBaseRepository } from "./base.repository.interface";
+import type { IOtp, OtpType } from "../../models/otp.model";
+import type { IBaseRepository } from "./base.repository.interface";
 
 export interface IOtpRepository extends IBaseRepository<IOtp> {
   upsertOtp(

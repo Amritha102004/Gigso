@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { jwtService } from "../utils/jwt";
 import { UserModel } from "../models/user.model";
 import { HttpStatus } from "../utils/http-status.enum";

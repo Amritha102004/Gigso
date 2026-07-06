@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 
 export interface User {
@@ -23,25 +23,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken');
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('accessToken'));
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('gigsoUser');
-    
-    if (storedToken && storedUser) {
+    if (storedUser) {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
+        return JSON.parse(storedUser);
+      } catch {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('gigsoUser');
       }
     }
-    setIsLoading(false);
-  }, []);
+    return null;
+  });
+  const [isLoading] = useState(false);
 
   const loginState = (userData: User, accessToken: string) => {
     setUser(userData);

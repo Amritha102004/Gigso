@@ -1,5 +1,5 @@
-import { ICategory } from "../interfaces/gig.interface";
-import { CategoryDTO } from "../dtos/category.dto";
+import type { ICategory } from "../interfaces/gig.interface";
+import type { CategoryDTO } from "../dtos/category.dto";
 
 export const toCategoryDTO = (category: ICategory): CategoryDTO => {
   return {

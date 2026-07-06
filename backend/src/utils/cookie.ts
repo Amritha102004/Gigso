@@ -1,4 +1,4 @@
-import { Response } from "express";
+import type { Response } from "express";
 import { ENV } from "../config/env.config";
 
 const MAX_AGE_MS = ENV.REFRESH_TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
