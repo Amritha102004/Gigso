@@ -37,8 +37,8 @@ const Login: React.FC = () => {
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
         if (res.user.role === 'admin') navigate('/admin/owners');
-        else if (res.user.role === 'worker') navigate('/worker/profile');
-        else navigate('/owner/profile');
+        else if (res.user.role === 'worker') navigate('/worker/home');
+        else navigate('/owner/dashboard');
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { requiresRole?: boolean; error?: string } } };
@@ -64,8 +64,8 @@ const Login: React.FC = () => {
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
         if (res.user.role === 'admin') navigate('/admin/owners');
-        else if (res.user.role === 'worker') navigate('/worker/profile');
-        else navigate('/owner/profile');
+        else if (res.user.role === 'worker') navigate('/worker/home');
+        else navigate('/owner/dashboard');
       })
       .catch((err: unknown) => {
         const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
