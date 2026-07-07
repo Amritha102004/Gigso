@@ -13,4 +13,5 @@ export interface IApplicationService {
     ownerId: string,
     status: "accepted" | "rejected"
   ): Promise<IGigApplication>;
+  withdrawApplication(applicationId: string, workerId: string): Promise<boolean>;
 }

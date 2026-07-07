@@ -9,5 +9,6 @@ router.use(authenticateJWT);
 router.use(authorizeRoles("worker"));
 
 router.get("/", applicationController.getWorkerApplications.bind(applicationController));
+router.delete("/:applicationId", applicationController.withdrawApplication.bind(applicationController));
 
 export const workerMyGigsRoutes = router;

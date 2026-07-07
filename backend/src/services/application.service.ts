@@ -114,6 +114,42 @@ export class ApplicationService implements IApplicationService {
     if (!updated) {
       throw new Error("Failed to update application status");
     }
+
+    // If accepted, auto-reject other pending applications by this worker for the same gig
+    if (status === "accepted") {
+      try {
+        const otherApps = await this._applicationRepo.findByGigIdAndWorkerId(
+          app.gigId.toString(),
+          app.workerId.toString()
+        );
+        for (const otherApp of otherApps) {
+          if (otherApp._id.toString() !== applicationId && otherApp.status === "pending") {
+            await this._applicationRepo.update(otherApp._id.toString(), { status: "rejected" } as any);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to auto-reject other applications for the same gig:", err);
+      }
+    }
+
     return updated;
+  }
+
+  async withdrawApplication(applicationId: string, workerId: string): Promise<boolean> {
+    const app = await this._applicationRepo.findById(applicationId);
+    if (!app) {
+      throw new Error("Application not found");
+    }
+
+    if (app.workerId.toString() !== workerId) {
+      throw new Error("Unauthorized to withdraw this application");
+    }
+
+    if (app.status !== "pending") {
+      throw new Error("Cannot withdraw an application that has already been accepted or rejected");
+    }
+
+    const deleted = await this._applicationRepo.delete(applicationId);
+    return !!deleted;
   }
 }

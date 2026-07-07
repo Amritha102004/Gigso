@@ -9,7 +9,20 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     super(GigModel);
   }
 
+  private async _updateExpiredGigs(): Promise<void> {
+    const now = new Date();
+    await GigModel.updateMany(
+      {
+        status: "active",
+        eventDate: { $lt: now },
+        isDeleted: false
+      },
+      { status: "completed" }
+    ).exec();
+  }
+
   override async findById(id: string): Promise<IGig | null> {
+    await this._updateExpiredGigs();
     return await GigModel.findOne({ _id: id, isDeleted: false })
       .populate("categoryId")
       .populate("roles")
@@ -17,6 +30,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
   }
 
   async findByOwnerId(ownerId: string, filters?: { status?: string }): Promise<IGig[]> {
+    await this._updateExpiredGigs();
     const query: any = { ownerId, isDeleted: false };
     if (filters?.status) {
       query.status = filters.status;
@@ -35,6 +49,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     minPay?: number;
     date?: string;
   }): Promise<IGig[]> {
+    await this._updateExpiredGigs();
     const query: any = { status: "active", isDeleted: false };
 
     if (filters?.categoryId) {

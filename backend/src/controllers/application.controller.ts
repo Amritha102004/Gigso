@@ -88,4 +88,18 @@ export class ApplicationController {
 
     res.status(HttpStatus.OK).json(response);
   });
+
+  public withdrawApplication = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const workerId = req.user._id.toString();
+    const applicationId = req.params.applicationId as string;
+
+    await this._applicationService.withdrawApplication(applicationId, workerId);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Application withdrawn successfully",
+    };
+
+    res.status(HttpStatus.OK).json(response);
+  });
 }

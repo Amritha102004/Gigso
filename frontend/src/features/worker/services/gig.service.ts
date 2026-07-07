@@ -67,6 +67,11 @@ export const workerGigService = {
     const response = await gigApi.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.WORKER_MY_GIGS, { params });
     return response.data;
   },
+
+  withdrawApplication: async (applicationId: string) => {
+    const response = await gigApi.delete<ApiResponse<void>>(`${GIG_ROUTES.WORKER_MY_GIGS}/${applicationId}`);
+    return response.data;
+  },
 };
 
 export default workerGigService;

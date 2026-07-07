@@ -85,6 +85,25 @@ const GigDetailPage: React.FC = () => {
     }
   };
 
+  const handleWithdrawClick = async (applicationId: string, roleName: string) => {
+    const confirmWithdraw = window.confirm(
+      `Are you sure you want to withdraw your application for "${roleName}"?`
+    );
+    if (!confirmWithdraw) return;
+
+    try {
+      const res = await workerGigService.withdrawApplication(applicationId);
+      if (res.success) {
+        showToast(`Successfully withdrew application for: ${roleName}`, 'success');
+        fetchUserApplications();
+      } else {
+        showToast(res.message || 'Failed to withdraw application.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Error withdrawing application.', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] gap-3 text-secondary bg-gray-50/20">
@@ -209,9 +228,13 @@ const GigDetailPage: React.FC = () => {
                         if (app) {
                           if (app.status === 'pending') {
                             return (
-                              <span className="inline-block px-3 py-1.5 bg-gray-100 text-gray-500 font-bold rounded-lg border border-gray-200 cursor-not-allowed">
+                              <button
+                                onClick={() => handleWithdrawClick(app.id, role.roleName)}
+                                className="px-3 py-1.5 bg-gray-100 text-gray-500 font-bold rounded-lg border border-gray-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-sm active:scale-95"
+                                title="Click to withdraw application"
+                              >
                                 Requested
-                              </span>
+                              </button>
                             );
                           }
                           if (app.status === 'accepted') {
