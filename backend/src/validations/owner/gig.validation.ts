@@ -46,11 +46,19 @@ export const createGigSchema = z.object({
           .min(1, "Spots must be at least 1")
           .max(500, "Spots cannot exceed 500"),
         payPerPerson: z.number()
-          .nonnegative("Pay cannot be negative")
+          .min(250, "Pay per person must be at least 250")
           .max(1000000, "Pay per person cannot exceed 1,000,000"),
       })
-    ).min(1, "At least one role is required"),
+    ).optional(),
     status: z.enum(["draft", "active"]).optional(),
+  }).refine((data) => {
+    if (data.status === "active") {
+      return !!data.roles && data.roles.length > 0;
+    }
+    return true;
+  }, {
+    message: "At least one role is required to publish the gig",
+    path: ["roles"],
   }),
 });
 
@@ -79,7 +87,7 @@ export const updateGigSchema = z.object({
           .min(1, "Spots must be at least 1")
           .max(500, "Spots cannot exceed 500"),
         payPerPerson: z.number()
-          .nonnegative("Pay cannot be negative")
+          .min(250, "Pay per person must be at least 250")
           .max(1000000, "Pay per person cannot exceed 1,000,000"),
       })
     ).min(1, "At least one role is required").optional(),

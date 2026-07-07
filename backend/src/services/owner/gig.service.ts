@@ -152,6 +152,12 @@ export class OwnerGigService implements IOwnerGigService {
       throw error;
     }
 
+    if (!gig.roles || gig.roles.length === 0) {
+      const error: any = new Error("At least one role is required to publish the gig");
+      error.statusCode = 400;
+      throw error;
+    }
+
     await this._gigRepo.update(gigId, { status: "active" } as any);
     const updated = await this._gigRepo.findById(gigId);
     if (!updated) {

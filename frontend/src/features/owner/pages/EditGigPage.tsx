@@ -86,7 +86,7 @@ const EditGigPage: React.FC = () => {
   }, [gigId]);
 
   const addRoleRow = () => {
-    setRoles([...roles, { roleName: '', spots: 1, payPerPerson: 100 }]);
+    setRoles([...roles, { roleName: '', spots: 1, payPerPerson: 250 }]);
   };
 
   const removeRoleRow = (index: number) => {
@@ -123,8 +123,8 @@ const EditGigPage: React.FC = () => {
       if (roles[i].spots <= 0) {
         return `Role #${i + 1} spots must be at least 1`;
       }
-      if (roles[i].payPerPerson < 0) {
-        return `Role #${i + 1} pay per person cannot be negative`;
+      if (roles[i].payPerPerson < 250) {
+        return `Role #${i + 1} pay per person must be at least ₹250`;
       }
     }
     return null;
@@ -266,8 +266,7 @@ const EditGigPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-secondary mb-1.5 uppercase">Start Time</label>
                 <input
-                  type="text"
-                  placeholder="e.g. 18:00 or 6:00 PM"
+                  type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -307,7 +306,7 @@ const EditGigPage: React.FC = () => {
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase">Role Name</th>
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-24">Spots</th>
-                  <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-36">Pay per person ($)</th>
+                  <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-36">Pay per person (₹)</th>
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-12 text-center"></th>
                 </tr>
               </thead>
@@ -363,7 +362,7 @@ const EditGigPage: React.FC = () => {
               <span className="text-xs font-bold uppercase">Estimated Budget</span>
             </div>
             <div className="text-right">
-              <div className="text-xl font-black text-primary">${totalBudget.toLocaleString()}</div>
+              <div className="text-xl font-black text-primary">₹{totalBudget.toLocaleString()}</div>
               <div className="text-[10px] text-secondary">Sum of (spots × pay) across all roles</div>
             </div>
           </div>

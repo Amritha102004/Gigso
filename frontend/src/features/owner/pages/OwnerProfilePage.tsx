@@ -401,11 +401,11 @@ const OwnerProfilePage: React.FC = () => {
               <div className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-secondary">Last Payout</span>
-                  <span className="font-bold text-textMain">$2,450.00</span>
+                  <span className="font-bold text-textMain">₹2,450.00</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary">Pending</span>
-                  <span className="font-bold text-textMain">$840.00</span>
+                  <span className="font-bold text-textMain">₹840.00</span>
                 </div>
               </div>
               <button className="mt-5 w-full py-2.5 bg-white border border-gray-200 text-textMain text-sm font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">

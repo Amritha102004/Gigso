@@ -216,7 +216,7 @@ const BrowseGigsPage: React.FC = () => {
 
           {/* Min Pay Rate */}
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Min Pay Rate ($)</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Min Pay Rate (₹)</label>
             <input
               type="number"
               placeholder="0.00"
@@ -315,7 +315,7 @@ const BrowseGigsPage: React.FC = () => {
                       Positions
                     </span>
                     <div className="text-xs text-textMain font-bold">
-                      {gig.totalRoles} {gig.totalRoles === 1 ? 'Role' : 'Roles'} available • Total Budget: ${gig.totalBudget}
+                      {gig.totalRoles} {gig.totalRoles === 1 ? 'Role' : 'Roles'} available • Total Budget: ₹{gig.totalBudget}
                     </div>
                   </div>
                 </div>

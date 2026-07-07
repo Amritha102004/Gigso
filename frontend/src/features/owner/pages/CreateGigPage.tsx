@@ -25,6 +25,9 @@ const CreateGigPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track draft ID once created
+  const [createdGigId, setCreatedGigId] = useState<string | null>(null);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -34,9 +37,12 @@ const CreateGigPage: React.FC = () => {
   const [startTime, setStartTime] = useState('');
   const [description, setDescription] = useState('');
   
+  // Field-level error state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Roles state (default with one empty role row)
   const [roles, setRoles] = useState<RoleInput[]>([
-    { roleName: '', spots: 1, payPerPerson: 100 }
+    { roleName: '', spots: 1, payPerPerson: 250 }
   ]);
 
   // Load categories
@@ -61,12 +67,30 @@ const CreateGigPage: React.FC = () => {
   }, []);
 
   const addRoleRow = () => {
-    setRoles([...roles, { roleName: '', spots: 1, payPerPerson: 100 }]);
+    setRoles([...roles, { roleName: '', spots: 1, payPerPerson: 250 }]);
   };
 
   const removeRoleRow = (index: number) => {
     if (roles.length === 1) return;
     setRoles(roles.filter((_, i) => i !== index));
+    // Also clear errors associated with the removed row
+    setErrors(prev => {
+      const copy = { ...prev };
+      delete copy[`roleName_${index}`];
+      delete copy[`spots_${index}`];
+      delete copy[`payPerPerson_${index}`];
+      return copy;
+    });
+  };
+
+  const clearError = (key: string) => {
+    if (errors[key]) {
+      setErrors(prev => {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      });
+    }
   };
 
   const handleRoleChange = (index: number, field: keyof RoleInput, value: string | number) => {
@@ -78,6 +102,7 @@ const CreateGigPage: React.FC = () => {
       updated[index] = { ...updated[index], [field]: value };
     }
     setRoles(updated);
+    clearError(`${field}_${index}`);
   };
 
   // Calculate total budget
@@ -85,76 +110,180 @@ const CreateGigPage: React.FC = () => {
 
   // Validations
   const validateStep1 = () => {
-    if (!title.trim()) return 'Title is required';
-    if (!categoryId) return 'Category is required';
-    if (!location.trim()) return 'Location is required';
-    if (!eventDate) return 'Event Date is required';
-    if (!startTime.trim()) return 'Start Time is required';
-    if (!description.trim()) return 'Description is required';
-    return null;
+    const newErrors: Record<string, string> = {};
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!categoryId) newErrors.categoryId = 'Category is required';
+    if (!location.trim()) newErrors.location = 'Location is required';
+    if (!eventDate) newErrors.eventDate = 'Event Date is required';
+    if (!startTime.trim()) newErrors.startTime = 'Start Time is required';
+    if (!description.trim()) newErrors.description = 'Description is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const validateStep2 = () => {
+    const newErrors: Record<string, string> = {};
     for (let i = 0; i < roles.length; i++) {
       if (!roles[i].roleName.trim()) {
-        return `Role #${i + 1} name is required`;
+        newErrors[`roleName_${i}`] = 'Role name is required';
       }
       if (roles[i].spots <= 0) {
-        return `Role #${i + 1} spots must be at least 1`;
+        newErrors[`spots_${i}`] = 'Spots must be at least 1';
       }
-      if (roles[i].payPerPerson < 0) {
-        return `Role #${i + 1} pay per person cannot be negative`;
+      if (roles[i].payPerPerson < 250) {
+        newErrors[`payPerPerson_${i}`] = 'Payout must be at least ₹250';
       }
     }
-    return null;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleContinue = () => {
-    const err = validateStep1();
-    if (err) {
-      setError(err);
-      return;
-    }
-    setError(null);
-    setStep(2);
-  };
-
-  const handleSave = async (isPublishing: boolean) => {
-    setError(null);
-    const step1Err = validateStep1();
-    if (step1Err) {
-      setError(step1Err);
-      setStep(1);
-      return;
-    }
-    const step2Err = validateStep2();
-    if (step2Err) {
-      setError(step2Err);
-      setStep(2);
-      return;
-    }
+  const handleContinue = async () => {
+    const isValid = validateStep1();
+    if (!isValid) return;
 
     try {
       setLoading(true);
-      const payload = {
+      setError(null);
+
+      const basePayload = {
         title,
         description,
         categoryId,
         location,
         eventDate,
         startTime,
-        roles,
-        status: (isPublishing ? 'active' : 'draft') as 'active' | 'draft',
       };
-      const res = await gigService.createGig(payload);
-      if (res.success) {
-        navigate('/owner/gigs');
+
+      if (!createdGigId) {
+        // Create draft (no roles yet)
+        const res = await gigService.createGig({
+          ...basePayload,
+          roles: [],
+          status: 'draft',
+        });
+        if (res.success && res.data) {
+          setCreatedGigId(res.data.id);
+          setStep(2);
+        } else {
+          setError(res.message || 'Failed to save draft.');
+        }
       } else {
-        setError(res.message || 'Failed to create gig.');
+        // Update draft (without roles yet, just base fields)
+        const res = await gigService.updateGig(createdGigId, basePayload);
+        if (res.success) {
+          setStep(2);
+        } else {
+          setError(res.message || 'Failed to update draft.');
+        }
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error creating gig.');
+      setError(err.response?.data?.message || 'Error saving gig draft.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveDraftStep1 = async () => {
+    const isValid = validateStep1();
+    if (!isValid) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const basePayload = {
+        title,
+        description,
+        categoryId,
+        location,
+        eventDate,
+        startTime,
+      };
+
+      if (!createdGigId) {
+        const res = await gigService.createGig({
+          ...basePayload,
+          roles: [],
+          status: 'draft',
+        });
+        if (res.success) {
+          navigate('/owner/gigs');
+        } else {
+          setError(res.message || 'Failed to save draft.');
+        }
+      } else {
+        const res = await gigService.updateGig(createdGigId, basePayload);
+        if (res.success) {
+          navigate('/owner/gigs');
+        } else {
+          setError(res.message || 'Failed to update draft.');
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Error saving gig draft.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveDraftStep2 = async () => {
+    const isValid = validateStep2();
+    if (!isValid) return;
+
+    if (!createdGigId) {
+      setError('No draft found to save. Please return to Step 1.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await gigService.updateGig(createdGigId, { roles });
+      if (res.success) {
+        navigate('/owner/gigs');
+      } else {
+        setError(res.message || 'Failed to save draft.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Error saving draft.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePublishStep2 = async () => {
+    const isValid = validateStep2();
+    if (!isValid) return;
+
+    if (!createdGigId) {
+      setError('No draft found to publish. Please return to Step 1.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      // 1. Update roles first
+      const updateRes = await gigService.updateGig(createdGigId, { roles });
+      if (!updateRes.success) {
+        setError(updateRes.message || 'Failed to update gig roles before publishing.');
+        return;
+      }
+      // 2. Publish gig (marks status as active)
+      const publishRes = await gigService.publishGig(createdGigId);
+      if (publishRes.success) {
+        navigate('/owner/gigs');
+      } else {
+        setError(publishRes.message || 'Failed to publish gig.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Error publishing gig.');
     } finally {
       setLoading(false);
     }
@@ -215,9 +344,15 @@ const CreateGigPage: React.FC = () => {
                 type="text"
                 placeholder="e.g. Catering Staff for Corporate Gala"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  clearError('title');
+                }}
+                className={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none transition-all ${
+                  errors.title ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                }`}
               />
+              {errors.title && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.title}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -228,26 +363,39 @@ const CreateGigPage: React.FC = () => {
                 ) : (
                   <select
                     value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white transition-all"
+                    onChange={(e) => {
+                      setCategoryId(e.target.value);
+                      clearError('categoryId');
+                    }}
+                    className={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none bg-white transition-all ${
+                      errors.categoryId ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                    }`}
                   >
+                    <option value="">Select a category</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 )}
+                {errors.categoryId && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.categoryId}</p>}
               </div>
               <div>
                 <LocationAutocomplete
                   id="create-gig-location"
                   label="Location"
                   value={location}
-                  onChange={(val) => setLocation(val)}
+                  onChange={(val) => {
+                    setLocation(val);
+                    clearError('location');
+                  }}
                   placeholder="e.g. Grand Hyatt, Ballroom B"
                   wrapperClassName="relative mb-0 flex flex-col"
                   labelClassName="block text-xs font-bold text-secondary mb-1.5 uppercase"
-                  inputClassName="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  inputClassName={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none transition-all ${
+                    errors.location ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                  }`}
                 />
+                {errors.location && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.location}</p>}
               </div>
             </div>
 
@@ -258,19 +406,30 @@ const CreateGigPage: React.FC = () => {
                   type="date"
                   value={eventDate}
                   min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  onChange={(e) => {
+                    setEventDate(e.target.value);
+                    clearError('eventDate');
+                  }}
+                  className={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none transition-all ${
+                    errors.eventDate ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                  }`}
                 />
+                {errors.eventDate && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.eventDate}</p>}
               </div>
               <div>
                 <label className="block text-xs font-bold text-secondary mb-1.5 uppercase">Start Time</label>
                 <input
-                  type="text"
-                  placeholder="e.g. 18:00 or 6:00 PM"
+                  type="time"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  onChange={(e) => {
+                    setStartTime(e.target.value);
+                    clearError('startTime');
+                  }}
+                  className={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none transition-all ${
+                    errors.startTime ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                  }`}
                 />
+                {errors.startTime && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.startTime}</p>}
               </div>
             </div>
 
@@ -280,9 +439,15 @@ const CreateGigPage: React.FC = () => {
                 rows={5}
                 placeholder="Describe the gig details, duties, dress code, or other specific guidelines..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  clearError('description');
+                }}
+                className={`w-full px-4 py-2.5 border rounded-xl text-xs text-textMain focus:ring-1 focus:ring-primary outline-none transition-all resize-none ${
+                  errors.description ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                }`}
               />
+              {errors.description && <p className="text-rose-500 text-[10px] mt-1 font-semibold">{errors.description}</p>}
             </div>
           </div>
 
@@ -295,7 +460,7 @@ const CreateGigPage: React.FC = () => {
             </button>
             <div className="flex gap-3">
               <button
-                onClick={() => handleSave(false)}
+                onClick={handleSaveDraftStep1}
                 disabled={loading}
                 className="px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold text-textMain transition-all disabled:opacity-50"
               >
@@ -303,7 +468,8 @@ const CreateGigPage: React.FC = () => {
               </button>
               <button
                 onClick={handleContinue}
-                className="inline-flex items-center gap-1 px-5 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-[#575727] transition-all shadow-sm"
+                disabled={loading}
+                className="inline-flex items-center gap-1 px-5 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-[#575727] transition-all shadow-sm disabled:opacity-50"
               >
                 Continue
                 <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -333,7 +499,7 @@ const CreateGigPage: React.FC = () => {
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase">Role Name</th>
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-24">Spots</th>
-                  <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-36">Pay per person ($)</th>
+                  <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-36">Pay per person (₹)</th>
                   <th className="px-4 py-3 text-xs font-bold text-secondary uppercase w-12 text-center"></th>
                 </tr>
               </thead>
@@ -346,8 +512,11 @@ const CreateGigPage: React.FC = () => {
                         placeholder="e.g. Head Bartender"
                         value={role.roleName}
                         onChange={(e) => handleRoleChange(idx, 'roleName', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-textMain focus:border-primary outline-none transition-all bg-white"
+                        className={`w-full px-3 py-1.5 border rounded-lg text-xs text-textMain outline-none transition-all bg-white ${
+                          errors[`roleName_${idx}`] ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                        }`}
                       />
+                      {errors[`roleName_${idx}`] && <p className="text-rose-500 text-[9px] mt-0.5 font-semibold">{errors[`roleName_${idx}`]}</p>}
                     </td>
                     <td className="px-4 py-2">
                       <input
@@ -355,17 +524,23 @@ const CreateGigPage: React.FC = () => {
                         min="1"
                         value={role.spots}
                         onChange={(e) => handleRoleChange(idx, 'spots', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-textMain focus:border-primary outline-none transition-all text-center bg-white"
+                        className={`w-full px-3 py-1.5 border rounded-lg text-xs text-textMain outline-none transition-all text-center bg-white ${
+                          errors[`spots_${idx}`] ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                        }`}
                       />
+                      {errors[`spots_${idx}`] && <p className="text-rose-500 text-[9px] mt-0.5 font-semibold text-center">{errors[`spots_${idx}`]}</p>}
                     </td>
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="0"
+                        min="250"
                         value={role.payPerPerson}
                         onChange={(e) => handleRoleChange(idx, 'payPerPerson', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-textMain focus:border-primary outline-none transition-all text-right bg-white"
+                        className={`w-full px-3 py-1.5 border rounded-lg text-xs text-textMain outline-none transition-all text-right bg-white ${
+                          errors[`payPerPerson_${idx}`] ? 'border-rose-500 focus:border-rose-500' : 'border-gray-200 focus:border-primary'
+                        }`}
                       />
+                      {errors[`payPerPerson_${idx}`] && <p className="text-rose-500 text-[9px] mt-0.5 font-semibold text-right">{errors[`payPerPerson_${idx}`]}</p>}
                     </td>
                     <td className="px-4 py-2 text-center">
                       <button
@@ -389,7 +564,7 @@ const CreateGigPage: React.FC = () => {
               <span className="text-xs font-bold uppercase">Estimated Budget</span>
             </div>
             <div className="text-right">
-              <div className="text-xl font-black text-primary">${totalBudget.toLocaleString()}</div>
+              <div className="text-xl font-black text-primary">₹{totalBudget.toLocaleString()}</div>
               <div className="text-[10px] text-secondary">Sum of (spots × pay) across all roles</div>
             </div>
           </div>
@@ -404,14 +579,14 @@ const CreateGigPage: React.FC = () => {
             </button>
             <div className="flex gap-3">
               <button
-                onClick={() => handleSave(false)}
+                onClick={handleSaveDraftStep2}
                 disabled={loading}
                 className="px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold text-textMain transition-all disabled:opacity-50"
               >
                 Save Draft
               </button>
               <button
-                onClick={() => handleSave(true)}
+                onClick={handlePublishStep2}
                 disabled={loading}
                 className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-[#575727] transition-all shadow-sm disabled:opacity-50"
               >

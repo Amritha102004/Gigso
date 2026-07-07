@@ -172,7 +172,6 @@ const ViewGigPage: React.FC = () => {
             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusColor}`}>
               {gig.status}
             </span>
-            <span className="text-xs text-secondary font-mono">ID: {gig.id}</span>
           </div>
           <h1 className="text-2xl font-black text-textMain">{gig.title}</h1>
           
@@ -285,7 +284,7 @@ const ViewGigPage: React.FC = () => {
                               {role.roleName} ({confirmedApps.length} / {role.spots})
                             </h4>
                             <span className="text-[10px] text-secondary font-semibold">
-                              Payout: ${role.payPerPerson}/hr
+                              Payout: ₹{role.payPerPerson}/hr
                             </span>
                           </div>
 
@@ -433,7 +432,7 @@ const ViewGigPage: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-secondary font-medium">Estimated Budget:</span>
-                <span className="text-base font-black text-primary">${gig.totalBudget.toLocaleString()}</span>
+                <span className="text-base font-black text-primary">₹{gig.totalBudget.toLocaleString()}</span>
               </div>
             </div>
           </div>
