@@ -36,7 +36,7 @@ const Login: React.FC = () => {
     authService.googleLogin({ token })
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
-        if (res.user.role === 'admin') navigate('/admin/owners');
+        if (res.user.role === 'admin') navigate('/admin/dashboard');
         else if (res.user.role === 'worker') navigate('/worker/home');
         else navigate('/owner/dashboard');
       })
@@ -63,7 +63,7 @@ const Login: React.FC = () => {
     authService.login(formData)
       .then((res: AuthResponse) => {
         loginState(res.user, res.accessToken);
-        if (res.user.role === 'admin') navigate('/admin/owners');
+        if (res.user.role === 'admin') navigate('/admin/dashboard');
         else if (res.user.role === 'worker') navigate('/worker/home');
         else navigate('/owner/dashboard');
       })

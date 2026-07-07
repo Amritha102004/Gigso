@@ -16,6 +16,7 @@ import OwnersPage from './features/admin/pages/OwnersPage';
 import WorkersPage from './features/admin/pages/WorkersPage';
 import CategoriesPage from './features/admin/pages/CategoriesPage';
 import AddCategoryPage from './features/admin/pages/AddCategoryPage';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
 import HomePage from './features/user/pages/HomePage';
 import SetupWorkerProfile from './features/worker/pages/SetupWorkerProfile';
 import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
@@ -50,6 +51,7 @@ function App() {
           {/* Secure Admin Pathways */}
           <Route path="/admin" element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
+              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="owners" element={<OwnersPage />} />
               <Route path="workers" element={<WorkersPage />} />
               <Route path="categories" element={<CategoriesPage />} />
