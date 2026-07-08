@@ -30,6 +30,7 @@ export interface IGig extends Document {
   status: "draft" | "active" | "completed" | "cancelled" | "paid";
   paymentStatus: "unpaid" | "paid";
   isDeleted: boolean;
+  isFlagged?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

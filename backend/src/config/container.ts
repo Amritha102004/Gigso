@@ -18,6 +18,7 @@ import { OwnerGigService } from "../services/owner/gig.service";
 import { AdminCategoryService } from "../services/admin/category.service";
 import { WorkerGigService } from "../services/worker/gig.service";
 import { ApplicationService } from "../services/application.service";
+import { AdminGigService } from "../services/admin/gig.service";
 
 // Controllers
 import { AuthController } from "../controllers/auth/auth.controller";
@@ -28,6 +29,7 @@ import { OwnerGigController } from "../controllers/owner/gig.controller";
 import { AdminCategoryController } from "../controllers/admin/category.controller";
 import { WorkerGigController } from "../controllers/worker/gig.controller";
 import { ApplicationController } from "../controllers/application.controller";
+import { AdminGigController } from "../controllers/admin/gig.controller";
 
 // Repositories
 export const userRepository = new UserRepository();
@@ -59,6 +61,7 @@ export const ownerGigService = new OwnerGigService(
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
 export const workerGigService = new WorkerGigService(gigRepository, categoryRepository);
 export const applicationService = new ApplicationService(gigApplicationRepository, gigRepository, gigRoleRepository);
+export const adminGigService = new AdminGigService(gigRepository, applicationService);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -69,3 +72,4 @@ export const ownerGigController = new OwnerGigController(ownerGigService);
 export const adminCategoryController = new AdminCategoryController(adminCategoryService);
 export const workerGigController = new WorkerGigController(workerGigService);
 export const applicationController = new ApplicationController(applicationService);
+export const adminGigController = new AdminGigController(adminGigService);

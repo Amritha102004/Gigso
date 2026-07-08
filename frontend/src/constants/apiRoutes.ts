@@ -18,6 +18,10 @@ export const ADMIN_ROUTES = {
   SUSPEND_USER:   (id: string) => `/admin/users/${id}/suspend`,
   CATEGORIES:     '/admin/categories',
   CATEGORY_BY_ID: (id: string) => `/admin/categories/${id}`,
+  GIGS:           '/admin/gigs',
+  GIG_BY_ID:      (id: string) => `/admin/gigs/${id}`,
+  FLAG_GIG:       (id: string) => `/admin/gigs/${id}/flag`,
+  DELETE_GIG:     (id: string) => `/admin/gigs/${id}`,
 } as const;
 
 export const PROFILE_ROUTES = {

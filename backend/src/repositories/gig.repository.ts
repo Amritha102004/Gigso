@@ -100,4 +100,51 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     ).exec();
     return !!result;
   }
+
+  async findAllGigs(
+    filters: { search?: string; categoryId?: string; status?: string; date?: string },
+    page: number,
+    limit: number
+  ): Promise<{ gigs: IGig[]; total: number }> {
+    await this._updateExpiredGigs();
+    const query: any = { isDeleted: false };
+
+    if (filters.categoryId) {
+      query.categoryId = new Types.ObjectId(filters.categoryId);
+    }
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    if (filters.search) {
+      query.$or = [
+        { title: { $regex: filters.search, $options: "i" } },
+        { location: { $regex: filters.search, $options: "i" } },
+      ];
+    }
+
+    if (filters.date) {
+      const dateStart = new Date(filters.date);
+      dateStart.setHours(0, 0, 0, 0);
+      const dateEnd = new Date(filters.date);
+      dateEnd.setHours(23, 59, 59, 999);
+      query.eventDate = { $gte: dateStart, $lte: dateEnd };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const gigs = await GigModel.find(query)
+      .populate("categoryId")
+      .populate("ownerId", "name email profileImage")
+      .populate("roles")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    const total = await GigModel.countDocuments(query).exec();
+
+    return { gigs, total };
+  }
 }

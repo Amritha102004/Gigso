@@ -21,4 +21,9 @@ export interface IGigRepository extends IBaseRepository<IGig> {
     date?: string;
   }): Promise<IGig[]>;
   softDelete(id: string): Promise<boolean>;
+  findAllGigs(
+    filters: { search?: string; categoryId?: string; status?: string; date?: string },
+    page: number,
+    limit: number
+  ): Promise<{ gigs: IGig[]; total: number }>;
 }

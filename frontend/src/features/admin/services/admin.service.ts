@@ -52,6 +52,51 @@ export const adminService = {
     const response = await adminApi.patch<ApiResponse<{ user: UserDTO }>>(ADMIN_ROUTES.SUSPEND_USER(userId));
     return { message: response.data.message, user: response.data.data!.user };
   },
+
+  getGigs: async (params?: {
+    search?: string;
+    categoryId?: string;
+    status?: string;
+    date?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ gigs: any[]; total: number; page: number; totalPages: number }> => {
+    const response = await adminApi.get<ApiResponse<{ gigs: any[]; total: number; page: number; totalPages: number }>>(
+      ADMIN_ROUTES.GIGS,
+      { params }
+    );
+    return response.data.data!;
+  },
+
+  getGigById: async (gigId: string): Promise<{ gig: any; ownerProfile: any; applications: any[] }> => {
+    const response = await adminApi.get<ApiResponse<{ gig: any; ownerProfile: any; applications: any[] }>>(
+      ADMIN_ROUTES.GIG_BY_ID(gigId)
+    );
+    return response.data.data!;
+  },
+
+  toggleFlagGig: async (gigId: string, isFlagged: boolean): Promise<any> => {
+    const response = await adminApi.patch<ApiResponse<any>>(
+      ADMIN_ROUTES.FLAG_GIG(gigId),
+      { isFlagged }
+    );
+    return response.data.data!;
+  },
+
+  deleteGig: async (gigId: string): Promise<any> => {
+    const response = await adminApi.delete<ApiResponse<any>>(
+      ADMIN_ROUTES.DELETE_GIG(gigId)
+    );
+    return response.data.data!;
+  },
+
+  updateApplicationStatus: async (gigId: string, applicationId: string, status: 'accepted' | 'rejected'): Promise<any> => {
+    const response = await adminApi.patch<ApiResponse<any>>(
+      `${ADMIN_ROUTES.GIGS}/${gigId}/applications/${applicationId}`,
+      { status }
+    );
+    return response.data.data!;
+  },
 };
 
 export default adminService;

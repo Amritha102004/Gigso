@@ -17,6 +17,8 @@ import WorkersPage from './features/admin/pages/WorkersPage';
 import CategoriesPage from './features/admin/pages/CategoriesPage';
 import AddCategoryPage from './features/admin/pages/AddCategoryPage';
 import AdminDashboard from './features/admin/pages/AdminDashboard';
+import AdminGigsPage from './features/admin/pages/AdminGigsPage';
+import AdminGigDetailsPage from './features/admin/pages/AdminGigDetailsPage';
 import HomePage from './features/user/pages/HomePage';
 import SetupWorkerProfile from './features/worker/pages/SetupWorkerProfile';
 import SetupOwnerProfile from './features/owner/pages/SetupOwnerProfile';
@@ -57,6 +59,8 @@ function App() {
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="categories/add" element={<AddCategoryPage />} />
               <Route path="categories/:categoryId/edit" element={<AddCategoryPage />} />
+              <Route path="gigs" element={<AdminGigsPage />} />
+              <Route path="gigs/:gigId" element={<AdminGigDetailsPage />} />
             </Route>
           </Route>
 

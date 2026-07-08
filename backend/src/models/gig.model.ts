@@ -61,6 +61,10 @@ const gigSchema: Schema<IGig> = new Schema<IGig>(
       type: Boolean,
       default: false,
     },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
