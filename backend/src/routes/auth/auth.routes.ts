@@ -28,20 +28,31 @@ router.post("/logout", authController.logout);
 
 // Profile image upload endpoint
 import { uploadProfileImage } from "../../middlewares/upload.middleware";
+import { uploadToCloudinary } from "../../utils/cloudinary";
+
 router.post("/upload-image", authenticateJWT, (req: any, res: any) => {
-  uploadProfileImage(req, res, (err: any) => {
+  uploadProfileImage(req, res, async (err: any) => {
     if (err) {
       return res.status(400).json({ success: false, message: err.message });
     }
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-    res.status(200).json({
-      success: true,
-      message: "Image uploaded successfully",
-      data: { url: imageUrl },
-    });
+
+    try {
+      const secureUrl = await uploadToCloudinary(req.file.path);
+      res.status(200).json({
+        success: true,
+        message: "Image uploaded successfully",
+        data: { url: secureUrl },
+      });
+    } catch (uploadError: any) {
+      console.error("Cloudinary upload failed:", uploadError);
+      res.status(500).json({
+        success: false,
+        message: uploadError.message || "Failed to upload image to Cloudinary",
+      });
+    }
   });
 });
 
