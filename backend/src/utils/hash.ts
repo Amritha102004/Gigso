@@ -24,6 +24,6 @@ export class BcryptHashService implements IHashService {
   }
 }
 
-// Singleton instances — one for passwords, one for OTPs (same behaviour, separate concern)
+
 export const passwordHashService = new BcryptHashService();
 export const otpHashService = new BcryptHashService();

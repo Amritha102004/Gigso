@@ -12,7 +12,7 @@ router.use(authenticateJWT);
 router.use(authorizeRoles("owner"));
 router.use(requireApproved);
 
-// Categories (must be before :gigId params route)
+// Categories 
 router.get("/categories", ownerGigController.getCategories.bind(ownerGigController));
 
 // Gigs

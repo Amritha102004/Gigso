@@ -42,7 +42,7 @@ export const toGigListItemDTO = (gig: IGig): GigListItemDTO => {
 
   const totalRoles = roles.length;
   const totalSpots = roles.reduce((sum, role) => sum + role.spots, 0);
-  const filledSpots = 0; // In this phase applications/rosters are not implemented yet.
+  const filledSpots = 0;
 
   return {
     id: gig._id.toString(),

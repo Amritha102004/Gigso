@@ -124,7 +124,7 @@ export class AdminUsersController {
 
   public toggleSuspendUser = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const { id } = req.params;
-    // Get user first to toggle
+    
     const user = await this._usersService.getUser(id);
     const updatedUser = await this._usersService.updateUserStatus(id, !user.isSuspended);
     
