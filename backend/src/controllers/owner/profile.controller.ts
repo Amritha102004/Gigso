@@ -5,22 +5,21 @@ import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
 import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { toUserResponse } from "../../mappers/user.mapper";
-import { toOwnerProfileResponse } from "../../mappers/ownerProfile.mapper";
+import { toSetupOwnerProfileRequestDTO } from "../../mappers/request.mapper";
 
 export class OwnerProfileController {
   constructor(private _profileService: IOwnerProfileService) {}
 
   public setupOwnerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user._id.toString();
-    const profileData = req.body;
+    const dto = toSetupOwnerProfileRequestDTO(req.body);
 
-    const { user, profile } = await this._profileService.setupOwnerProfile(userId, profileData);
+    const { user, profile } = await this._profileService.setupOwnerProfile(userId, dto);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.OWNER_PROFILE_SETUP,
-      data: { user: toUserResponse(user), profile: toOwnerProfileResponse(profile) },
+      data: { user, profile },
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -33,7 +32,7 @@ export class OwnerProfileController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.OWNER_PROFILE_FETCHED,
-      data: { profile: profile ? toOwnerProfileResponse(profile) : null },
+      data: { profile },
     };
 
     res.status(HttpStatus.OK).json(response);

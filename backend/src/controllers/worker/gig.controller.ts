@@ -3,27 +3,19 @@ import type { IWorkerGigService } from "../../interfaces/services/worker/gig.ser
 import { HttpStatus } from "../../utils/http-status.enum";
 import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
-import { toCategoryDTO } from "../../mappers/category.mapper";
+import { toBrowseGigsQueryDTO } from "../../mappers/request.mapper";
 
 export class WorkerGigController {
   constructor(private _gigService: IWorkerGigService) {}
 
   public browseGigs = asyncHandler(async (req: Request, res: Response) => {
-    const filters = {
-      search: req.query.search as string | undefined,
-      categoryId: req.query.category as string | undefined,
-      location: req.query.location as string | undefined,
-      minPay: req.query.minPay ? Number(req.query.minPay) : undefined,
-      date: req.query.date as string | undefined,
-    };
-
-    const gigs = await this._gigService.browseGigs(filters);
+    const dto = toBrowseGigsQueryDTO(req.query);
+    const gigs = await this._gigService.browseGigs(dto);
 
     const response: ApiResponse = {
       success: true,
       message: "Active gigs fetched successfully",
-      data: gigs.map(toGigListItemDTO),
+      data: gigs,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -36,7 +28,7 @@ export class WorkerGigController {
     const response: ApiResponse = {
       success: true,
       message: "Gig details fetched successfully",
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -48,7 +40,7 @@ export class WorkerGigController {
     const response: ApiResponse = {
       success: true,
       message: "Categories fetched successfully",
-      data: categories.map(toCategoryDTO),
+      data: categories,
     };
 
     res.status(HttpStatus.OK).json(response);

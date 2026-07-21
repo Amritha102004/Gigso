@@ -3,7 +3,12 @@ import type { IGigRepository } from "../../interfaces/repositories/gig.repositor
 import type { IWorkerProfileRepository, IOwnerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
 import type { IGigApplicationRepository } from "../../interfaces/repositories/application.repository.interface";
 import type { IApplicationService } from "../../interfaces/services/application.service.interface";
-import type { IGig } from "../../interfaces/gig.interface";
+import type { GigListItemDTO, GigResponseDTO, AdminGigsQueryDTO } from "../../dtos/gig.dto";
+import type { OwnerProfileResponseDTO } from "../../dtos/ownerProfile.dto";
+import type { GigApplicationDTO } from "../../dtos/application.dto";
+import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
+import { toOwnerProfileResponse } from "../../mappers/ownerProfile.mapper";
+import { toGigApplicationDTO } from "../../mappers/application.mapper";
 
 export class AdminGigService implements IAdminGigService {
   constructor(
@@ -15,30 +20,25 @@ export class AdminGigService implements IAdminGigService {
   ) {}
 
   async getAllGigs(
-    filters: {
-      search?: string;
-      categoryId?: string;
-      status?: string;
-      date?: string;
-    },
+    filters: AdminGigsQueryDTO,
     page: number,
     limit: number
   ): Promise<{
-    gigs: IGig[];
+    gigs: GigListItemDTO[];
     total: number;
     page: number;
     totalPages: number;
   }> {
     const { gigs, total } = await this._gigRepo.findAllGigs(filters, page, limit);
     return {
-      gigs,
+      gigs: gigs.map(toGigListItemDTO),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
     };
   }
 
-  async getGigById(id: string): Promise<{ gig: IGig; ownerProfile: any; applications: any[] }> {
+  async getGigById(id: string): Promise<{ gig: GigResponseDTO; ownerProfile: OwnerProfileResponseDTO | null; applications: GigApplicationDTO[] }> {
     const gig = await this._gigRepo.findGigDetailsById(id);
 
     if (!gig) {
@@ -47,7 +47,8 @@ export class AdminGigService implements IAdminGigService {
       throw error;
     }
 
-    const ownerProfile = await this._ownerProfileRepo.findByUserId(gig.ownerId._id.toString());
+    const ownerProfileDoc = await this._ownerProfileRepo.findByUserId(gig.ownerId._id.toString());
+    const ownerProfile = ownerProfileDoc ? toOwnerProfileResponse(ownerProfileDoc) : null;
 
     // Fetch applications with worker user profile attached
     const applications = await this._applicationRepo.findByGigId(id);
@@ -58,20 +59,17 @@ export class AdminGigService implements IAdminGigService {
     const applicationsWithProfiles = applications.map((app) => {
       const applicantId = app.workerId._id?.toString() || app.workerId.toString();
       const profile = workerProfiles.find((p) => p.userId.toString() === applicantId) || null;
-      return {
-        ...app.toObject(),
-        profile,
-      };
+      return toGigApplicationDTO(app, profile);
     });
 
     return {
-      gig,
+      gig: toGigResponseDTO(gig),
       ownerProfile,
       applications: applicationsWithProfiles,
     };
   }
 
-  async toggleFlagGig(id: string, isFlagged: boolean): Promise<IGig> {
+  async toggleFlagGig(id: string, isFlagged: boolean): Promise<GigResponseDTO> {
     await this._gigRepo.update(id, { isFlagged });
     const gig = await this._gigRepo.findGigDetailsById(id);
 
@@ -80,7 +78,7 @@ export class AdminGigService implements IAdminGigService {
       error.statusCode = 404;
       throw error;
     }
-    return gig;
+    return toGigResponseDTO(gig);
   }
 
   async deleteGig(id: string): Promise<boolean> {
@@ -91,7 +89,7 @@ export class AdminGigService implements IAdminGigService {
     gigId: string,
     applicationId: string,
     status: "accepted" | "rejected"
-  ): Promise<any> {
+  ): Promise<GigApplicationDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.isDeleted) {
       const error: any = new Error("Gig not found");

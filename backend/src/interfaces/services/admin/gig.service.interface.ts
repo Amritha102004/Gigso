@@ -1,27 +1,24 @@
-import type { IGig } from "../../gig.interface";
+import type { GigListItemDTO, GigResponseDTO, AdminGigsQueryDTO } from "../../../dtos/gig.dto";
+import type { OwnerProfileResponseDTO } from "../../../dtos/ownerProfile.dto";
+import type { GigApplicationDTO } from "../../../dtos/application.dto";
 
 export interface IAdminGigService {
   getAllGigs(
-    filters: {
-      search?: string;
-      categoryId?: string;
-      status?: string;
-      date?: string;
-    },
+    filters: AdminGigsQueryDTO,
     page: number,
     limit: number
   ): Promise<{
-    gigs: IGig[];
+    gigs: GigListItemDTO[];
     total: number;
     page: number;
     totalPages: number;
   }>;
-  getGigById(id: string): Promise<{ gig: IGig; ownerProfile: any; applications: any[] }>;
-  toggleFlagGig(id: string, isFlagged: boolean): Promise<IGig>;
+  getGigById(id: string): Promise<{ gig: GigResponseDTO; ownerProfile: OwnerProfileResponseDTO | null; applications: GigApplicationDTO[] }>;
+  toggleFlagGig(id: string, isFlagged: boolean): Promise<GigResponseDTO>;
   deleteGig(id: string): Promise<boolean>;
   updateApplicationStatus(
     gigId: string,
     applicationId: string,
     status: "accepted" | "rejected"
-  ): Promise<any>;
+  ): Promise<GigApplicationDTO>;
 }

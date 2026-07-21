@@ -1,13 +1,8 @@
-import type { IGig, ICategory } from "../../gig.interface";
+import type { BrowseGigsQueryDTO, GigListItemDTO, GigResponseDTO } from "../../../dtos/gig.dto";
+import type { CategoryDTO } from "../../../dtos/category.dto";
 
 export interface IWorkerGigService {
-  browseGigs(filters?: {
-    search?: string;
-    categoryId?: string;
-    location?: string;
-    minPay?: number;
-    date?: string;
-  }): Promise<IGig[]>;
-  getGigById(gigId: string): Promise<IGig>;
-  getCategories(): Promise<ICategory[]>;
+  browseGigs(filters?: BrowseGigsQueryDTO): Promise<GigListItemDTO[]>;
+  getGigById(gigId: string): Promise<GigResponseDTO>;
+  getCategories(): Promise<CategoryDTO[]>;
 }

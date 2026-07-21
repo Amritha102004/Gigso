@@ -2,8 +2,8 @@ import type { IApplicationService } from "../interfaces/services/application.ser
 import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
 import type { IGigRepository, IGigRoleRepository } from "../interfaces/repositories/gig.repository.interface";
 import type { IWorkerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
-import type { IGigApplication } from "../interfaces/application.interface";
-import type { IWorkerProfile } from "../interfaces/user.interface";
+import type { GigApplicationDTO } from "../dtos/application.dto";
+import { toGigApplicationDTO } from "../mappers/application.mapper";
 import { Types } from "mongoose";
 
 export class ApplicationService implements IApplicationService {
@@ -14,7 +14,7 @@ export class ApplicationService implements IApplicationService {
     private _workerProfileRepo: IWorkerProfileRepository
   ) {}
 
-  async applyForGigRole(workerId: string, gigId: string, roleId: string): Promise<IGigApplication> {
+  async applyForGigRole(workerId: string, gigId: string, roleId: string): Promise<GigApplicationDTO> {
     // 1. Verify gig exists and is active
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.status !== "active" || gig.isDeleted) {
@@ -35,23 +35,23 @@ export class ApplicationService implements IApplicationService {
     }
 
     // 4. Create new application
-    return await this._applicationRepo.create({
+    const app = await this._applicationRepo.create({
       gigId: new Types.ObjectId(gigId) as any,
       roleId: new Types.ObjectId(roleId) as any,
       workerId: new Types.ObjectId(workerId) as any,
       status: "pending",
       appliedAt: new Date(),
     } as any);
+
+    return toGigApplicationDTO(app);
   }
 
-  async getWorkerApplications(workerId: string, status?: string): Promise<IGigApplication[]> {
-    return await this._applicationRepo.findByWorkerId(workerId, status);
+  async getWorkerApplications(workerId: string, status?: string): Promise<GigApplicationDTO[]> {
+    const apps = await this._applicationRepo.findByWorkerId(workerId, status);
+    return apps.map((app) => toGigApplicationDTO(app));
   }
 
-  async getGigApplications(
-    gigId: string,
-    ownerId: string
-  ): Promise<{ application: IGigApplication; profile: IWorkerProfile | null }[]> {
+  async getGigApplications(gigId: string, ownerId: string): Promise<GigApplicationDTO[]> {
     // Verify owner owns the gig
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId || gig.isDeleted) {
@@ -69,10 +69,7 @@ export class ApplicationService implements IApplicationService {
     return applications.map((app) => {
       const applicantId = app.workerId._id?.toString() || app.workerId.toString();
       const profile = profiles.find((p) => p.userId.toString() === applicantId) || null;
-      return {
-        application: app,
-        profile,
-      };
+      return toGigApplicationDTO(app, profile);
     });
   }
 
@@ -80,7 +77,7 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     ownerId: string,
     status: "accepted" | "rejected"
-  ): Promise<IGigApplication> {
+  ): Promise<GigApplicationDTO> {
     // 1. Retrieve the application
     const app = await this._applicationRepo.findById(applicationId);
     if (!app) {
@@ -133,7 +130,7 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    return updated;
+    return toGigApplicationDTO(updated);
   }
 
   async withdrawApplication(applicationId: string, workerId: string): Promise<boolean> {

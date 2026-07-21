@@ -36,7 +36,7 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
   };
 };
 
-export const toGigListItemDTO = (gig: IGig): GigListItemDTO => {
+export const toGigListItemDTO = (gig: IGig, pendingApplicationsCount?: number): GigListItemDTO => {
   const category = gig.categoryId as any as ICategory;
   const roles = (gig.roles || []) as any[] as IGigRole[];
 
@@ -57,5 +57,6 @@ export const toGigListItemDTO = (gig: IGig): GigListItemDTO => {
     totalSpots,
     location: gig.location,
     totalBudget: gig.totalBudget,
+    pendingApplicationsCount,
   };
 };

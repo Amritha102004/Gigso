@@ -1,9 +1,9 @@
-import type { IUser } from "../../user.interface";
+import type { UserResponseDTO } from "../../../dtos/user.dto";
 import type { UserFilter } from "../../repositories/user.repository.interface";
 
 export interface IUsersService {
-  getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: IUser[]; total: number }>;
-  getUser(id: string): Promise<IUser>;
-  updateUserStatus(id: string, isSuspended: boolean): Promise<IUser>;
-  approveOwner(id: string): Promise<IUser>;
+  getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: UserResponseDTO[]; total: number }>;
+  getUser(id: string): Promise<UserResponseDTO>;
+  updateUserStatus(id: string, isSuspended: boolean): Promise<UserResponseDTO>;
+  approveOwner(id: string): Promise<UserResponseDTO>;
 }

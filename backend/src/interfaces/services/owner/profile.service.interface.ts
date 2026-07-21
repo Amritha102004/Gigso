@@ -1,6 +1,7 @@
-import type { IOwnerProfile, IUser } from "../../user.interface";
+import type { UserResponseDTO } from "../../../dtos/user.dto";
+import type { SetupOwnerProfileRequestDTO, OwnerProfileResponseDTO } from "../../../dtos/ownerProfile.dto";
 
 export interface IOwnerProfileService {
-  setupOwnerProfile(userId: string, profileData: Partial<IOwnerProfile> & { name?: string; phone?: string; profileImage?: string; }): Promise<{ user: IUser; profile: IOwnerProfile }>;
-  getOwnerProfile(userId: string): Promise<IOwnerProfile | null>;
+  setupOwnerProfile(userId: string, profileData: SetupOwnerProfileRequestDTO): Promise<{ user: UserResponseDTO; profile: OwnerProfileResponseDTO }>;
+  getOwnerProfile(userId: string): Promise<OwnerProfileResponseDTO | null>;
 }

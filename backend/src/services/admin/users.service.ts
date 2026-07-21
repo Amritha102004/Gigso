@@ -1,33 +1,38 @@
 import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
 import type { IUsersService } from "../../interfaces/services/admin/users.service.interface";
 import type { UserFilter } from "../../interfaces/repositories/user.repository.interface";
-import type { IUser } from "../../interfaces/user.interface";
+import type { UserResponseDTO } from "../../dtos/user.dto";
+import { toUserResponse } from "../../mappers/user.mapper";
 
 export class UsersService implements IUsersService {
   constructor(private _usersRepo: IUserRepository) {}
 
-  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: IUser[]; total: number }> {
+  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: UserResponseDTO[]; total: number }> {
     const skip = (page - 1) * limit;
-    return this._usersRepo.findUsers(filter, skip, limit);
+    const { users, total } = await this._usersRepo.findUsers(filter, skip, limit);
+    return {
+      users: users.map(toUserResponse),
+      total,
+    };
   }
 
-  async getUser(id: string): Promise<IUser> {
+  async getUser(id: string): Promise<UserResponseDTO> {
     const user = await this._usersRepo.findById(id);
     if (!user) {
       throw new Error("User not found");
     }
-    return user;
+    return toUserResponse(user);
   }
 
-  async updateUserStatus(id: string, isSuspended: boolean): Promise<IUser> {
+  async updateUserStatus(id: string, isSuspended: boolean): Promise<UserResponseDTO> {
     const user = await this._usersRepo.updateUser(id, { isSuspended });
     if (!user) {
       throw new Error("User not found");
     }
-    return user;
+    return toUserResponse(user);
   }
 
-  async approveOwner(id: string): Promise<IUser> {
+  async approveOwner(id: string): Promise<UserResponseDTO> {
     const user = await this._usersRepo.findById(id);
     if (!user) {
       throw new Error("User not found");
@@ -41,6 +46,6 @@ export class UsersService implements IUsersService {
     if (!updatedUser) {
       throw new Error("User not found during update");
     }
-    return updatedUser;
+    return toUserResponse(updatedUser);
   }
 }

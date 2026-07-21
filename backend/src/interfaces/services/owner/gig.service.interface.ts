@@ -1,45 +1,18 @@
-import type { ICategory, IGig } from "../../gig.interface";
-
-export interface ICreateGigRoleInput {
-  roleName: string;
-  spots: number;
-  payPerPerson: number;
-}
-
-export interface ICreateGigInput {
-  title: string;
-  description: string;
-  categoryId: string;
-  location: string;
-  eventDate: Date;
-  startTime: string;
-  roles: ICreateGigRoleInput[];
-  status?: "draft" | "active";
-}
-
-export interface IUpdateGigInput {
-  title?: string;
-  description?: string;
-  categoryId?: string;
-  location?: string;
-  eventDate?: Date;
-  startTime?: string;
-  roles?: ICreateGigRoleInput[];
-}
-
-export interface IOwnerGigWithCounts {
-  gig: IGig;
-  pendingCount: number;
-  acceptedCount: number;
-}
+import type {
+  CreateGigRequestDTO,
+  UpdateGigRequestDTO,
+  GigResponseDTO,
+  GigListItemDTO,
+} from "../../../dtos/gig.dto";
+import type { CategoryDTO } from "../../../dtos/category.dto";
 
 export interface IOwnerGigService {
-  createGig(ownerId: string, input: ICreateGigInput): Promise<IGig>;
-  getOwnerGigs(ownerId: string, status?: string): Promise<IOwnerGigWithCounts[]>;
-  getGigById(gigId: string, ownerId: string): Promise<IGig>;
-  updateGig(gigId: string, ownerId: string, input: IUpdateGigInput): Promise<IGig>;
+  createGig(ownerId: string, input: CreateGigRequestDTO): Promise<GigResponseDTO>;
+  getOwnerGigs(ownerId: string, status?: string): Promise<GigListItemDTO[]>;
+  getGigById(gigId: string, ownerId: string): Promise<GigResponseDTO>;
+  updateGig(gigId: string, ownerId: string, input: UpdateGigRequestDTO): Promise<GigResponseDTO>;
   softDeleteGig(gigId: string, ownerId: string): Promise<boolean>;
-  publishGig(gigId: string, ownerId: string): Promise<IGig>;
-  markAsCompleted(gigId: string, ownerId: string): Promise<IGig>;
-  getCategories(): Promise<ICategory[]>;
+  publishGig(gigId: string, ownerId: string): Promise<GigResponseDTO>;
+  markAsCompleted(gigId: string, ownerId: string): Promise<GigResponseDTO>;
+  getCategories(): Promise<CategoryDTO[]>;
 }

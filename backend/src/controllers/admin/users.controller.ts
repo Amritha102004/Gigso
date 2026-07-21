@@ -3,8 +3,6 @@ import type { IUsersService } from "../../interfaces/services/admin/users.servic
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
 import type { ApiResponse } from "../../types/api-response.type";
-import { toUserResponse } from "../../mappers/user.mapper";
-import type { IUser } from "../../interfaces/user.interface";
 import { asyncHandler } from "../../utils/asyncHandler";
 
 export class AdminUsersController {
@@ -26,15 +24,11 @@ export class AdminUsersController {
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);
-    const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.USERS_FETCHED,
-      data: {
-        ...result,
-        users: mappedUsers
-      }
+      data: result,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -54,15 +48,11 @@ export class AdminUsersController {
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);
-    const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.USERS_FETCHED,
-      data: {
-        ...result,
-        users: mappedUsers
-      }
+      data: result,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -82,15 +72,11 @@ export class AdminUsersController {
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);
-    const mappedUsers = result.users.map((user: IUser) => toUserResponse(user));
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.USERS_FETCHED,
-      data: {
-        ...result,
-        users: mappedUsers
-      }
+      data: result,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -103,7 +89,7 @@ export class AdminUsersController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.DETAILS_FETCHED,
-      data: { user: toUserResponse(user as IUser) }
+      data: { user }
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -116,7 +102,7 @@ export class AdminUsersController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.OWNER_APPROVED,
-      data: { user: toUserResponse(updatedUser) }
+      data: { user: updatedUser }
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -131,7 +117,7 @@ export class AdminUsersController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.USER_STATUS_UPDATED,
-      data: { user: toUserResponse(updatedUser) }
+      data: { user: updatedUser }
     };
 
     res.status(HttpStatus.OK).json(response);

@@ -1,8 +1,16 @@
 import { Types } from "mongoose";
-import type { IOwnerGigService, ICreateGigInput, IUpdateGigInput, IOwnerGigWithCounts } from "../../interfaces/services/owner/gig.service.interface";
+import type { IOwnerGigService } from "../../interfaces/services/owner/gig.service.interface";
 import type { ICategoryRepository, IGigRepository, IGigRoleRepository } from "../../interfaces/repositories/gig.repository.interface";
 import type { IGigApplicationRepository } from "../../interfaces/repositories/application.repository.interface";
-import type { ICategory, IGig } from "../../interfaces/gig.interface";
+import type {
+  CreateGigRequestDTO,
+  UpdateGigRequestDTO,
+  GigResponseDTO,
+  GigListItemDTO,
+} from "../../dtos/gig.dto";
+import type { CategoryDTO } from "../../dtos/category.dto";
+import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
+import { toCategoryDTO } from "../../mappers/category.mapper";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
@@ -12,7 +20,7 @@ export class OwnerGigService implements IOwnerGigService {
     private _applicationRepo: IGigApplicationRepository
   ) {}
 
-  async createGig(ownerId: string, input: ICreateGigInput): Promise<IGig> {
+  async createGig(ownerId: string, input: CreateGigRequestDTO): Promise<GigResponseDTO> {
     const gigId = new Types.ObjectId();
 
     // 1. Calculate totalBudget
@@ -55,35 +63,31 @@ export class OwnerGigService implements IOwnerGigService {
     if (!gig) {
       throw new Error("Gig was not created properly");
     }
-    return gig;
+    return toGigResponseDTO(gig);
   }
 
-  async getOwnerGigs(ownerId: string, status?: string): Promise<IOwnerGigWithCounts[]> {
+  async getOwnerGigs(ownerId: string, status?: string): Promise<GigListItemDTO[]> {
     const gigs = await this._gigRepo.findByOwnerId(ownerId, status ? { status } : undefined);
     const gigIds = gigs.map((g) => g._id.toString());
     const counts = await this._applicationRepo.getCountsForGigs(gigIds);
 
     return gigs.map((gig) => {
       const gigCount = counts.find((c) => c.gigId === gig._id.toString());
-      return {
-        gig,
-        pendingCount: gigCount ? gigCount.pendingCount : 0,
-        acceptedCount: gigCount ? gigCount.acceptedCount : 0,
-      };
+      return toGigListItemDTO(gig, gigCount ? gigCount.pendingCount : undefined);
     });
   }
 
-  async getGigById(gigId: string, ownerId: string): Promise<IGig> {
+  async getGigById(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
       const error: any = new Error("Gig not found or unauthorized access");
       error.statusCode = 404;
       throw error;
     }
-    return gig;
+    return toGigResponseDTO(gig);
   }
 
-  async updateGig(gigId: string, ownerId: string, input: IUpdateGigInput): Promise<IGig> {
+  async updateGig(gigId: string, ownerId: string, input: UpdateGigRequestDTO): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
       const error: any = new Error("Gig not found or unauthorized access");
@@ -126,7 +130,7 @@ export class OwnerGigService implements IOwnerGigService {
     if (!updatedGig) {
       throw new Error("Gig not found after update");
     }
-    return updatedGig;
+    return toGigResponseDTO(updatedGig);
   }
 
   async softDeleteGig(gigId: string, ownerId: string): Promise<boolean> {
@@ -139,7 +143,7 @@ export class OwnerGigService implements IOwnerGigService {
     return await this._gigRepo.softDelete(gigId);
   }
 
-  async publishGig(gigId: string, ownerId: string): Promise<IGig> {
+  async publishGig(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
       const error: any = new Error("Gig not found or unauthorized access");
@@ -163,10 +167,10 @@ export class OwnerGigService implements IOwnerGigService {
     if (!updated) {
       throw new Error("Gig not found after publish");
     }
-    return updated;
+    return toGigResponseDTO(updated);
   }
 
-  async markAsCompleted(gigId: string, ownerId: string): Promise<IGig> {
+  async markAsCompleted(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
       const error: any = new Error("Gig not found or unauthorized access");
@@ -184,10 +188,11 @@ export class OwnerGigService implements IOwnerGigService {
     if (!updated) {
       throw new Error("Gig not found after completion");
     }
-    return updated;
+    return toGigResponseDTO(updated);
   }
 
-  async getCategories(): Promise<ICategory[]> {
-    return await this._categoryRepo.findAll();
+  async getCategories(): Promise<CategoryDTO[]> {
+    const categories = await this._categoryRepo.findAll();
+    return categories.map(toCategoryDTO);
   }
 }

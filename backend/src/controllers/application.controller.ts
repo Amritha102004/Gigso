@@ -4,7 +4,7 @@ import type { IApplicationService } from "../interfaces/services/application.ser
 import { HttpStatus } from "../utils/http-status.enum";
 import type { ApiResponse } from "../types/api-response.type";
 import { asyncHandler } from "../utils/asyncHandler";
-import { toGigApplicationDTO } from "../mappers/application.mapper";
+import { toApplyForGigRoleRequestDTO, toUpdateApplicationStatusRequestDTO } from "../mappers/request.mapper";
 
 export class ApplicationController {
   constructor(private _applicationService: IApplicationService) {}
@@ -12,9 +12,9 @@ export class ApplicationController {
   public applyForGigRole = asyncHandler(async (req: AuthRequest, res: Response) => {
     const workerId = req.user._id.toString();
     const gigId = req.params.gigId as string;
-    const { roleId } = req.body;
+    const dto = toApplyForGigRoleRequestDTO(req.body);
 
-    if (!roleId) {
+    if (!dto.roleId) {
       res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: "roleId is required in request body",
@@ -22,12 +22,12 @@ export class ApplicationController {
       return;
     }
 
-    const application = await this._applicationService.applyForGigRole(workerId, gigId, roleId);
+    const application = await this._applicationService.applyForGigRole(workerId, gigId, dto.roleId);
 
     const response: ApiResponse = {
       success: true,
       message: "Applied for role successfully",
-      data: toGigApplicationDTO(application),
+      data: application,
     };
 
     res.status(HttpStatus.CREATED).json(response);
@@ -42,7 +42,7 @@ export class ApplicationController {
     const response: ApiResponse = {
       success: true,
       message: "Applications fetched successfully",
-      data: applications.map((app) => toGigApplicationDTO(app)),
+      data: applications,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -52,14 +52,12 @@ export class ApplicationController {
     const ownerId = req.user._id.toString();
     const gigId = req.params.gigId as string;
 
-    const applicationsWithProfiles = await this._applicationService.getGigApplications(gigId, ownerId);
+    const applications = await this._applicationService.getGigApplications(gigId, ownerId);
 
     const response: ApiResponse = {
       success: true,
       message: "Gig applications fetched successfully",
-      data: applicationsWithProfiles.map(({ application, profile }) => 
-        toGigApplicationDTO(application, profile)
-      ),
+      data: applications,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -68,9 +66,9 @@ export class ApplicationController {
   public updateApplicationStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user._id.toString();
     const applicationId = req.params.applicationId as string;
-    const { status } = req.body;
+    const dto = toUpdateApplicationStatusRequestDTO(req.body);
 
-    if (status !== "accepted" && status !== "rejected") {
+    if (dto.status !== "accepted" && dto.status !== "rejected") {
       res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: "Status must be either 'accepted' or 'rejected'",
@@ -78,12 +76,12 @@ export class ApplicationController {
       return;
     }
 
-    const application = await this._applicationService.updateApplicationStatus(applicationId, ownerId, status);
+    const application = await this._applicationService.updateApplicationStatus(applicationId, ownerId, dto.status);
 
     const response: ApiResponse = {
       success: true,
-      message: `Application status updated to ${status}`,
-      data: toGigApplicationDTO(application),
+      message: `Application status updated to ${dto.status}`,
+      data: application,
     };
 
     res.status(HttpStatus.OK).json(response);

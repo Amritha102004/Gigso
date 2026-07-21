@@ -5,20 +5,20 @@ import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
 import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
-import { toCategoryDTO } from "../../mappers/category.mapper";
+import { toCreateGigRequestDTO, toUpdateGigRequestDTO } from "../../mappers/request.mapper";
 
 export class OwnerGigController {
   constructor(private _gigService: IOwnerGigService) {}
 
   public createGig = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user._id.toString();
-    const gig = await this._gigService.createGig(ownerId, req.body);
+    const dto = toCreateGigRequestDTO(req.body);
+    const gig = await this._gigService.createGig(ownerId, dto);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIG_CREATED,
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.CREATED).json(response);
@@ -27,19 +27,12 @@ export class OwnerGigController {
   public getMyGigs = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user._id.toString();
     const status = req.query.status as string | undefined;
-    const gigsWithCounts = await this._gigService.getOwnerGigs(ownerId, status);
+    const gigs = await this._gigService.getOwnerGigs(ownerId, status);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIGS_FETCHED,
-      data: gigsWithCounts.map(({ gig, pendingCount, acceptedCount }) => {
-        const d = toGigListItemDTO(gig);
-        d.filledSpots = acceptedCount;
-        return {
-          ...d,
-          pendingApplicationsCount: pendingCount,
-        };
-      }),
+      data: gigs,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -53,7 +46,7 @@ export class OwnerGigController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIG_FETCHED,
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -62,12 +55,13 @@ export class OwnerGigController {
   public updateGig = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user._id.toString();
     const gigId = req.params.gigId as string;
-    const gig = await this._gigService.updateGig(gigId, ownerId, req.body);
+    const dto = toUpdateGigRequestDTO(req.body);
+    const gig = await this._gigService.updateGig(gigId, ownerId, dto);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIG_UPDATED,
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -94,7 +88,7 @@ export class OwnerGigController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIG_PUBLISHED,
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -108,7 +102,7 @@ export class OwnerGigController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.GIG_COMPLETED,
-      data: toGigResponseDTO(gig),
+      data: gig,
     };
 
     res.status(HttpStatus.OK).json(response);
@@ -120,7 +114,7 @@ export class OwnerGigController {
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.CATEGORIES_FETCHED,
-      data: categories.map(toCategoryDTO),
+      data: categories,
     };
 
     res.status(HttpStatus.OK).json(response);

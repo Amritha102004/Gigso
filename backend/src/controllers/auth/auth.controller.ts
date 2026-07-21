@@ -1,40 +1,48 @@
 import type { Request, Response } from "express";
 import type { AuthRequest } from "../../middlewares/auth.middleware";
 import type { IAuthService } from "../../interfaces/services/auth/auth.service.interface";
-import type { IUser } from "../../interfaces/user.interface";
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../../utils/cookie";
 import { HttpStatus } from "../../utils/http-status.enum";
-import { toUserResponse } from "../../mappers/user.mapper";
 import { MESSAGES } from "../../constants/messages";
 import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
+import {
+  toRegisterUserRequestDTO,
+  toLoginUserRequestDTO,
+  toVerifyOtpRequestDTO,
+  toResendOtpRequestDTO,
+  toResetPasswordRequestDTO,
+  toChangePasswordRequestDTO,
+  toGoogleLoginRequestDTO,
+} from "../../mappers/request.mapper";
+import type { UserResponseDTO } from "../../dtos/user.dto";
 
 export class AuthController {
   constructor(private _authService: IAuthService) {}
 
   public signup = asyncHandler(async (req: Request, res: Response) => {
-    const { name, email, password, role } = req.body;
+    const dto = toRegisterUserRequestDTO(req.body);
 
-    await this._authService.sendRegistrationOtp({ name, email, password, role });
+    await this._authService.sendRegistrationOtp(dto);
 
     const response: ApiResponse = {
       success: true,
-      message: `${MESSAGES.OTP_SENT} to ${email}`,
+      message: `${MESSAGES.OTP_SENT} to ${dto.email}`,
     };
     res.status(HttpStatus.OK).json(response);
   });
 
   public verifyOtp = asyncHandler(async (req: Request, res: Response) => {
-    const { email, otp, type } = req.body;
+    const dto = toVerifyOtpRequestDTO(req.body);
 
-    const result = await this._authService.verifyOtp(email, String(otp), type);
+    const result = await this._authService.verifyOtp(dto.email, dto.otp, dto.type);
 
-    if (type === "registration") {
-      const user = result as IUser;
+    if (dto.type === "registration") {
+      const user = result as UserResponseDTO;
       const response: ApiResponse = {
         success: true,
         message: MESSAGES.USER_CREATED,
-        data: { user: toUserResponse(user) },
+        data: { user },
       };
       res.status(HttpStatus.CREATED).json(response);
     } else {
@@ -47,44 +55,44 @@ export class AuthController {
   });
 
   public resendOtp = asyncHandler(async (req: Request, res: Response) => {
-    const { email, type } = req.body;
+    const dto = toResendOtpRequestDTO(req.body);
 
-    await this._authService.resendOtp(email, type);
+    await this._authService.resendOtp(dto.email, dto.type);
 
     const response: ApiResponse = {
       success: true,
-      message: `${MESSAGES.OTP_RESEND_SUCCESS} to ${email}`,
+      message: `${MESSAGES.OTP_RESEND_SUCCESS} to ${dto.email}`,
     };
     res.status(HttpStatus.OK).json(response);
   });
 
   public login = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const dto = toLoginUserRequestDTO(req.body);
 
-    const { user, accessToken, refreshToken } = await this._authService.login(email, password);
+    const { user, accessToken, refreshToken } = await this._authService.login(dto);
 
     setRefreshTokenCookie(res, refreshToken);
 
     const response: ApiResponse = {
       success: true,
       message: MESSAGES.LOGIN_SUCCESS,
-      data: { accessToken, user: toUserResponse(user) },
+      data: { accessToken, user },
     };
     res.status(HttpStatus.OK).json(response);
   });
 
   public googleLogin = asyncHandler(async (req: Request, res: Response) => {
-    const { token, role } = req.body;
+    const dto = toGoogleLoginRequestDTO(req.body);
 
     try {
-      const { user, accessToken, refreshToken } = await this._authService.googleLogin(token, role);
+      const { user, accessToken, refreshToken } = await this._authService.googleLogin(dto.credential, dto.role);
 
       setRefreshTokenCookie(res, refreshToken);
 
       const response: ApiResponse = {
         success: true,
         message: MESSAGES.GOOGLE_LOGIN_SUCCESS,
-        data: { accessToken, user: toUserResponse(user) },
+        data: { accessToken, user },
       };
       res.status(HttpStatus.OK).json(response);
     } catch (error: any) {
@@ -129,9 +137,10 @@ export class AuthController {
   });
 
   public resetPassword = asyncHandler(async (req: Request, res: Response) => {
-    const { email, otp, newPassword } = req.body;
+    const dto = toResetPasswordRequestDTO(req.body);
+    const { email } = req.body;
 
-    await this._authService.resetPassword(email, String(otp), newPassword);
+    await this._authService.resetPassword(email, dto.token, dto.newPassword);
 
     const response: ApiResponse = {
       success: true,
@@ -150,10 +159,10 @@ export class AuthController {
   });
 
   public changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { oldPassword, newPassword } = req.body;
+    const dto = toChangePasswordRequestDTO(req.body);
     const userId = req.user._id.toString();
 
-    await this._authService.changePassword(userId, oldPassword, newPassword);
+    await this._authService.changePassword(userId, dto.currentPassword, dto.newPassword);
 
     const response: ApiResponse = {
       success: true,

@@ -20,3 +20,11 @@ export interface GigApplicationDTO {
   role?: GigRoleDTO;
   worker?: UserResponseDTO & { profile?: WorkerProfileInfoDTO };
 }
+
+export interface ApplyForGigRoleRequestDTO {
+  roleId: string;
+}
+
+export interface UpdateApplicationStatusRequestDTO {
+  status: "accepted" | "rejected";
+}

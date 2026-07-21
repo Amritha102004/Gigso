@@ -1,6 +1,8 @@
 import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
 import type { IOtpRepository } from "../../interfaces/repositories/otp.repository.interface";
 import type { ICreateUser, IUser } from "../../interfaces/user.interface";
+import type { RegisterUserRequestDTO, LoginUserRequestDTO, UserResponseDTO } from "../../dtos/user.dto";
+import { toUserResponse } from "../../mappers/user.mapper";
 import { passwordHashService, otpHashService } from "../../utils/hash";
 import { generateOtp } from "../../utils/otp";
 import type { IEmailService } from "../../interfaces/services/auth/email.service.interface";
@@ -27,7 +29,7 @@ export class AuthService implements IAuthService {
     this._googleClient = new OAuth2Client(this._googleClientId);
   }
 
-  async sendRegistrationOtp(userData: ICreateUser): Promise<void> {
+  async sendRegistrationOtp(userData: RegisterUserRequestDTO): Promise<void> {
     if (!ALLOWED_ROLES.includes(userData.role)) {
       throw new Error(MESSAGES.INVALID_ROLE);
     }
@@ -59,7 +61,7 @@ export class AuthService implements IAuthService {
     console.log(`Registration OTP for ${userData.email} is: ${otp}`);
   }
 
-  async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<IUser | void> {
+  async verifyOtp(email: string, otp: string, type: "registration" | "password-reset"): Promise<UserResponseDTO | void> {
     const otpDoc = await this._otpRepo.findOtpByEmailAndType(email, type);
 
     if (!otpDoc) {
@@ -78,7 +80,7 @@ export class AuthService implements IAuthService {
 
       const user = await this._authRepo.createUser(otpDoc.userData as ICreateUser);
       await this._otpRepo.deleteOtp(email, "registration");
-      return user;
+      return toUserResponse(user);
     }
 
     if (type === "password-reset") {
@@ -105,7 +107,8 @@ export class AuthService implements IAuthService {
     console.log(`Resent ${type} OTP for ${email} is: ${otp}`);
   }
 
-  async login(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+  async login(loginData: LoginUserRequestDTO): Promise<{ user: UserResponseDTO; accessToken: string; refreshToken: string }> {
+    const { email, password } = loginData;
     const user = await this._authRepo.findUserByEmail(email);
 
     if (!user) {
@@ -124,10 +127,10 @@ export class AuthService implements IAuthService {
     const accessToken = jwtService.generateAccessToken(user._id.toString(), user.role);
     const refreshToken = jwtService.generateRefreshToken(user._id.toString());
 
-    return { user, accessToken, refreshToken };
+    return { user: toUserResponse(user), accessToken, refreshToken };
   }
 
-  async googleLogin(token: string, role?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+  async googleLogin(token: string, role?: string): Promise<{ user: UserResponseDTO; accessToken: string; refreshToken: string }> {
     const ticket = await this._googleClient.verifyIdToken({
       idToken: token,
       audience: this._googleClientId,
@@ -170,7 +173,7 @@ export class AuthService implements IAuthService {
     const accessToken = jwtService.generateAccessToken(user._id.toString(), user.role);
     const refreshToken = jwtService.generateRefreshToken(user._id.toString());
 
-    return { user, accessToken, refreshToken };
+    return { user: toUserResponse(user), accessToken, refreshToken };
   }
 
   async refreshTokens(token: string): Promise<{ accessToken: string; refreshToken: string }> {

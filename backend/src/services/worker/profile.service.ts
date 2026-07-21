@@ -1,7 +1,10 @@
 import type { IWorkerProfileService } from "../../interfaces/services/worker/profile.service.interface";
 import type { IUserRepository } from "../../interfaces/repositories/user.repository.interface";
 import type { IWorkerProfileRepository } from "../../interfaces/repositories/profile.repository.interface";
-import type { IWorkerProfile, IUser } from "../../interfaces/user.interface";
+import type { UserResponseDTO } from "../../dtos/user.dto";
+import type { SetupWorkerProfileRequestDTO, WorkerProfileResponseDTO } from "../../dtos/workerProfile.dto";
+import { toUserResponse } from "../../mappers/user.mapper";
+import { toWorkerProfileResponse } from "../../mappers/workerProfile.mapper";
 
 export class WorkerProfileService implements IWorkerProfileService {
   constructor(
@@ -9,7 +12,10 @@ export class WorkerProfileService implements IWorkerProfileService {
     private _workerProfileRepo: IWorkerProfileRepository
   ) {}
 
-  async setupWorkerProfile(userId: string, profileData: Partial<IWorkerProfile> & { name?: string; phone?: string; profileImage?: string; }): Promise<{ user: IUser; profile: IWorkerProfile }> {
+  async setupWorkerProfile(
+    userId: string,
+    profileData: SetupWorkerProfileRequestDTO
+  ): Promise<{ user: UserResponseDTO; profile: WorkerProfileResponseDTO }> {
     const user = await this._userRepo.findById(userId);
     if (!user) {
       throw new Error("User not found");
@@ -33,10 +39,14 @@ export class WorkerProfileService implements IWorkerProfileService {
       throw new Error("Failed to update user profile status");
     }
 
-    return { user: updatedUser, profile };
+    return {
+      user: toUserResponse(updatedUser),
+      profile: toWorkerProfileResponse(profile),
+    };
   }
 
-  async getWorkerProfile(userId: string): Promise<IWorkerProfile | null> {
-    return this._workerProfileRepo.findByUserId(userId);
+  async getWorkerProfile(userId: string): Promise<WorkerProfileResponseDTO | null> {
+    const profile = await this._workerProfileRepo.findByUserId(userId);
+    return profile ? toWorkerProfileResponse(profile) : null;
   }
 }

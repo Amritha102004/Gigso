@@ -3,20 +3,15 @@ import type { IAdminGigService } from "../../interfaces/services/admin/gig.servi
 import { HttpStatus } from "../../utils/http-status.enum";
 import type { ApiResponse } from "../../types/api-response.type";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { toAdminGigsQueryDTO, toUpdateApplicationStatusRequestDTO } from "../../mappers/request.mapper";
 
 export class AdminGigController {
   constructor(private _gigService: IAdminGigService) {}
 
   public getAllGigs = asyncHandler(async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const search = req.query.search as string | undefined;
-    const categoryId = req.query.categoryId as string | undefined;
-    const status = req.query.status as string | undefined;
-    const date = req.query.date as string | undefined;
+    const dto = toAdminGigsQueryDTO(req.query);
 
-    const filters = { search, categoryId, status, date };
-    const result = await this._gigService.getAllGigs(filters, page, limit);
+    const result = await this._gigService.getAllGigs(dto, dto.page || 1, dto.limit || 10);
 
     const response: ApiResponse = {
       success: true,
@@ -69,9 +64,9 @@ export class AdminGigController {
 
   public updateApplicationStatus = asyncHandler(async (req: Request<{ id: string; appId: string }>, res: Response) => {
     const { id, appId } = req.params;
-    const { status } = req.body;
+    const dto = toUpdateApplicationStatusRequestDTO(req.body);
 
-    if (status !== "accepted" && status !== "rejected") {
+    if (dto.status !== "accepted" && dto.status !== "rejected") {
       res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: "Invalid status value. Must be 'accepted' or 'rejected'",
@@ -79,11 +74,11 @@ export class AdminGigController {
       return;
     }
 
-    const result = await this._gigService.updateApplicationStatus(id, appId, status);
+    const result = await this._gigService.updateApplicationStatus(id, appId, dto.status);
 
     const response: ApiResponse = {
       success: true,
-      message: `Application ${status === 'accepted' ? 'approved' : 'rejected'} successfully`,
+      message: `Application ${dto.status === 'accepted' ? 'approved' : 'rejected'} successfully`,
       data: result,
     };
 

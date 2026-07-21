@@ -38,3 +38,48 @@ export interface GigListItemDTO {
   totalBudget: number;
   pendingApplicationsCount?: number;
 }
+
+export interface CreateGigRoleInputDTO {
+  roleName: string;
+  spots: number;
+  payPerPerson: number;
+}
+
+export interface CreateGigRequestDTO {
+  title: string;
+  description: string;
+  categoryId: string;
+  location: string;
+  eventDate: string;
+  startTime: string;
+  roles: CreateGigRoleInputDTO[];
+  status?: "draft" | "active";
+}
+
+export interface UpdateGigRequestDTO {
+  title?: string;
+  description?: string;
+  categoryId?: string;
+  location?: string;
+  eventDate?: string;
+  startTime?: string;
+  roles?: CreateGigRoleInputDTO[];
+  status?: "draft" | "active";
+}
+
+export interface BrowseGigsQueryDTO {
+  search?: string;
+  categoryId?: string;
+  location?: string;
+  minPay?: number;
+  date?: string;
+}
+
+export interface AdminGigsQueryDTO {
+  search?: string;
+  categoryId?: string;
+  status?: string;
+  date?: string;
+  page?: number;
+  limit?: number;
+}
