@@ -9,11 +9,11 @@ export class GigRoleRepository extends BaseRepository<IGigRole> implements IGigR
   }
 
   async findByGigId(gigId: string): Promise<IGigRole[]> {
-    return await GigRoleModel.find({ gigId }).exec();
+    return await this._model.find({ gigId }).exec();
   }
 
   async deleteByGigId(gigId: string): Promise<boolean> {
-    const result = await GigRoleModel.deleteMany({ gigId }).exec();
+    const result = await this._model.deleteMany({ gigId }).exec();
     return result.acknowledged;
   }
 }

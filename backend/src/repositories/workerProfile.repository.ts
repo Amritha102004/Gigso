@@ -9,15 +9,19 @@ export class WorkerProfileRepository extends BaseRepository<IWorkerProfile> impl
   }
 
   async findByUserId(userId: string): Promise<IWorkerProfile | null> {
-    return WorkerProfileModel.findOne({ userId });
+    return this._model.findOne({ userId }).exec();
   }
 
   async upsertProfile(userId: string, profileData: Partial<IWorkerProfile>): Promise<IWorkerProfile> {
-    const profile = await WorkerProfileModel.findOneAndUpdate(
+    const profile = await this._model.findOneAndUpdate(
       { userId },
       profileData,
       { new: true, upsert: true }
-    );
-    return profile;
+    ).exec();
+    return profile!;
+  }
+
+  async findProfilesByUserIds(userIds: string[]): Promise<IWorkerProfile[]> {
+    return this._model.find({ userId: { $in: userIds } }).exec();
   }
 }

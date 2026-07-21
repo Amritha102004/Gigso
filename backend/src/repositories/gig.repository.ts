@@ -11,7 +11,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
   private async _updateExpiredGigs(): Promise<void> {
     const now = new Date();
-    await GigModel.updateMany(
+    await this._model.updateMany(
       {
         status: "active",
         eventDate: { $lt: now },
@@ -23,7 +23,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
   override async findById(id: string): Promise<IGig | null> {
     await this._updateExpiredGigs();
-    return await GigModel.findOne({ _id: id, isDeleted: false })
+    return await this._model.findOne({ _id: id, isDeleted: false })
       .populate("categoryId")
       .populate("roles")
       .exec();
@@ -35,7 +35,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     if (filters?.status) {
       query.status = filters.status;
     }
-    return await GigModel.find(query)
+    return await this._model.find(query)
       .populate("categoryId")
       .populate("roles")
       .sort({ createdAt: -1 })
@@ -75,7 +75,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
       query.eventDate = { $gte: dateStart, $lte: dateEnd };
     }
 
-    let gigs = await GigModel.find(query)
+    let gigs = await this._model.find(query)
       .populate("categoryId")
       .populate("roles")
       .sort({ eventDate: 1 })
@@ -93,7 +93,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const result = await GigModel.findByIdAndUpdate(
+    const result = await this._model.findByIdAndUpdate(
       id,
       { isDeleted: true },
       { new: true }
@@ -134,7 +134,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
     const skip = (page - 1) * limit;
 
-    const gigs = await GigModel.find(query)
+    const gigs = await this._model.find(query)
       .populate("categoryId")
       .populate("ownerId", "name email profileImage")
       .populate("roles")
@@ -143,8 +143,17 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
       .limit(limit)
       .exec();
 
-    const total = await GigModel.countDocuments(query).exec();
+    const total = await this._model.countDocuments(query).exec();
 
     return { gigs, total };
+  }
+
+  async findGigDetailsById(id: string): Promise<IGig | null> {
+    await this._updateExpiredGigs();
+    return await this._model.findOne({ _id: id, isDeleted: false })
+      .populate("categoryId")
+      .populate("ownerId", "name email role profileImage")
+      .populate("roles")
+      .exec();
   }
 }

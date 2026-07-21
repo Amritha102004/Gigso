@@ -15,8 +15,7 @@ export class OtpRepository extends BaseRepository<IOtp> implements IOtpRepositor
     expiresAt: Date,
     userData?: Record<string, any>
   ): Promise<IOtp | null> {
-  
-    return OtpModel.findOneAndUpdate(
+    return this._model.findOneAndUpdate(
       { email, type },
       {
         email,
@@ -27,14 +26,14 @@ export class OtpRepository extends BaseRepository<IOtp> implements IOtpRepositor
         expiresAt: expiresAt,
       },
       { upsert: true, new: true }
-    );
+    ).exec();
   }
 
   async findOtpByEmailAndType(email: string, type: OtpType): Promise<IOtp | null> {
-    return OtpModel.findOne({ email, type });
+    return this._model.findOne({ email, type }).exec();
   }
 
   async deleteOtp(email: string, type: OtpType): Promise<void> {
-    await OtpModel.deleteOne({ email, type });
+    await this._model.deleteOne({ email, type }).exec();
   }
 }

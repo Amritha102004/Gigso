@@ -1,16 +1,17 @@
 import type { IApplicationService } from "../interfaces/services/application.service.interface";
 import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
 import type { IGigRepository, IGigRoleRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IWorkerProfileRepository } from "../interfaces/repositories/profile.repository.interface";
 import type { IGigApplication } from "../interfaces/application.interface";
 import type { IWorkerProfile } from "../interfaces/user.interface";
-import { WorkerProfileModel } from "../models/workerProfile.model";
 import { Types } from "mongoose";
 
 export class ApplicationService implements IApplicationService {
   constructor(
     private _applicationRepo: IGigApplicationRepository,
     private _gigRepo: IGigRepository,
-    private _gigRoleRepo: IGigRoleRepository
+    private _gigRoleRepo: IGigRoleRepository,
+    private _workerProfileRepo: IWorkerProfileRepository
   ) {}
 
   async applyForGigRole(workerId: string, gigId: string, roleId: string): Promise<IGigApplication> {
@@ -63,7 +64,7 @@ export class ApplicationService implements IApplicationService {
 
     // Fetch profiles of applicants to attach bio, rating info to owner dashboard cards
     const workerIds = applications.map((app) => app.workerId._id || app.workerId);
-    const profiles = await WorkerProfileModel.find({ userId: { $in: workerIds } }).exec();
+    const profiles = await this._workerProfileRepo.findProfilesByUserIds(workerIds.map((id) => id.toString()));
 
     return applications.map((app) => {
       const applicantId = app.workerId._id?.toString() || app.workerId.toString();

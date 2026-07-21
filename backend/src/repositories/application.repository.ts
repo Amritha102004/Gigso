@@ -14,7 +14,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
     if (status) {
       query.status = status;
     }
-    return await GigApplicationModel.find(query)
+    return await this._model.find(query)
       .populate({
         path: "gigId",
         populate: [
@@ -28,7 +28,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   }
 
   async findByGigId(gigId: string): Promise<IGigApplication[]> {
-    return await GigApplicationModel.find({ gigId: new Types.ObjectId(gigId) })
+    return await this._model.find({ gigId: new Types.ObjectId(gigId) })
       .populate("workerId")
       .populate("roleId")
       .sort({ appliedAt: -1 })
@@ -36,7 +36,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   }
 
   async findByGigIdAndWorkerId(gigId: string, workerId: string): Promise<IGigApplication[]> {
-    return await GigApplicationModel.find({
+    return await this._model.find({
       gigId: new Types.ObjectId(gigId),
       workerId: new Types.ObjectId(workerId)
     })
@@ -45,14 +45,14 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   }
 
   async findPendingCountForGig(gigId: string): Promise<number> {
-    return await GigApplicationModel.countDocuments({
+    return await this._model.countDocuments({
       gigId: new Types.ObjectId(gigId),
       status: "pending"
     }).exec();
   }
 
   async findAcceptedCountForRole(roleId: string): Promise<number> {
-    return await GigApplicationModel.countDocuments({
+    return await this._model.countDocuments({
       roleId: new Types.ObjectId(roleId),
       status: "accepted"
     }).exec();
@@ -61,12 +61,12 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   async getCountsForGigs(gigIds: string[]): Promise<{ gigId: string; pendingCount: number; acceptedCount: number }[]> {
     const objectIds = gigIds.map((id) => new Types.ObjectId(id));
 
-    const pendingCounts = await GigApplicationModel.aggregate([
+    const pendingCounts = await this._model.aggregate([
       { $match: { gigId: { $in: objectIds }, status: "pending" } },
       { $group: { _id: "$gigId", count: { $sum: 1 } } }
     ]);
 
-    const acceptedCounts = await GigApplicationModel.aggregate([
+    const acceptedCounts = await this._model.aggregate([
       { $match: { gigId: { $in: objectIds }, status: "accepted" } },
       { $group: { _id: "$gigId", count: { $sum: 1 } } }
     ]);

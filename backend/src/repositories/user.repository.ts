@@ -13,39 +13,40 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   }
 
   async findUserByEmail(email: string): Promise<IUser | null> {
-    return UserModel.findOne({ email }).select("+password");
+    return this._model.findOne({ email }).select("+password").exec();
   }
 
   async findUserById(id: string): Promise<IUser | null> {
-    return UserModel.findById(id).select("-password");
+    return this._model.findById(id).select("-password").exec();
   }
 
   async updateUserPassword(email: string, hashedPass: string): Promise<IUser | null> {
-    return UserModel.findOneAndUpdate(
+    return this._model.findOneAndUpdate(
       { email },
       { password: hashedPass },
       { new: true }
-    );
+    ).exec();
   }
 
   async findUsers(filter: UserFilter, skip: number, limit: number): Promise<{ users: IUser[], total: number }> {
     const [users, total] = await Promise.all([
-      UserModel.find(filter)
+      this._model.find(filter)
         .select("-password")
         .skip(skip)
         .limit(limit)
-        .sort({ createdAt: -1 }),
-      UserModel.countDocuments(filter)
+        .sort({ createdAt: -1 })
+        .exec(),
+      this._model.countDocuments(filter).exec()
     ]);
 
     return { users, total };
   }
 
   async findUserByIdWithPassword(id: string): Promise<IUser | null> {
-    return UserModel.findById(id).select("+password");
+    return this._model.findById(id).select("+password").exec();
   }
 
   async updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    return UserModel.findByIdAndUpdate(id, updateData, { new: true }).select("-password");
+    return this._model.findByIdAndUpdate(id, updateData, { new: true }).select("-password").exec();
   }
 }

@@ -4,6 +4,7 @@ import type { IBaseRepository } from "./base.repository.interface";
 export interface IWorkerProfileRepository extends IBaseRepository<IWorkerProfile> {
   findByUserId(userId: string): Promise<IWorkerProfile | null>;
   upsertProfile(userId: string, profileData: Partial<IWorkerProfile>): Promise<IWorkerProfile>;
+  findProfilesByUserIds(userIds: string[]): Promise<IWorkerProfile[]>;
 }
 
 export interface IOwnerProfileRepository extends IBaseRepository<IOwnerProfile> {

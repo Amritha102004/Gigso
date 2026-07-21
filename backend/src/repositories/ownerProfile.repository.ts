@@ -9,15 +9,15 @@ export class OwnerProfileRepository extends BaseRepository<IOwnerProfile> implem
   }
 
   async findByUserId(userId: string): Promise<IOwnerProfile | null> {
-    return OwnerProfileModel.findOne({ userId });
+    return this._model.findOne({ userId }).exec();
   }
 
   async upsertProfile(userId: string, profileData: Partial<IOwnerProfile>): Promise<IOwnerProfile> {
-    const profile = await OwnerProfileModel.findOneAndUpdate(
+    const profile = await this._model.findOneAndUpdate(
       { userId },
       profileData,
       { new: true, upsert: true }
-    );
-    return profile;
+    ).exec();
+    return profile!;
   }
 }

@@ -9,7 +9,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
   }
 
   async findAll(): Promise<ICategory[]> {
-    return await CategoryModel.find().sort({ createdAt: -1 }).exec();
+    return await this._model.find().sort({ createdAt: -1 }).exec();
   }
 
   async findCategories(
@@ -18,8 +18,8 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
     limit: number
   ): Promise<{ categories: ICategory[]; total: number }> {
     const [categories, total] = await Promise.all([
-      CategoryModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
-      CategoryModel.countDocuments(filter),
+      this._model.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      this._model.countDocuments(filter).exec(),
     ]);
     return { categories, total };
   }

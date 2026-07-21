@@ -60,8 +60,19 @@ export const ownerGigService = new OwnerGigService(
 );
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
 export const workerGigService = new WorkerGigService(gigRepository, categoryRepository);
-export const applicationService = new ApplicationService(gigApplicationRepository, gigRepository, gigRoleRepository);
-export const adminGigService = new AdminGigService(gigRepository, applicationService);
+export const applicationService = new ApplicationService(
+  gigApplicationRepository,
+  gigRepository,
+  gigRoleRepository,
+  workerProfileRepository
+);
+export const adminGigService = new AdminGigService(
+  gigRepository,
+  workerProfileRepository,
+  ownerProfileRepository,
+  gigApplicationRepository,
+  applicationService
+);
 
 // Controllers
 export const authController = new AuthController(authService);
