@@ -12,6 +12,7 @@ import {
 import gigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import Pagination from '../../../components/Pagination';
 
 const ViewGigPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
@@ -26,6 +27,15 @@ const ViewGigPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 4;
+
+  // Reset page on sub-tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSubTab]);
 
   useEffect(() => {
     const state = location.state as { activeTab?: 'roster' | 'applications' } | null;
@@ -333,22 +343,35 @@ const ViewGigPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                /* Applications Tab grouped by role */
+                /* Applications Tab grouped by role with pagination */
                 <div className="space-y-6">
-                  {gig.roles.map((role) => {
-                    const pendingApps = applications.filter(
-                      (a) => a.roleId === role.id && a.status === 'pending'
+                  {(() => {
+                    const pendingApplications = applications.filter((a) => a.status === 'pending');
+                    const totalPages = Math.ceil(pendingApplications.length / ITEMS_PER_PAGE);
+                    const adjustedCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+                    const paginatedPending = pendingApplications.slice(
+                      (adjustedCurrentPage - 1) * ITEMS_PER_PAGE,
+                      adjustedCurrentPage * ITEMS_PER_PAGE
                     );
 
-                    if (pendingApps.length === 0) return null;
+                    if (pendingApplications.length === 0) {
+                      return (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-12 h-12 bg-primary/10 text-primary flex items-center justify-center rounded-full mx-auto">
+                            <UserGroupIcon className="w-6 h-6" />
+                          </div>
+                          <h3 className="font-bold text-textMain text-sm">No Pending Applications</h3>
+                          <p className="text-xs text-secondary max-w-sm mx-auto leading-relaxed">
+                            There are currently no pending worker applications for this gig posting.
+                          </p>
+                        </div>
+                      );
+                    }
 
                     return (
-                      <div key={role.id} className="space-y-3">
-                        <h4 className="text-xs font-bold text-textMain uppercase tracking-wider border-b border-gray-100 pb-2">
-                          {role.roleName} Applications
-                        </h4>
+                      <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {pendingApps.map((app) => (
+                          {paginatedPending.map((app) => (
                             <div
                               key={app.id}
                               className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col justify-between gap-4 shadow-sm hover:shadow transition-all"
@@ -362,9 +385,13 @@ const ViewGigPage: React.FC = () => {
                                   />
                                   <div>
                                     <div className="font-bold text-xs text-textMain">{app.worker?.name}</div>
-                                    <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold">
-                                      <span>★ 4.8</span>
-                                      <span className="text-secondary font-normal">(42 reviews)</span>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                      <span className="px-1.5 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded uppercase">
+                                        {app.role?.roleName}
+                                      </span>
+                                      <span className="text-[10px] text-amber-500 font-bold">
+                                        ★ 4.8
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -399,21 +426,15 @@ const ViewGigPage: React.FC = () => {
                             </div>
                           ))}
                         </div>
+
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={setCurrentPage}
+                        />
                       </div>
                     );
-                  })}
-
-                  {applications.filter((a) => a.status === 'pending').length === 0 && (
-                    <div className="py-12 text-center space-y-3">
-                      <div className="w-12 h-12 bg-primary/10 text-primary flex items-center justify-center rounded-full mx-auto">
-                        <UserGroupIcon className="w-6 h-6" />
-                      </div>
-                      <h3 className="font-bold text-textMain text-sm">No Pending Applications</h3>
-                      <p className="text-xs text-secondary max-w-sm mx-auto leading-relaxed">
-                        There are currently no pending worker applications for this gig posting.
-                      </p>
-                    </div>
-                  )}
+                  })()}
                 </div>
               )}
             </div>

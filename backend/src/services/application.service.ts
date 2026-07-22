@@ -5,6 +5,7 @@ import type { IWorkerProfileRepository } from "../interfaces/repositories/profil
 import type { GigApplicationDTO } from "../dtos/application.dto";
 import { toGigApplicationDTO } from "../mappers/application.mapper";
 import { Types } from "mongoose";
+import { AppError } from "../utils/errors";
 
 export class ApplicationService implements IApplicationService {
   constructor(
@@ -18,20 +19,20 @@ export class ApplicationService implements IApplicationService {
     // 1. Verify gig exists and is active
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.status !== "active" || gig.isDeleted) {
-      throw new Error("Gig not found or is no longer active for applications");
+      throw new AppError("Gig not found or is no longer active for applications", 404);
     }
 
     // 2. Verify role exists and matches gig
     const role = await this._gigRoleRepo.findById(roleId);
     if (!role || role.gigId.toString() !== gigId) {
-      throw new Error("Specified role does not belong to this gig");
+      throw new AppError("Specified role does not belong to this gig", 400);
     }
 
     // 3. Prevent duplicate applications
     const existing = await this._applicationRepo.findByGigIdAndWorkerId(gigId, workerId);
     const hasAppliedToRole = existing.some((app) => app.roleId.toString() === roleId);
     if (hasAppliedToRole) {
-      throw new Error("You have already applied for this role");
+      throw new AppError("You have already applied for this role", 400);
     }
 
     // 4. Create new application
@@ -55,9 +56,7 @@ export class ApplicationService implements IApplicationService {
     // Verify owner owns the gig
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId || gig.isDeleted) {
-      const error: any = new Error("Gig not found or unauthorized");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized", 404);
     }
 
     const applications = await this._applicationRepo.findByGigId(gigId);
@@ -81,36 +80,32 @@ export class ApplicationService implements IApplicationService {
     // 1. Retrieve the application
     const app = await this._applicationRepo.findById(applicationId);
     if (!app) {
-      const error: any = new Error("Application not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Application not found", 404);
     }
 
     // 2. Retrieve and verify the gig owner
     const gig = await this._gigRepo.findById(app.gigId.toString());
     if (!gig || gig.ownerId.toString() !== ownerId || gig.isDeleted) {
-      const error: any = new Error("Unauthorized to manage this application");
-      error.statusCode = 403;
-      throw error;
+      throw new AppError("Unauthorized to manage this application", 403);
     }
 
     // 3. If accepting, check remaining spots
     if (status === "accepted") {
       const role = await this._gigRoleRepo.findById(app.roleId.toString());
       if (!role) {
-        throw new Error("Associated role not found");
+        throw new AppError("Associated role not found", 404);
       }
 
       const acceptedCount = await this._applicationRepo.findAcceptedCountForRole(app.roleId.toString());
       if (acceptedCount >= role.spots) {
-        throw new Error("This role is already fully staffed");
+        throw new AppError("This role is already fully staffed", 400);
       }
     }
 
     // 4. Update and return status
     const updated = await this._applicationRepo.update(applicationId, { status } as any);
     if (!updated) {
-      throw new Error("Failed to update application status");
+      throw new AppError("Failed to update application status", 500);
     }
 
     // If accepted, auto-reject other pending applications by this worker for the same gig
@@ -136,15 +131,15 @@ export class ApplicationService implements IApplicationService {
   async withdrawApplication(applicationId: string, workerId: string): Promise<boolean> {
     const app = await this._applicationRepo.findById(applicationId);
     if (!app) {
-      throw new Error("Application not found");
+      throw new AppError("Application not found", 404);
     }
 
     if (app.workerId.toString() !== workerId) {
-      throw new Error("Unauthorized to withdraw this application");
+      throw new AppError("Unauthorized to withdraw this application", 403);
     }
 
     if (app.status !== "pending") {
-      throw new Error("Cannot withdraw an application that has already been accepted or rejected");
+      throw new AppError("Cannot withdraw an application that has already been accepted or rejected", 400);
     }
 
     const deleted = await this._applicationRepo.delete(applicationId);

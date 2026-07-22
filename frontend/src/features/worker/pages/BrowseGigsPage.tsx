@@ -4,6 +4,7 @@ import workerGigService from '../services/gig.service';
 import type { GigListItemDTO, CategoryDTO } from '../../../types/api.types';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
+import Pagination from '../../../components/Pagination';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -21,6 +22,10 @@ const BrowseGigsPage: React.FC = () => {
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 6;
+
   // Filters State
   const [search, setSearch] = useState<string>('');
   const [category, setCategory] = useState<string>('');
@@ -32,6 +37,7 @@ const BrowseGigsPage: React.FC = () => {
   // Trigger filters trigger
   useEffect(() => {
     fetchCategories();
+    setCurrentPage(1);
     fetchGigs();
   }, [category, activeTab]); // Fetch immediately when category or tab changes
 
@@ -73,6 +79,7 @@ const BrowseGigsPage: React.FC = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchGigs();
   };
 
@@ -82,6 +89,7 @@ const BrowseGigsPage: React.FC = () => {
     setLocation('');
     setMinPay('');
     setDate('');
+    setCurrentPage(1);
     // Trigger list fetch
     setTimeout(() => {
       fetchGigs();
@@ -273,77 +281,94 @@ const BrowseGigsPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {gigs.map((gig) => {
-            const spotsLeft = gig.totalSpots - gig.filledSpots;
-            const isLowSpots = spotsLeft <= 2;
-            
-            return (
-              <div
-                key={gig.id}
-                onClick={() => navigate(`/worker/gigs/${gig.id}`)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
-              >
-                <div className="p-6 space-y-4">
-                  {/* Category & Status Badges */}
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 bg-primary/5 text-primary text-[10px] font-bold rounded-full uppercase tracking-wider">
-                      {gig.category.name}
-                    </span>
-                  </div>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(() => {
+              const totalPages = Math.ceil(gigs.length / ITEMS_PER_PAGE);
+              const adjustedCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+              const paginatedGigs = gigs.slice(
+                (adjustedCurrentPage - 1) * ITEMS_PER_PAGE,
+                adjustedCurrentPage * ITEMS_PER_PAGE
+              );
 
-                  {/* Title & Info */}
-                  <div className="space-y-1.5">
-                    <h3 className="font-bold text-textMain text-base group-hover:text-primary transition-colors line-clamp-1">
-                      {gig.title}
-                    </h3>
-                    <div className="space-y-1 text-xs text-secondary">
-                      <p className="flex items-center gap-1.5">
-                        <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
-                        {formatDate(gig.eventDate)}
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <MapPinIcon className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="truncate">{gig.location}</span>
-                      </p>
+              return paginatedGigs.map((gig) => {
+                const spotsLeft = gig.totalSpots - gig.filledSpots;
+                const isLowSpots = spotsLeft <= 2;
+                
+                return (
+                  <div
+                    key={gig.id}
+                    onClick={() => navigate(`/worker/gigs/${gig.id}`)}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
+                  >
+                    <div className="p-6 space-y-4">
+                      {/* Category & Status Badges */}
+                      <div className="flex items-center justify-between">
+                        <span className="px-2.5 py-0.5 bg-primary/5 text-primary text-[10px] font-bold rounded-full uppercase tracking-wider">
+                          {gig.category.name}
+                        </span>
+                      </div>
+
+                      {/* Title & Info */}
+                      <div className="space-y-1.5">
+                        <h3 className="font-bold text-textMain text-base group-hover:text-primary transition-colors line-clamp-1">
+                          {gig.title}
+                        </h3>
+                        <div className="space-y-1 text-xs text-secondary">
+                          <p className="flex items-center gap-1.5">
+                            <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                            {formatDate(gig.eventDate)}
+                          </p>
+                          <p className="flex items-center gap-1.5">
+                            <MapPinIcon className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="truncate">{gig.location}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Gig Summary Box */}
+                      <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 space-y-2">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">
+                          Positions
+                        </span>
+                        <div className="text-xs text-textMain font-bold">
+                          {gig.totalRoles} {gig.totalRoles === 1 ? 'Role' : 'Roles'} available • Total Budget: ₹{gig.totalBudget}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer of Card */}
+                    <div className="bg-gray-50/20 px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+                      {/* Spots Indicator */}
+                      <span
+                        className={`text-[11px] font-bold uppercase tracking-wider ${
+                          isLowSpots ? 'text-rose-600 animate-pulse' : 'text-emerald-700'
+                        }`}
+                      >
+                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+                      </span>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Avoid triggering card navigate twice
+                          navigate(`/worker/gigs/${gig.id}`);
+                        }}
+                        className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-[#575727] transition-all shadow-sm"
+                      >
+                        Apply Now
+                      </button>
                     </div>
                   </div>
+                );
+              });
+            })()}
+          </div>
 
-                  {/* Gig Summary Box */}
-                  <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 space-y-2">
-                    <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">
-                      Positions
-                    </span>
-                    <div className="text-xs text-textMain font-bold">
-                      {gig.totalRoles} {gig.totalRoles === 1 ? 'Role' : 'Roles'} available • Total Budget: ₹{gig.totalBudget}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer of Card */}
-                <div className="bg-gray-50/20 px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
-                  {/* Spots Indicator */}
-                  <span
-                    className={`text-[11px] font-bold uppercase tracking-wider ${
-                      isLowSpots ? 'text-rose-600 animate-pulse' : 'text-emerald-700'
-                    }`}
-                  >
-                    {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
-                  </span>
-                  
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Avoid triggering card navigate twice
-                      navigate(`/worker/gigs/${gig.id}`);
-                    }}
-                    className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-[#575727] transition-all shadow-sm"
-                  >
-                    Apply Now
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(gigs.length / ITEMS_PER_PAGE)}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
     </div>

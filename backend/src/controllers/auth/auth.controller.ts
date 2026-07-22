@@ -95,8 +95,8 @@ export class AuthController {
         data: { accessToken, user },
       };
       res.status(HttpStatus.OK).json(response);
-    } catch (error: any) {
-      if (error.message === MESSAGES.ROLE_REQUIRED) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === MESSAGES.ROLE_REQUIRED) {
         res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: error.message, data: { requiresRole: true } });
         return;
       }

@@ -9,6 +9,7 @@ import type { GigApplicationDTO } from "../../dtos/application.dto";
 import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
 import { toOwnerProfileResponse } from "../../mappers/ownerProfile.mapper";
 import { toGigApplicationDTO } from "../../mappers/application.mapper";
+import { AppError } from "../../utils/errors";
 
 export class AdminGigService implements IAdminGigService {
   constructor(
@@ -42,9 +43,7 @@ export class AdminGigService implements IAdminGigService {
     const gig = await this._gigRepo.findGigDetailsById(id);
 
     if (!gig) {
-      const error: any = new Error("Gig not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found", 404);
     }
 
     const ownerProfileDoc = await this._ownerProfileRepo.findByUserId(gig.ownerId._id.toString());
@@ -74,9 +73,7 @@ export class AdminGigService implements IAdminGigService {
     const gig = await this._gigRepo.findGigDetailsById(id);
 
     if (!gig) {
-      const error: any = new Error("Gig not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found", 404);
     }
     return toGigResponseDTO(gig);
   }
@@ -92,9 +89,7 @@ export class AdminGigService implements IAdminGigService {
   ): Promise<GigApplicationDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.isDeleted) {
-      const error: any = new Error("Gig not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found", 404);
     }
 
     // Bypass HTTP owner auth by providing gig's actual ownerId directly

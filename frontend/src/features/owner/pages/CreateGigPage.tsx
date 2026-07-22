@@ -53,9 +53,6 @@ const CreateGigPage: React.FC = () => {
         const res = await gigService.getCategories();
         if (res.success && res.data) {
           setCategories(res.data);
-          if (res.data.length > 0) {
-            setCategoryId(res.data[0].id);
-          }
         }
       } catch (err) {
         console.error('Error fetching categories:', err);

@@ -11,6 +11,7 @@ import type {
 import type { CategoryDTO } from "../../dtos/category.dto";
 import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
 import { toCategoryDTO } from "../../mappers/category.mapper";
+import { AppError } from "../../utils/errors";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
@@ -80,9 +81,7 @@ export class OwnerGigService implements IOwnerGigService {
   async getGigById(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
-      const error: any = new Error("Gig not found or unauthorized access");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized access", 404);
     }
     return toGigResponseDTO(gig);
   }
@@ -90,9 +89,7 @@ export class OwnerGigService implements IOwnerGigService {
   async updateGig(gigId: string, ownerId: string, input: UpdateGigRequestDTO): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
-      const error: any = new Error("Gig not found or unauthorized access");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized access", 404);
     }
 
     const updateData: any = {};
@@ -136,9 +133,7 @@ export class OwnerGigService implements IOwnerGigService {
   async softDeleteGig(gigId: string, ownerId: string): Promise<boolean> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
-      const error: any = new Error("Gig not found or unauthorized access");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized access", 404);
     }
     return await this._gigRepo.softDelete(gigId);
   }
@@ -146,20 +141,14 @@ export class OwnerGigService implements IOwnerGigService {
   async publishGig(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
-      const error: any = new Error("Gig not found or unauthorized access");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized access", 404);
     }
     if (gig.status !== "draft") {
-      const error: any = new Error("Only draft gigs can be published");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Only draft gigs can be published", 400);
     }
 
     if (!gig.roles || gig.roles.length === 0) {
-      const error: any = new Error("At least one role is required to publish the gig");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("At least one role is required to publish the gig", 400);
     }
 
     await this._gigRepo.update(gigId, { status: "active" } as any);
@@ -173,14 +162,10 @@ export class OwnerGigService implements IOwnerGigService {
   async markAsCompleted(gigId: string, ownerId: string): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
-      const error: any = new Error("Gig not found or unauthorized access");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Gig not found or unauthorized access", 404);
     }
     if (gig.status !== "active") {
-      const error: any = new Error("Only active gigs can be marked as completed");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Only active gigs can be marked as completed", 400);
     }
 
     await this._gigRepo.update(gigId, { status: "completed" } as any);

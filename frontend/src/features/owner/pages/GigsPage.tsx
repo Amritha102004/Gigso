@@ -15,6 +15,7 @@ import {
 import gigService from '../services/gig.service';
 import type { GigListItemDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import Pagination from '../../../components/Pagination';
 
 const GigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +25,15 @@ const GigsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 5;
+
+  // Reset page when search or tab filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
 
   const fetchGigs = async () => {
     try {
@@ -178,107 +188,125 @@ const GigsPage: React.FC = () => {
             No gigs found. {searchQuery ? 'Try matching a different keyword.' : 'Get started by posting a gig.'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Gig Title</th>
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Event Date</th>
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Roles Filled</th>
-                  <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredGigs.map((gig) => {
-                  const percentFilled = gig.totalSpots > 0 ? Math.round((gig.filledSpots / gig.totalSpots) * 100) : 0;
-                  
-                  let statusBadge = 'bg-gray-100 text-gray-700';
-                  if (gig.status === 'active') statusBadge = 'bg-blue-50 text-blue-700 border border-blue-100';
-                  if (gig.status === 'completed') statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                  if (gig.status === 'cancelled') statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100';
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Gig Title</th>
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Event Date</th>
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider">Roles Filled</th>
+                    <th className="px-6 py-4 text-xs font-bold text-secondary uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(() => {
+                    const totalPages = Math.ceil(filteredGigs.length / ITEMS_PER_PAGE);
+                    const adjustedCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+                    const paginatedGigs = filteredGigs.slice(
+                      (adjustedCurrentPage - 1) * ITEMS_PER_PAGE,
+                      adjustedCurrentPage * ITEMS_PER_PAGE
+                    );
 
-                  return (
-                    <tr key={gig.id} className="hover:bg-gray-50/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-sm text-textMain">{gig.title}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-secondary font-medium">
-                          {gig.category.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-textMain font-medium">
-                        {new Date(gig.eventDate).toLocaleDateString(undefined, { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusBadge}`}>
-                          {gig.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 max-w-[200px]">
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between items-center text-xs font-semibold text-secondary">
-                            <span>{gig.filledSpots} / {gig.totalSpots} spots</span>
-                            <span>{percentFilled}%</span>
-                          </div>
-                          <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                            <div 
-                              className="bg-primary h-1.5 rounded-full transition-all" 
-                              style={{ width: `${percentFilled}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="inline-flex gap-2 items-center">
-                          <button
-                            onClick={() => navigate(`/owner/gigs/${gig.id}`)}
-                            title="View Detail"
-                            className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
-                          >
-                            <EyeIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/owner/gigs/${gig.id}`, { state: { activeTab: 'applications' } })}
-                            title="View Applications"
-                            className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all relative"
-                          >
-                            <UserGroupIcon className="w-4 h-4" />
-                            {gig.pendingApplicationsCount !== undefined && gig.pendingApplicationsCount > 0 ? (
-                              <span className="absolute top-0 right-0 bg-red-500 text-white font-bold text-[8px] w-4 h-4 rounded-full flex items-center justify-center border border-white">
-                                {gig.pendingApplicationsCount}
-                              </span>
-                            ) : null}
-                          </button>
-                          {gig.status === 'draft' && (
-                            <button
-                              onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
-                              title="Edit Gig"
-                              className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-primary transition-all"
-                            >
-                              <PencilSquareIcon className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(gig.id)}
-                            title="Delete Gig"
-                            className="p-2 hover:bg-rose-50 rounded-lg text-secondary hover:text-rose-600 transition-all"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return paginatedGigs.map((gig) => {
+                      const percentFilled = gig.totalSpots > 0 ? Math.round((gig.filledSpots / gig.totalSpots) * 100) : 0;
+                      
+                      let statusBadge = 'bg-gray-100 text-gray-700';
+                      if (gig.status === 'active') statusBadge = 'bg-blue-50 text-blue-700 border border-blue-100';
+                      if (gig.status === 'completed') statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+                      if (gig.status === 'cancelled') statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100';
+
+                      return (
+                        <tr key={gig.id} className="hover:bg-gray-50/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-sm text-textMain">{gig.title}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-secondary font-medium">
+                              {gig.category.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-textMain font-medium">
+                            {new Date(gig.eventDate).toLocaleDateString(undefined, { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusBadge}`}>
+                              {gig.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 max-w-[200px]">
+                            <div className="space-y-1.5">
+                              <div className="flex justify-between items-center text-xs font-semibold text-secondary">
+                                <span>{gig.filledSpots} / {gig.totalSpots} spots</span>
+                                <span>{percentFilled}%</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="bg-primary h-1.5 rounded-full transition-all" 
+                                  style={{ width: `${percentFilled}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="inline-flex gap-2 items-center">
+                              <button
+                                onClick={() => navigate(`/owner/gigs/${gig.id}`)}
+                                title="View Detail"
+                                className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => navigate(`/owner/gigs/${gig.id}`, { state: { activeTab: 'applications' } })}
+                                title="View Applications"
+                                className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all relative"
+                              >
+                                <UserGroupIcon className="w-4 h-4" />
+                                {gig.pendingApplicationsCount !== undefined && gig.pendingApplicationsCount > 0 && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full" />
+                                )}
+                              </button>
+                              {gig.status === 'draft' && (
+                                <>
+                                  <button
+                                    onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
+                                    title="Edit Gig"
+                                    className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
+                                  >
+                                    <PencilSquareIcon className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(gig.id)}
+                                    title="Delete Gig"
+                                    className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-rose-600 transition-all"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t border-gray-100">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredGigs.length / ITEMS_PER_PAGE)}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           </div>
         )}
       </div>

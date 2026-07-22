@@ -44,10 +44,8 @@ const EditGigPage: React.FC = () => {
         setError(null);
         
         const catRes = await gigService.getCategories();
-        let loadedCats: CategoryDTO[] = [];
         if (catRes.success && catRes.data) {
           setCategories(catRes.data);
-          loadedCats = catRes.data;
         }
 
         const gigRes = await gigService.getGigById(gigId);
@@ -61,7 +59,7 @@ const EditGigPage: React.FC = () => {
           }
 
           setTitle(g.title);
-          setCategoryId(g.category.id || (loadedCats.length > 0 ? loadedCats[0].id : ''));
+          setCategoryId(g.category.id || '');
           setLocation(g.location);
           setEventDate(g.eventDate.split('T')[0]);
           setStartTime(g.startTime);

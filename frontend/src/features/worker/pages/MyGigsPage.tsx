@@ -11,6 +11,7 @@ import {
 import workerGigService from '../services/gig.service';
 import type { GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import Pagination from '../../../components/Pagination';
 
 const MyGigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,9 +21,18 @@ const MyGigsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 6;
+
   // Filter values
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
+
+  // Reset page on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery, selectedCategory, selectedLocation]);
 
   const fetchApplications = async () => {
     try {
@@ -269,77 +279,94 @@ const MyGigsPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          filteredApps.map((app) => {
-            const status = getAssignmentStatus(app);
-            return (
-              <div
-                key={app.id}
-                className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
-              >
-                {/* Left Side: Info */}
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-primary flex-shrink-0">
-                    <BriefcaseIcon className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-textMain text-sm line-clamp-1">{app.gig?.title}</h3>
-                      {getStatusBadge(status)}
+          <div className="space-y-6">
+            {(() => {
+              const totalPages = Math.ceil(filteredApps.length / ITEMS_PER_PAGE);
+              const adjustedCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+              const paginatedApps = filteredApps.slice(
+                (adjustedCurrentPage - 1) * ITEMS_PER_PAGE,
+                adjustedCurrentPage * ITEMS_PER_PAGE
+              );
+
+              return paginatedApps.map((app) => {
+                const status = getAssignmentStatus(app);
+                return (
+                  <div
+                    key={app.id}
+                    className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                  >
+                    {/* Left Side: Info */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-primary flex-shrink-0">
+                        <BriefcaseIcon className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-bold text-textMain text-sm line-clamp-1">{app.gig?.title}</h3>
+                          {getStatusBadge(status)}
+                        </div>
+                        <p className="text-xs font-bold text-secondary">{app.role?.roleName}</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-secondary">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            {formatDate(app.gig?.eventDate)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <ClockIcon className="w-3.5 h-3.5" />
+                            {app.gig?.startTime}
+                          </span>
+                          <span className="flex items-center gap-1 truncate">
+                            <MapPinIcon className="w-3.5 h-3.5" />
+                            {app.gig?.location}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs font-bold text-secondary">{app.role?.roleName}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-secondary">
-                      <span className="flex items-center gap-1">
-                        <CalendarIcon className="w-3.5 h-3.5" />
-                        {formatDate(app.gig?.eventDate)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ClockIcon className="w-3.5 h-3.5" />
-                        {app.gig?.startTime}
-                      </span>
-                      <span className="flex items-center gap-1 truncate">
-                        <MapPinIcon className="w-3.5 h-3.5" />
-                        {app.gig?.location}
-                      </span>
+
+                    {/* Right Side: Price & Actions */}
+                    <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
+                      <div className="text-right">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">Pay Rate</span>
+                        <span className="font-bold text-primary text-sm">₹{app.role?.payPerPerson}/hr</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {status === 'completed' ? (
+                          <button
+                            onClick={() => showToast('Reviews will be available in next phase!', 'info')}
+                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all"
+                          >
+                            Review
+                          </button>
+                        ) : app.status === 'accepted' ? (
+                          <button
+                            onClick={() => showToast('Chat functionality will be added in Phase 5!', 'info')}
+                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
+                            Chat
+                          </button>
+                        ) : null}
+
+                        <button
+                          onClick={() => navigate(`/worker/gigs/${app.gigId}`)}
+                          className="px-4 py-2 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:bg-[#575727] transition-all"
+                        >
+                          View Details
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                );
+              });
+            })()}
 
-                {/* Right Side: Price & Actions */}
-                <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">Pay Rate</span>
-                    <span className="font-bold text-primary text-sm">₹{app.role?.payPerPerson}/hr</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {status === 'completed' ? (
-                      <button
-                        onClick={() => showToast('Reviews will be available in next phase!', 'info')}
-                        className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all"
-                      >
-                        Review
-                      </button>
-                    ) : app.status === 'accepted' ? (
-                      <button
-                        onClick={() => showToast('Chat functionality will be added in Phase 5!', 'info')}
-                        className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all flex items-center gap-1.5"
-                      >
-                        <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
-                        Chat
-                      </button>
-                    ) : null}
-
-                    <button
-                      onClick={() => navigate(`/worker/gigs/${app.gigId}`)}
-                      className="px-4 py-2 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:bg-[#575727] transition-all"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredApps.length / ITEMS_PER_PAGE)}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
 
