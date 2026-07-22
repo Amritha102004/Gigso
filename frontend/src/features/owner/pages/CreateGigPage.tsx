@@ -99,7 +99,7 @@ const CreateGigPage: React.FC = () => {
       const numVal = Math.max(0, Number(value));
       updated[index] = { ...updated[index], [field]: numVal };
     } else {
-      updated[index] = { ...updated[index], [field]: value };
+      updated[index] = { ...updated[index], [field]: value as any };
     }
     setRoles(updated);
     clearError(`${field}_${index}`);

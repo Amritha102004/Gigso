@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import workerGigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import MapPreview from '../../../components/MapPreview';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -326,23 +327,7 @@ const GigDetailPage: React.FC = () => {
           {/* Map Preview Box */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-6 space-y-4">
             <h3 className="text-sm font-bold text-textMain uppercase tracking-wider">Map Preview</h3>
-            
-            {/* Mock Map Drawing */}
-            <div className="h-44 bg-blue-50 border border-blue-100 rounded-xl relative flex items-center justify-center overflow-hidden">
-              {/* Stylized mock map grid patterns */}
-              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]" />
-              <div className="absolute inset-x-0 h-0.5 bg-indigo-500/20 top-1/2 -translate-y-1/2" />
-              <div className="absolute inset-y-0 w-0.5 bg-indigo-500/20 left-1/2 -translate-x-1/2" />
-              
-              <div className="relative z-10 flex flex-col items-center gap-1 text-center p-4">
-                <div className="w-9 h-9 rounded-full bg-rose-600 shadow-md flex items-center justify-center text-white animate-bounce">
-                  <MapPinIcon className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-bold text-textMain uppercase bg-white px-2 py-0.5 rounded shadow-sm border border-gray-100 max-w-[200px] truncate">
-                  {gig.location}
-                </span>
-              </div>
-            </div>
+            <MapPreview location={gig.location} />
           </div>
         </div>
       </div>
