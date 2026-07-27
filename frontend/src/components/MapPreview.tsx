@@ -106,10 +106,10 @@ const MapPreview: React.FC<MapPreviewProps> = ({ location }) => {
           .openPopup();
 
         setLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error loading map:', err);
         if (isMounted) {
-          setError(err.message || 'Could not load map');
+          setError(err instanceof Error ? err.message : 'Could not load map');
           setLoading(false);
         }
       }

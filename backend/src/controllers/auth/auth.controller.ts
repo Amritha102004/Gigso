@@ -160,7 +160,7 @@ export class AuthController {
 
   public changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
     const dto = toChangePasswordRequestDTO(req.body);
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
 
     await this._authService.changePassword(userId, dto.currentPassword, dto.newPassword);
 

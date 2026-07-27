@@ -6,6 +6,8 @@ import type { SetupWorkerProfileRequestDTO, WorkerProfileResponseDTO } from "../
 import { toUserResponse } from "../../mappers/user.mapper";
 import { toWorkerProfileResponse } from "../../mappers/workerProfile.mapper";
 
+import type { IUser } from "../../interfaces/user.interface";
+
 export class WorkerProfileService implements IWorkerProfileService {
   constructor(
     private _userRepo: IUserRepository,
@@ -29,7 +31,7 @@ export class WorkerProfileService implements IWorkerProfileService {
 
     const profile = await this._workerProfileRepo.upsertProfile(userId, workerProfileFields);
 
-    const userUpdate: any = { isProfileCompleted: true };
+    const userUpdate: Partial<IUser> = { isProfileCompleted: true };
     if (name !== undefined) userUpdate.name = name;
     if (phone !== undefined) userUpdate.phone = phone;
     if (profileImage !== undefined) userUpdate.profileImage = profileImage;

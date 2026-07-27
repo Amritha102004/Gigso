@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import categoryService from '../services/category.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import { getErrorMessage } from '../../../utils/error';
 
 // SVG Icon list mapped for display
 export const categoryIconMap: Record<string, (className?: string) => React.ReactNode> = {
@@ -95,9 +96,8 @@ const CategoriesPage: React.FC = () => {
       setTotal(data.total);
       setTotalPages(data.totalPages);
       setError('');
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to fetch categories';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch categories'));
     } finally {
       setIsLoading(false);
     }
@@ -130,9 +130,8 @@ const CategoriesPage: React.FC = () => {
       } else {
         fetchCategories(search, page);
       }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to delete category';
-      showToast(msg, 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Failed to delete category'), 'error');
     }
   };
 

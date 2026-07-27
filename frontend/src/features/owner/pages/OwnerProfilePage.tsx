@@ -6,6 +6,7 @@ import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
+import { getErrorMessage } from '../../../utils/error';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -123,8 +124,8 @@ const OwnerProfilePage: React.FC = () => {
       const res = await authService.uploadImage(file);
       setProfileImage(res.url);
       showToast('Profile image uploaded successfully!', 'success');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to upload image', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Failed to upload image'), 'error');
     } finally {
       setIsUploading(false);
     }
@@ -217,8 +218,8 @@ const OwnerProfilePage: React.FC = () => {
       showToast('Profile updated successfully!', 'success');
       setIsEditing(false);
       fetchProfile();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to update profile'));
     } finally {
       setIsSaving(false);
     }
@@ -260,13 +261,13 @@ const OwnerProfilePage: React.FC = () => {
     }
 
     try {
-      await authService.changePassword({ oldPassword, newPassword });
+      await authService.changePassword({ currentPassword: oldPassword, newPassword });
       showToast('Password changed successfully!', 'success');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to change password', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Failed to change password'), 'error');
     }
   };
 

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { IUsersService } from "../../interfaces/services/admin/users.service.interface";
+import type { UserFilter } from "../../interfaces/repositories/user.repository.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import { MESSAGES } from "../../constants/messages";
 import type { ApiResponse } from "../../types/api-response.type";
@@ -14,7 +15,7 @@ export class AdminUsersController {
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
 
-    const filter: any = {};
+    const filter: UserFilter = {};
     if (role) filter.role = role;
     if (search) {
       filter.$or = [
@@ -39,7 +40,7 @@ export class AdminUsersController {
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
 
-    const filter: any = { role: "owner" };
+    const filter: UserFilter = { role: "owner" };
     if (search) {
       filter.$or = [
         { name: new RegExp(search, 'i') },
@@ -63,7 +64,7 @@ export class AdminUsersController {
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
 
-    const filter: any = { role: "worker" };
+    const filter: UserFilter = { role: "worker" };
     if (search) {
       filter.$or = [
         { name: new RegExp(search, 'i') },

@@ -11,7 +11,7 @@ export class WorkerProfileController {
   constructor(private _profileService: IWorkerProfileService) {}
 
   public setupWorkerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
     const dto = toSetupWorkerProfileRequestDTO(req.body);
 
     const { user, profile } = await this._profileService.setupWorkerProfile(userId, dto);
@@ -26,7 +26,7 @@ export class WorkerProfileController {
   });
 
   public getWorkerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
     const profile = await this._profileService.getWorkerProfile(userId);
 
     const response: ApiResponse = {

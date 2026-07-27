@@ -6,6 +6,8 @@ import type { SetupOwnerProfileRequestDTO, OwnerProfileResponseDTO } from "../..
 import { toUserResponse } from "../../mappers/user.mapper";
 import { toOwnerProfileResponse } from "../../mappers/ownerProfile.mapper";
 
+import type { IUser } from "../../interfaces/user.interface";
+
 export class OwnerProfileService implements IOwnerProfileService {
   constructor(
     private _userRepo: IUserRepository,
@@ -29,7 +31,7 @@ export class OwnerProfileService implements IOwnerProfileService {
 
     const profile = await this._ownerProfileRepo.upsertProfile(userId, ownerProfileFields);
 
-    const userUpdate: any = { isProfileCompleted: true };
+    const userUpdate: Partial<IUser> = { isProfileCompleted: true };
     if (name !== undefined) userUpdate.name = name;
     if (phone !== undefined) userUpdate.phone = phone;
     if (profileImage !== undefined) userUpdate.profileImage = profileImage;

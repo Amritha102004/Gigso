@@ -26,14 +26,18 @@ router.post("/reset-password", validate(resetPasswordSchema), authController.res
 router.post("/change-password", authenticateJWT, validate(changePasswordSchema), authController.changePassword.bind(authController));
 router.post("/logout", authController.logout);
 
+import type { Response } from "express";
+import type { AuthRequest } from "../../middlewares/auth.middleware";
+
 // Profile image upload endpoint
 import { uploadProfileImage } from "../../middlewares/upload.middleware";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 
-router.post("/upload-image", authenticateJWT, (req: any, res: any) => {
-  uploadProfileImage(req, res, async (err: any) => {
+router.post("/upload-image", authenticateJWT, (req: AuthRequest, res: Response) => {
+  uploadProfileImage(req, res, async (err: unknown) => {
     if (err) {
-      return res.status(400).json({ success: false, message: err.message });
+      const errorMsg = err instanceof Error ? err.message : "Failed to parse file";
+      return res.status(400).json({ success: false, message: errorMsg });
     }
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -46,11 +50,12 @@ router.post("/upload-image", authenticateJWT, (req: any, res: any) => {
         message: "Image uploaded successfully",
         data: { url: secureUrl },
       });
-    } catch (uploadError: any) {
+    } catch (uploadError: unknown) {
       console.error("Cloudinary upload failed:", uploadError);
+      const errorMsg = uploadError instanceof Error ? uploadError.message : "Failed to upload image to Cloudinary";
       res.status(500).json({
         success: false,
-        message: uploadError.message || "Failed to upload image to Cloudinary",
+        message: errorMsg,
       });
     }
   });

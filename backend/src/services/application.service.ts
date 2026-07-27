@@ -37,12 +37,12 @@ export class ApplicationService implements IApplicationService {
 
     // 4. Create new application
     const app = await this._applicationRepo.create({
-      gigId: new Types.ObjectId(gigId) as any,
-      roleId: new Types.ObjectId(roleId) as any,
-      workerId: new Types.ObjectId(workerId) as any,
+      gigId: new Types.ObjectId(gigId),
+      roleId: new Types.ObjectId(roleId),
+      workerId: new Types.ObjectId(workerId),
       status: "pending",
       appliedAt: new Date(),
-    } as any);
+    });
 
     return toGigApplicationDTO(app);
   }
@@ -103,7 +103,7 @@ export class ApplicationService implements IApplicationService {
     }
 
     // 4. Update and return status
-    const updated = await this._applicationRepo.update(applicationId, { status } as any);
+    const updated = await this._applicationRepo.update(applicationId, { status });
     if (!updated) {
       throw new AppError("Failed to update application status", 500);
     }
@@ -117,7 +117,7 @@ export class ApplicationService implements IApplicationService {
         );
         for (const otherApp of otherApps) {
           if (otherApp._id.toString() !== applicationId && otherApp.status === "pending") {
-            await this._applicationRepo.update(otherApp._id.toString(), { status: "rejected" } as any);
+            await this._applicationRepo.update(otherApp._id.toString(), { status: "rejected" });
           }
         }
       } catch (err) {

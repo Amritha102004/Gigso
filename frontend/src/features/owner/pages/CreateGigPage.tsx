@@ -11,6 +11,7 @@ import {
 import gigService from '../services/gig.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
+import { getErrorMessage } from '../../../utils/error';
 
 interface RoleInput {
   roleName: string;
@@ -175,9 +176,9 @@ const CreateGigPage: React.FC = () => {
           setError(res.message || 'Failed to update draft.');
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error saving gig draft.');
+      setError(getErrorMessage(err, 'Error saving gig draft.'));
     } finally {
       setLoading(false);
     }
@@ -219,9 +220,9 @@ const CreateGigPage: React.FC = () => {
           setError(res.message || 'Failed to update draft.');
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error saving gig draft.');
+      setError(getErrorMessage(err, 'Error saving gig draft.'));
     } finally {
       setLoading(false);
     }
@@ -245,9 +246,9 @@ const CreateGigPage: React.FC = () => {
       } else {
         setError(res.message || 'Failed to save draft.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error saving draft.');
+      setError(getErrorMessage(err, 'Error saving draft.'));
     } finally {
       setLoading(false);
     }
@@ -278,9 +279,9 @@ const CreateGigPage: React.FC = () => {
       } else {
         setError(publishRes.message || 'Failed to publish gig.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error publishing gig.');
+      setError(getErrorMessage(err, 'Error publishing gig.'));
     } finally {
       setLoading(false);
     }

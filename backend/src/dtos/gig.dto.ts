@@ -10,7 +10,7 @@ export interface GigRoleDTO {
 
 export interface GigResponseDTO {
   id: string;
-  ownerId: string;
+  ownerId: string | { id: string; name: string; email: string; };
   title: string;
   description: string;
   category: CategoryDTO;
@@ -21,6 +21,7 @@ export interface GigResponseDTO {
   totalBudget: number;
   status: "draft" | "active" | "completed" | "cancelled" | "paid";
   paymentStatus: "unpaid" | "paid";
+  isFlagged?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +37,8 @@ export interface GigListItemDTO {
   totalSpots: number;
   location: string;
   totalBudget: number;
+  isFlagged?: boolean;
+  ownerId?: string | { id: string; name: string; email: string; };
   pendingApplicationsCount?: number;
 }
 

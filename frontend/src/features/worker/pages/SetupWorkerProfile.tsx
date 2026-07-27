@@ -6,6 +6,7 @@ import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
+import { getErrorMessage } from '../../../utils/error';
 
 const SetupWorkerProfile: React.FC = () => {
   const { user, loginState } = useAuth();
@@ -63,8 +64,8 @@ const SetupWorkerProfile: React.FC = () => {
       const res = await authService.uploadImage(file);
       setProfileImage(res.url);
       showToast('Profile image uploaded successfully!', 'success');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to upload image', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Failed to upload image'), 'error');
     } finally {
       setIsUploading(false);
     }
@@ -166,8 +167,8 @@ const SetupWorkerProfile: React.FC = () => {
 
       showToast('Profile setup completed successfully!', 'success');
       navigate('/worker/home');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to setup profile', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Failed to setup profile'), 'error');
     } finally {
       setIsLoading(false);
     }

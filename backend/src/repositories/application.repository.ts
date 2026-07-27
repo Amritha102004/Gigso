@@ -10,7 +10,10 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   }
 
   async findByWorkerId(workerId: string, status?: string): Promise<IGigApplication[]> {
-    const query: any = { workerId: new Types.ObjectId(workerId) };
+    const query: {
+      workerId: Types.ObjectId;
+      status?: string;
+    } = { workerId: new Types.ObjectId(workerId) };
     if (status) {
       query.status = status;
     }

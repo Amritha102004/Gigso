@@ -1,6 +1,13 @@
 import axios from 'axios';
 import { ADMIN_ROUTES } from '../../../constants/apiRoutes';
-import type { PaginatedUsersResponse, UserDTO } from '../../../types/api.types';
+import type { 
+  PaginatedUsersResponse, 
+  UserDTO, 
+  GigResponseDTO, 
+  GigRoleDTO, 
+  OwnerProfileResponseDTO, 
+  GigApplicationDTO 
+} from '../../../types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -24,14 +31,29 @@ export interface GetUsersParams {
   search?: string;
 }
 
-interface ApiResponse<T = any> {
+export interface AdminGigRole extends GigRoleDTO {
+  filledSpots?: number;
+}
+
+export interface AdminGig extends Omit<GigResponseDTO, 'roles'> {
+  roles: AdminGigRole[];
+  isFlagged?: boolean;
+}
+
+export interface AdminGigDetails {
+  gig: AdminGig;
+  ownerProfile: OwnerProfileResponseDTO;
+  applications: GigApplicationDTO[];
+}
+
+interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
 }
 
 export const adminService = {
-  getUsers: async (params: GetUsersParams): Promise<PaginatedUsersResponse> => {
+  getUsers: async (params?: GetUsersParams): Promise<PaginatedUsersResponse> => {
     const response = await adminApi.get<ApiResponse<PaginatedUsersResponse>>(ADMIN_ROUTES.USERS, { params });
     return response.data.data!;
   },
@@ -60,38 +82,38 @@ export const adminService = {
     date?: string;
     page?: number;
     limit?: number;
-  }): Promise<{ gigs: any[]; total: number; page: number; totalPages: number }> => {
-    const response = await adminApi.get<ApiResponse<{ gigs: any[]; total: number; page: number; totalPages: number }>>(
+  }): Promise<{ gigs: AdminGig[]; total: number; page: number; totalPages: number }> => {
+    const response = await adminApi.get<ApiResponse<{ gigs: AdminGig[]; total: number; page: number; totalPages: number }>>(
       ADMIN_ROUTES.GIGS,
       { params }
     );
     return response.data.data!;
   },
 
-  getGigById: async (gigId: string): Promise<{ gig: any; ownerProfile: any; applications: any[] }> => {
-    const response = await adminApi.get<ApiResponse<{ gig: any; ownerProfile: any; applications: any[] }>>(
+  getGigById: async (gigId: string): Promise<AdminGigDetails> => {
+    const response = await adminApi.get<ApiResponse<AdminGigDetails>>(
       ADMIN_ROUTES.GIG_BY_ID(gigId)
     );
     return response.data.data!;
   },
 
-  toggleFlagGig: async (gigId: string, isFlagged: boolean): Promise<any> => {
-    const response = await adminApi.patch<ApiResponse<any>>(
+  toggleFlagGig: async (gigId: string, isFlagged: boolean): Promise<AdminGig> => {
+    const response = await adminApi.patch<ApiResponse<AdminGig>>(
       ADMIN_ROUTES.FLAG_GIG(gigId),
       { isFlagged }
     );
     return response.data.data!;
   },
 
-  deleteGig: async (gigId: string): Promise<any> => {
-    const response = await adminApi.delete<ApiResponse<any>>(
+  deleteGig: async (gigId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await adminApi.delete<ApiResponse<{ success: boolean; message: string }>>(
       ADMIN_ROUTES.DELETE_GIG(gigId)
     );
-    return response.data.data!;
+    return { success: response.data.success, message: response.data.message };
   },
 
-  updateApplicationStatus: async (gigId: string, applicationId: string, status: 'accepted' | 'rejected'): Promise<any> => {
-    const response = await adminApi.patch<ApiResponse<any>>(
+  updateApplicationStatus: async (gigId: string, applicationId: string, status: 'accepted' | 'rejected'): Promise<GigApplicationDTO> => {
+    const response = await adminApi.patch<ApiResponse<GigApplicationDTO>>(
       `${ADMIN_ROUTES.GIGS}/${gigId}/applications/${applicationId}`,
       { status }
     );

@@ -11,7 +11,7 @@ export class OwnerGigController {
   constructor(private _gigService: IOwnerGigService) {}
 
   public createGig = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const dto = toCreateGigRequestDTO(req.body);
     const gig = await this._gigService.createGig(ownerId, dto);
 
@@ -25,7 +25,7 @@ export class OwnerGigController {
   });
 
   public getMyGigs = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const status = req.query.status as string | undefined;
     const gigs = await this._gigService.getOwnerGigs(ownerId, status);
 
@@ -39,7 +39,7 @@ export class OwnerGigController {
   });
 
   public getGigById = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     const gig = await this._gigService.getGigById(gigId, ownerId);
 
@@ -53,7 +53,7 @@ export class OwnerGigController {
   });
 
   public updateGig = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     const dto = toUpdateGigRequestDTO(req.body);
     const gig = await this._gigService.updateGig(gigId, ownerId, dto);
@@ -68,7 +68,7 @@ export class OwnerGigController {
   });
 
   public deleteGig = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     await this._gigService.softDeleteGig(gigId, ownerId);
 
@@ -81,7 +81,7 @@ export class OwnerGigController {
   });
 
   public publishGig = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     const gig = await this._gigService.publishGig(gigId, ownerId);
 
@@ -95,7 +95,7 @@ export class OwnerGigController {
   });
 
   public markAsCompleted = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     const gig = await this._gigService.markAsCompleted(gigId, ownerId);
 

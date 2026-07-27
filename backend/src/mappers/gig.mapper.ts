@@ -15,10 +15,13 @@ export const toGigRoleDTO = (role: IGigRole): GigRoleDTO => {
 export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
   const category = gig.categoryId as any as ICategory;
   const roles = (gig.roles || []) as any[] as IGigRole[];
+  const owner = gig.ownerId as any;
 
   return {
     id: gig._id.toString(),
-    ownerId: gig.ownerId.toString(),
+    ownerId: owner && typeof owner.name === "string"
+      ? { id: owner._id.toString(), name: owner.name, email: owner.email }
+      : gig.ownerId.toString(),
     title: gig.title,
     description: gig.description,
     category: category && typeof category.name === "string" 
@@ -31,6 +34,7 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
     totalBudget: gig.totalBudget,
     status: gig.status,
     paymentStatus: gig.paymentStatus,
+    isFlagged: gig.isFlagged,
     createdAt: gig.createdAt.toISOString(),
     updatedAt: gig.updatedAt.toISOString(),
   };
@@ -39,6 +43,7 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
 export const toGigListItemDTO = (gig: IGig, pendingApplicationsCount?: number): GigListItemDTO => {
   const category = gig.categoryId as any as ICategory;
   const roles = (gig.roles || []) as any[] as IGigRole[];
+  const owner = gig.ownerId as any;
 
   const totalRoles = roles.length;
   const totalSpots = roles.reduce((sum, role) => sum + role.spots, 0);
@@ -57,6 +62,10 @@ export const toGigListItemDTO = (gig: IGig, pendingApplicationsCount?: number): 
     totalSpots,
     location: gig.location,
     totalBudget: gig.totalBudget,
+    isFlagged: gig.isFlagged,
+    ownerId: owner && typeof owner.name === "string"
+      ? { id: owner._id.toString(), name: owner.name, email: owner.email }
+      : gig.ownerId.toString(),
     pendingApplicationsCount,
   };
 };

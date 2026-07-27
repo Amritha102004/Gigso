@@ -5,6 +5,7 @@ import type { GigListItemDTO, CategoryDTO } from '../../../types/api.types';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/Pagination';
+import { getErrorMessage } from '../../../utils/error';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -69,9 +70,9 @@ const BrowseGigsPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to fetch gigs', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching gigs:', err);
-      showToast(err.response?.data?.message || 'Error connecting to server', 'error');
+      showToast(getErrorMessage(err, 'Error connecting to server'), 'error');
     } finally {
       setLoading(false);
     }

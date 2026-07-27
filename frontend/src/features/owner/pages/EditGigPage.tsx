@@ -10,6 +10,7 @@ import {
 import gigService from '../services/gig.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
+import { getErrorMessage } from '../../../utils/error';
 
 interface RoleInput {
   id?: string;
@@ -72,9 +73,9 @@ const EditGigPage: React.FC = () => {
         } else {
           setError(gigRes.message || 'Failed to fetch gig details.');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.response?.data?.message || 'Error loading edit page data.');
+        setError(getErrorMessage(err, 'Error loading edit page data.'));
       } finally {
         setLoading(false);
       }
@@ -155,9 +156,9 @@ const EditGigPage: React.FC = () => {
       } else {
         setError(res.message || 'Failed to update gig.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error updating gig details.');
+      setError(getErrorMessage(err, 'Error updating gig details.'));
     } finally {
       setSaveLoading(false);
     }

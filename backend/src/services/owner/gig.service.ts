@@ -13,6 +13,8 @@ import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
 import { toCategoryDTO } from "../../mappers/category.mapper";
 import { AppError } from "../../utils/errors";
 
+import type { IGig } from "../../interfaces/gig.interface";
+
 export class OwnerGigService implements IOwnerGigService {
   constructor(
     private _categoryRepo: ICategoryRepository,
@@ -35,30 +37,30 @@ export class OwnerGigService implements IOwnerGigService {
     const roleIds: Types.ObjectId[] = [];
     for (const r of rolesData) {
       const createdRole = await this._gigRoleRepo.create({
-        gigId: gigId as any,
+        gigId: gigId,
         roleName: r.roleName,
         spots: r.spots,
         payPerPerson: r.payPerPerson,
-      } as any);
+      });
       roleIds.push(createdRole._id as Types.ObjectId);
     }
 
     // 3. Create gig
     await this._gigRepo.create({
-      _id: gigId as any,
-      ownerId: new Types.ObjectId(ownerId) as any,
+      _id: gigId,
+      ownerId: new Types.ObjectId(ownerId),
       title: input.title,
       description: input.description,
-      categoryId: new Types.ObjectId(input.categoryId) as any,
+      categoryId: new Types.ObjectId(input.categoryId),
       location: input.location,
       eventDate: new Date(input.eventDate),
       startTime: input.startTime,
-      roles: roleIds as any,
+      roles: roleIds,
       totalBudget,
       status: input.status || "draft",
       paymentStatus: "unpaid",
       isDeleted: false,
-    } as any);
+    });
 
     const gig = await this._gigRepo.findById(gigId.toString());
     if (!gig) {
@@ -92,7 +94,7 @@ export class OwnerGigService implements IOwnerGigService {
       throw new AppError("Gig not found or unauthorized access", 404);
     }
 
-    const updateData: any = {};
+    const updateData: Partial<IGig> = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.description !== undefined) updateData.description = input.description;
     if (input.categoryId !== undefined) updateData.categoryId = new Types.ObjectId(input.categoryId);
@@ -109,11 +111,11 @@ export class OwnerGigService implements IOwnerGigService {
       for (const r of input.roles) {
         totalBudget += r.spots * r.payPerPerson;
         const createdRole = await this._gigRoleRepo.create({
-          gigId: new Types.ObjectId(gigId) as any,
+          gigId: new Types.ObjectId(gigId),
           roleName: r.roleName,
           spots: r.spots,
           payPerPerson: r.payPerPerson,
-        } as any);
+        });
         roleIds.push(createdRole._id as Types.ObjectId);
       }
 
@@ -151,7 +153,7 @@ export class OwnerGigService implements IOwnerGigService {
       throw new AppError("At least one role is required to publish the gig", 400);
     }
 
-    await this._gigRepo.update(gigId, { status: "active" } as any);
+    await this._gigRepo.update(gigId, { status: "active" });
     const updated = await this._gigRepo.findById(gigId);
     if (!updated) {
       throw new Error("Gig not found after publish");
@@ -168,7 +170,7 @@ export class OwnerGigService implements IOwnerGigService {
       throw new AppError("Only active gigs can be marked as completed", 400);
     }
 
-    await this._gigRepo.update(gigId, { status: "completed" } as any);
+    await this._gigRepo.update(gigId, { status: "completed" });
     const updated = await this._gigRepo.findById(gigId);
     if (!updated) {
       throw new Error("Gig not found after completion");

@@ -4,6 +4,7 @@ import workerGigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import MapPreview from '../../../components/MapPreview';
+import { getErrorMessage } from '../../../utils/error';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -52,9 +53,9 @@ const GigDetailPage: React.FC = () => {
         showToast(res.message || 'Failed to load gig details', 'error');
         navigate('/worker/browse');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching gig details:', err);
-      showToast(err.response?.data?.message || 'Failed to retrieve gig details', 'error');
+      showToast(getErrorMessage(err, 'Failed to retrieve gig details'), 'error');
       navigate('/worker/browse');
     } finally {
       setLoading(false);
@@ -81,8 +82,8 @@ const GigDetailPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to apply.', 'error');
       }
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Error submitting application.', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Error submitting application.'), 'error');
     }
   };
 
@@ -100,8 +101,8 @@ const GigDetailPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to withdraw application.', 'error');
       }
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Error withdrawing application.', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err, 'Error withdrawing application.'), 'error');
     }
   };
 

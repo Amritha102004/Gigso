@@ -10,7 +10,7 @@ export class ApplicationController {
   constructor(private _applicationService: IApplicationService) {}
 
   public applyForGigRole = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const workerId = req.user._id.toString();
+    const workerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
     const dto = toApplyForGigRoleRequestDTO(req.body);
 
@@ -34,7 +34,7 @@ export class ApplicationController {
   });
 
   public getWorkerApplications = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const workerId = req.user._id.toString();
+    const workerId = req.user!._id.toString();
     const status = req.query.status as string | undefined;
 
     const applications = await this._applicationService.getWorkerApplications(workerId, status);
@@ -49,7 +49,7 @@ export class ApplicationController {
   });
 
   public getGigApplications = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const gigId = req.params.gigId as string;
 
     const applications = await this._applicationService.getGigApplications(gigId, ownerId);
@@ -64,7 +64,7 @@ export class ApplicationController {
   });
 
   public updateApplicationStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const ownerId = req.user._id.toString();
+    const ownerId = req.user!._id.toString();
     const applicationId = req.params.applicationId as string;
     const dto = toUpdateApplicationStatusRequestDTO(req.body);
 
@@ -88,7 +88,7 @@ export class ApplicationController {
   });
 
   public withdrawApplication = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const workerId = req.user._id.toString();
+    const workerId = req.user!._id.toString();
     const applicationId = req.params.applicationId as string;
 
     await this._applicationService.withdrawApplication(applicationId, workerId);

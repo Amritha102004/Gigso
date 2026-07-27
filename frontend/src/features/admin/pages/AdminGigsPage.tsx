@@ -12,7 +12,9 @@ import {
   MapPinIcon
 } from '@heroicons/react/24/outline';
 import { FlagIcon as FlagIconSolid } from '@heroicons/react/24/solid';
+import axios from 'axios';
 import adminService from '../services/admin.service';
+import type { AdminGig, AdminGigRole } from '../services/admin.service';
 import categoryService from '../services/category.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
@@ -22,7 +24,7 @@ const AdminGigsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [gigs, setGigs] = useState<any[]>([]);
+  const [gigs, setGigs] = useState<AdminGig[]>([]);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -95,15 +97,15 @@ const AdminGigsPage: React.FC = () => {
         const allData = await adminService.getGigs({ limit: 1000 });
         if (allData && allData.gigs) {
           const list = allData.gigs;
-          const live = list.filter((g: any) => g.status === 'active').length;
-          const completed = list.filter((g: any) => g.status === 'completed').length;
-          const cancelled = list.filter((g: any) => g.status === 'cancelled').length;
+          const live = list.filter((g: AdminGig) => g.status === 'active').length;
+          const completed = list.filter((g: AdminGig) => g.status === 'completed').length;
+          const cancelled = list.filter((g: AdminGig) => g.status === 'cancelled').length;
           
           let totalSpots = 0;
           let filledSpots = 0;
-          list.forEach((g: any) => {
+          list.forEach((g: AdminGig) => {
             if (g.status === 'active') {
-              (g.roles || []).forEach((r: any) => {
+              (g.roles || []).forEach((r: AdminGigRole) => {
                 totalSpots += r.spots || 0;
                 filledSpots += r.filledSpots || 0;
               });
@@ -120,9 +122,10 @@ const AdminGigsPage: React.FC = () => {
           });
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching admin gigs:', err);
-      setError(err.response?.data?.message || 'Failed to fetch gigs.');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(errorMessage || 'Failed to fetch gigs.');
     } finally {
       setIsLoading(false);
     }
@@ -153,9 +156,10 @@ const AdminGigsPage: React.FC = () => {
         'success'
       );
       fetchGigs();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error toggling flag:', err);
-      showToast(err.response?.data?.message || 'Failed to update flag status.', 'error');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      showToast(errorMessage || 'Failed to update flag status.', 'error');
     }
   };
 
@@ -170,9 +174,10 @@ const AdminGigsPage: React.FC = () => {
           showToast('Gig posting deleted successfully.', 'success');
           setConfirmDialog(prev => ({ ...prev, isOpen: false }));
           fetchGigs();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Error deleting gig:', err);
-          showToast(err.response?.data?.message || 'Failed to delete gig.', 'error');
+          const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+          showToast(errorMessage || 'Failed to delete gig.', 'error');
         }
       }
     });
@@ -184,9 +189,9 @@ const AdminGigsPage: React.FC = () => {
     return g.location.toLowerCase().includes(locationQuery.toLowerCase());
   });
 
-  const getFulfillmentInfo = (gig: any) => {
-    const totalSpots = (gig.roles || []).reduce((sum: number, r: any) => sum + (r.spots || 0), 0);
-    const filledSpots = (gig.roles || []).reduce((sum: number, r: any) => sum + (r.filledSpots || 0), 0);
+  const getFulfillmentInfo = (gig: AdminGig) => {
+    const totalSpots = (gig.roles || []).reduce((sum: number, r: AdminGigRole) => sum + (r.spots || 0), 0);
+    const filledSpots = (gig.roles || []).reduce((sum: number, r: AdminGigRole) => sum + (r.filledSpots || 0), 0);
     const percent = totalSpots > 0 ? (filledSpots / totalSpots) * 100 : 0;
     
     return {
@@ -196,7 +201,7 @@ const AdminGigsPage: React.FC = () => {
     };
   };
 
-  const getStatusBadge = (gig: any) => {
+  const getStatusBadge = (gig: AdminGig) => {
     const { isFilled } = getFulfillmentInfo(gig);
     
     if (gig.isFlagged) {
@@ -382,7 +387,7 @@ const AdminGigsPage: React.FC = () => {
               ) : (
                 filteredGigs.map((gig) => {
                   const fulfill = getFulfillmentInfo(gig);
-                  const gigId = (gig.id || gig._id || '').toString();
+                  const gigId = (gig.id || '').toString();
                   return (
                     <tr key={gigId} className="hover:bg-gray-50/10">
                       <td className="px-6 py-4">
@@ -392,11 +397,11 @@ const AdminGigsPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-semibold text-secondary">
-                        {gig.ownerId?.name || 'Unknown Owner'}
+                        {gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Unknown Owner'}
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-block px-2.5 py-0.5 bg-primary/5 text-primary rounded-full font-bold uppercase tracking-wider text-[9px]">
-                          {gig.categoryId?.name || 'Category'}
+                          {gig.category?.name || 'Category'}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium text-secondary">

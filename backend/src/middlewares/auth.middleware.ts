@@ -3,9 +3,10 @@ import { jwtService } from "../utils/jwt";
 import { UserModel } from "../models/user.model";
 import { HttpStatus } from "../utils/http-status.enum";
 import { MESSAGES } from "../constants/messages";
+import type { IUser } from "../interfaces/user.interface";
 
 export interface AuthRequest extends Request {
-  user?: any; 
+  user?: IUser; 
 }
 
 export const authenticateJWT = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

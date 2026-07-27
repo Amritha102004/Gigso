@@ -11,7 +11,7 @@ export class OwnerProfileController {
   constructor(private _profileService: IOwnerProfileService) {}
 
   public setupOwnerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
     const dto = toSetupOwnerProfileRequestDTO(req.body);
 
     const { user, profile } = await this._profileService.setupOwnerProfile(userId, dto);
@@ -26,7 +26,7 @@ export class OwnerProfileController {
   });
 
   public getOwnerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
     const profile = await this._profileService.getOwnerProfile(userId);
 
     const response: ApiResponse = {

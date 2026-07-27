@@ -12,6 +12,7 @@ import workerGigService from '../services/gig.service';
 import type { GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/Pagination';
+import { getErrorMessage } from '../../../utils/error';
 
 const MyGigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,9 +44,9 @@ const MyGigsPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to fetch assignments', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error loading assignments', 'error');
+      showToast(getErrorMessage(err, 'Error loading assignments'), 'error');
     } finally {
       setLoading(false);
     }

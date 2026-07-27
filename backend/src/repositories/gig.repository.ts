@@ -31,7 +31,11 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
   async findByOwnerId(ownerId: string, filters?: { status?: string }): Promise<IGig[]> {
     await this._updateExpiredGigs();
-    const query: any = { ownerId, isDeleted: false };
+    const query: {
+      ownerId: Types.ObjectId;
+      isDeleted: boolean;
+      status?: string;
+    } = { ownerId: new Types.ObjectId(ownerId), isDeleted: false };
     if (filters?.status) {
       query.status = filters.status;
     }
@@ -50,7 +54,18 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     date?: string;
   }): Promise<IGig[]> {
     await this._updateExpiredGigs();
-    const query: any = { status: "active", isDeleted: false };
+    const query: {
+      status: string;
+      isDeleted: boolean;
+      categoryId?: Types.ObjectId;
+      location?: string | { $regex: string; $options: string };
+      $or?: Array<{
+        title?: { $regex: string; $options: string };
+        location?: { $regex: string; $options: string };
+        description?: { $regex: string; $options: string };
+      }>;
+      eventDate?: { $gte: Date; $lte: Date };
+    } = { status: "active", isDeleted: false };
 
     if (filters?.categoryId) {
       query.categoryId = new Types.ObjectId(filters.categoryId);
@@ -107,7 +122,13 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     limit: number
   ): Promise<{ gigs: IGig[]; total: number }> {
     await this._updateExpiredGigs();
-    const query: any = { isDeleted: false };
+    const query: {
+      isDeleted: boolean;
+      categoryId?: Types.ObjectId;
+      status?: string;
+      $or?: Array<{ title?: { $regex: string; $options: string }; location?: { $regex: string; $options: string } }>;
+      eventDate?: { $gte: Date; $lte: Date };
+    } = { isDeleted: false };
 
     if (filters.categoryId) {
       query.categoryId = new Types.ObjectId(filters.categoryId);

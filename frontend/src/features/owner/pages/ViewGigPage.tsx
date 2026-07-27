@@ -13,6 +13,7 @@ import gigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/Pagination';
+import { getErrorMessage } from '../../../utils/error';
 
 const ViewGigPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
@@ -55,9 +56,9 @@ const ViewGigPage: React.FC = () => {
       } else {
         setError(res.message || 'Failed to find gig details.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error fetching gig details.');
+      setError(getErrorMessage(err, 'Error fetching gig details.'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ const ViewGigPage: React.FC = () => {
       if (res.success && res.data) {
         setApplications(res.data);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error fetching applications:', err);
     }
   };
@@ -93,9 +94,9 @@ const ViewGigPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to publish gig.', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error publishing gig.', 'error');
+      showToast(getErrorMessage(err, 'Error publishing gig.'), 'error');
     } finally {
       setActionLoading(false);
     }
@@ -115,9 +116,9 @@ const ViewGigPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to complete gig.', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error completing gig.', 'error');
+      showToast(getErrorMessage(err, 'Error completing gig.'), 'error');
     } finally {
       setActionLoading(false);
     }
@@ -135,9 +136,9 @@ const ViewGigPage: React.FC = () => {
       } else {
         showToast(res.message || 'Failed to update status.', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error updating application status.', 'error');
+      showToast(getErrorMessage(err, 'Error updating application status.'), 'error');
     } finally {
       setActionLoading(false);
     }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import categoryService from '../services/category.service';
 import { categoryIconMap, renderCategoryIcon } from './CategoriesPage';
+import { getErrorMessage } from '../../../utils/error';
 
 const AddCategoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,9 +28,8 @@ const AddCategoryPage: React.FC = () => {
         setDescription(data.description);
         setSelectedIcon(data.icon || 'Camera');
         setError(null);
-      } catch (err: any) {
-        const msg = err.response?.data?.message || err.message || 'Failed to load category';
-        setError(msg);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, 'Failed to load category'));
       } finally {
         setIsLoading(false);
       }
@@ -69,9 +69,8 @@ const AddCategoryPage: React.FC = () => {
       }
 
       navigate('/admin/categories');
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'An error occurred';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An error occurred'));
     } finally {
       setIsSubmitting(false);
     }

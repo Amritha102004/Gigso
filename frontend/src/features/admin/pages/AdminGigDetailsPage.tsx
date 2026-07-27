@@ -10,7 +10,10 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { FlagIcon as FlagIconSolid } from '@heroicons/react/24/solid';
+import axios from 'axios';
 import adminService from '../services/admin.service';
+import type { AdminGig, AdminGigRole } from '../services/admin.service';
+import type { OwnerProfileResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
@@ -19,9 +22,9 @@ const AdminGigDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [gig, setGig] = useState<any | null>(null);
-  const [ownerProfile, setOwnerProfile] = useState<any | null>(null);
-  const [applications, setApplications] = useState<any[]>([]);
+  const [gig, setGig] = useState<AdminGig | null>(null);
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfileResponseDTO | null>(null);
+  const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'roles' | 'applications'>('overview');
@@ -41,9 +44,10 @@ const AdminGigDetailsPage: React.FC = () => {
         setOwnerProfile(res.ownerProfile);
         setApplications(res.applications || []);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error fetching gig details.');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(errorMessage || 'Error fetching gig details.');
     } finally {
       setIsLoading(false);
     }
@@ -57,15 +61,16 @@ const AdminGigDetailsPage: React.FC = () => {
     if (!gig) return;
     try {
       setActionLoading(true);
-      const updated = await adminService.toggleFlagGig(gig.id || gig._id, !gig.isFlagged);
+      const updated = await adminService.toggleFlagGig(gig.id, !gig.isFlagged);
       setGig(updated);
       showToast(
         `Gig successfully ${!gig.isFlagged ? 'flagged for review' : 'unflagged'}`,
         'success'
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error updating flag status.', 'error');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      showToast(errorMessage || 'Error updating flag status.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -75,12 +80,13 @@ const AdminGigDetailsPage: React.FC = () => {
     if (!gig) return;
     try {
       setActionLoading(true);
-      await adminService.deleteGig(gig.id || gig._id);
+      await adminService.deleteGig(gig.id);
       showToast('Gig posting deleted successfully.', 'success');
       navigate('/admin/gigs');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error deleting gig.', 'error');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      showToast(errorMessage || 'Error deleting gig.', 'error');
     } finally {
       setActionLoading(false);
       setIsDeleteOpen(false);
@@ -91,12 +97,13 @@ const AdminGigDetailsPage: React.FC = () => {
     if (!gig) return;
     try {
       setActionLoading(true);
-      await adminService.updateApplicationStatus(gig.id || gig._id, appId, status);
+      await adminService.updateApplicationStatus(gig.id, appId, status);
       showToast(`Application has been ${status === 'accepted' ? 'approved' : 'rejected'}.`, 'success');
       fetchDetails();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Failed to update application status.', 'error');
+      const errorMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      showToast(errorMessage || 'Failed to update application status.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -122,8 +129,8 @@ const AdminGigDetailsPage: React.FC = () => {
 
   // Derived stats
   const totalRolesCount = (gig.roles || []).length;
-  const totalSpotsCount = (gig.roles || []).reduce((sum: number, r: any) => sum + (r.spots || 0), 0);
-  const totalFilledSpots = (gig.roles || []).reduce((sum: number, r: any) => sum + (r.filledSpots || 0), 0);
+  const totalSpotsCount = (gig.roles || []).reduce((sum: number, r: AdminGigRole) => sum + (r.spots || 0), 0);
+  const totalFilledSpots = (gig.roles || []).reduce((sum: number, r: AdminGigRole) => sum + (r.filledSpots || 0), 0);
   const totalApplicationsCount = applications.length;
   const totalBudget = gig.totalBudget || 0;
 
@@ -165,7 +172,7 @@ const AdminGigDetailsPage: React.FC = () => {
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-bold text-lg uppercase shadow-inner">
-            {gig.categoryId?.name ? gig.categoryId.name.substring(0, 2) : 'GI'}
+            {gig.category?.name ? gig.category.name.substring(0, 2) : 'GI'}
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
@@ -178,7 +185,7 @@ const AdminGigDetailsPage: React.FC = () => {
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary font-medium">
               <span className="flex items-center gap-1">
                 <BriefcaseIcon className="w-3.5 h-3.5" />
-                {ownerProfile?.businessName || gig.ownerId?.name || 'Owner'}
+                {ownerProfile?.businessName || (gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Owner')}
               </span>
               <span className="flex items-center gap-1">
                 <CalendarIcon className="w-3.5 h-3.5" />
@@ -395,13 +402,13 @@ const AdminGigDetailsPage: React.FC = () => {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {acceptedWorkers.map((app) => (
-                          <div key={app._id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                          <div key={app.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-primary border border-gray-200 shadow-inner">
-                              {app.workerId?.name ? app.workerId.name.substring(0, 1) : 'W'}
+                              {app.worker?.name ? app.worker.name.substring(0, 1) : 'W'}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-bold text-textMain truncate">{app.workerId?.name}</div>
-                              <div className="text-[10px] text-secondary font-medium truncate">{app.roleId?.roleName}</div>
+                              <div className="text-xs font-bold text-textMain truncate">{app.worker?.name}</div>
+                              <div className="text-[10px] text-secondary font-medium truncate">{app.role?.roleName}</div>
                             </div>
                             <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[9px] uppercase tracking-wider">
                               Hired
@@ -426,29 +433,29 @@ const AdminGigDetailsPage: React.FC = () => {
                     ) : (
                       <div className="space-y-3">
                         {pendingApplicants.map((app) => (
-                          <div key={app._id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div key={app.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-primary border border-gray-200 shadow-inner">
-                                {app.workerId?.name ? app.workerId.name.substring(0, 1) : 'W'}
+                                {app.worker?.name ? app.worker.name.substring(0, 1) : 'W'}
                               </div>
                               <div>
-                                <div className="text-xs font-bold text-textMain">{app.workerId?.name}</div>
+                                <div className="text-xs font-bold text-textMain">{app.worker?.name}</div>
                                 <div className="text-[10px] text-secondary font-medium mt-0.5">
-                                  Applied for: <span className="font-bold text-primary">{app.roleId?.roleName}</span>
+                                  Applied for: <span className="font-bold text-primary">{app.role?.roleName}</span>
                                 </div>
                               </div>
                             </div>
                             
                             <div className="flex items-center gap-2 self-end sm:self-auto">
                               <button
-                                onClick={() => handleApplicationStatus(app._id, 'rejected')}
+                                onClick={() => handleApplicationStatus(app.id, 'rejected')}
                                 disabled={actionLoading}
                                 className="px-3 py-1.5 border border-rose-200 text-rose-700 hover:bg-rose-50 text-[10px] font-bold rounded-lg transition-all"
                               >
                                 Reject
                               </button>
                               <button
-                                onClick={() => handleApplicationStatus(app._id, 'accepted')}
+                                onClick={() => handleApplicationStatus(app.id, 'accepted')}
                                 disabled={actionLoading}
                                 className="px-3 py-1.5 bg-primary text-white hover:bg-[#575727] text-[10px] font-bold rounded-lg transition-all shadow-sm"
                               >
@@ -503,13 +510,15 @@ const AdminGigDetailsPage: React.FC = () => {
             
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-inner">
-                {gig.ownerId?.name ? gig.ownerId.name.substring(0, 2) : 'OW'}
+                {gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name.substring(0, 2) : 'OW'}
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-bold text-textMain truncate">
-                  {ownerProfile?.businessName || gig.ownerId?.name || 'Owner Profile'}
+                  {ownerProfile?.businessName || (gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Owner Profile')}
                 </h4>
-                <p className="text-[10px] text-secondary truncate mt-0.5">{gig.ownerId?.email}</p>
+                <p className="text-[10px] text-secondary truncate mt-0.5">
+                  {gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.email : ''}
+                </p>
               </div>
             </div>
 

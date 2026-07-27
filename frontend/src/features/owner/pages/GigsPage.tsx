@@ -16,6 +16,7 @@ import gigService from '../services/gig.service';
 import type { GigListItemDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/Pagination';
+import { getErrorMessage } from '../../../utils/error';
 
 const GigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,9 +46,9 @@ const GigsPage: React.FC = () => {
       } else {
         setError(response.message || 'Failed to load gigs.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.message || 'Error fetching gigs.');
+      setError(getErrorMessage(err, 'Error fetching gigs.'));
     } finally {
       setLoading(false);
     }
@@ -69,9 +70,9 @@ const GigsPage: React.FC = () => {
       } else {
         showToast(response.message || 'Failed to delete gig.', 'error');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Error deleting gig.', 'error');
+      showToast(getErrorMessage(err, 'Error deleting gig.'), 'error');
     }
   };
 
