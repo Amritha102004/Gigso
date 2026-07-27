@@ -3,6 +3,8 @@ import adminService from '../services/admin.service';
 import type { UserDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { DataTable } from '../../../components/DataTable';
+import type { Column } from '../../../components/DataTable';
 
 interface OwnerRow extends UserDTO {
   status: 'pending' | 'approved' | 'suspended';
@@ -147,6 +149,43 @@ const OwnersPage: React.FC = () => {
     );
   };
 
+  const columns: Column<OwnerRow>[] = [
+    {
+      header: 'Owner Name',
+      accessor: (owner) => <span className="text-textMain font-medium">{owner.name}</span>,
+    },
+    {
+      header: 'Email',
+      accessor: (owner) => <span className="text-secondary">{owner.email}</span>,
+    },
+    {
+      header: 'Status',
+      accessor: (owner) => getStatusBadge(owner.status),
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      accessor: (owner) => (
+        <div className="space-x-4">
+          {owner.status === 'pending' && (
+            <button
+              onClick={() => handleApprove(owner._id!)}
+              className="text-xs font-bold text-primary hover:text-primary/70 transition-colors"
+            >
+              Approve
+            </button>
+          )}
+          <button
+            onClick={() => handleSuspendToggle(owner._id!)}
+            className={`text-xs font-bold transition-colors ${owner.status === 'suspended' ? 'text-gray-500 hover:text-textMain' : 'text-red-500 hover:text-red-700'}`}
+          >
+            {owner.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex-1 p-8 sm:p-10 bg-[#FAF9F6] h-full overflow-y-auto">
 
@@ -179,75 +218,16 @@ const OwnersPage: React.FC = () => {
         </h2>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          </div>
-        ) : (
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-[#F8F9FA] text-[#848462] text-xs font-bold tracking-wider uppercase border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4">Owner Name</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {owners.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No owners found.</td></tr>
-              ) : (
-                owners.map((owner) => (
-                  <tr key={owner._id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 text-textMain font-medium">{owner.name}</td>
-                    <td className="px-6 py-4 text-secondary">{owner.email}</td>
-                    <td className="px-6 py-4">{getStatusBadge(owner.status)}</td>
-                    <td className="px-6 py-4 text-right space-x-4">
-                      {owner.status === 'pending' && (
-                        <button
-                          onClick={() => handleApprove(owner._id!)}
-                          className="text-xs font-bold text-primary hover:text-primary/70 transition-colors"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleSuspendToggle(owner._id!)}
-                        className={`text-xs font-bold transition-colors ${owner.status === 'suspended' ? 'text-gray-500 hover:text-textMain' : 'text-red-500 hover:text-red-700'}`}
-                      >
-                        {owner.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end items-center gap-2 mt-6">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-secondary">Page {page} of {totalPages}</span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {/* Reusable DataTable */}
+      <DataTable
+        columns={columns}
+        data={owners}
+        isLoading={isLoading}
+        emptyMessage="No owners found."
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {/* Confirm Dialog */}
       <ConfirmDialog

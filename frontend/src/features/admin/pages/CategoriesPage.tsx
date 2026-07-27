@@ -4,6 +4,8 @@ import categoryService from '../services/category.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import { getErrorMessage } from '../../../utils/error';
+import { DataTable } from '../../../components/DataTable';
+import type { Column } from '../../../components/DataTable';
 
 // SVG Icon list mapped for display
 export const categoryIconMap: Record<string, (className?: string) => React.ReactNode> = {
@@ -135,6 +137,64 @@ const CategoriesPage: React.FC = () => {
     }
   };
 
+  const columns: Column<CategoryDTO>[] = [
+    {
+      header: 'Icon',
+      className: 'w-16',
+      accessor: (category) => (
+        <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+          {renderCategoryIcon(category.icon)}
+        </div>
+      ),
+    },
+    {
+      header: 'Category Name',
+      accessor: (category) => (
+        <span className="text-textMain font-semibold">{category.name}</span>
+      ),
+    },
+    {
+      header: 'Description',
+      accessor: (category) => (
+        <span className="text-secondary max-w-xs truncate block" title={category.description}>
+          {category.description}
+        </span>
+      ),
+    },
+    {
+      header: 'Created At',
+      accessor: (category) => (
+        <span className="text-secondary text-xs">
+          {category.createdAt ? new Date(category.createdAt).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }) : 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      accessor: (category) => (
+        <div className="space-x-4">
+          <button
+            onClick={() => navigate(`/admin/categories/${category.id}/edit`)}
+            className="text-xs font-bold text-primary hover:text-[#575727] transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(category.id, category.name)}
+            className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex-1 p-8 sm:p-10 bg-[#FAF9F6] h-full overflow-y-auto">
       {/* Header */}
@@ -178,95 +238,16 @@ const CategoriesPage: React.FC = () => {
         </h2>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap border-collapse">
-              <thead className="bg-[#F8F9FA] text-[#848462] text-xs font-bold tracking-wider uppercase border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-4 w-16">Icon</th>
-                  <th className="px-6 py-4">Category Name</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4">Created At</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {categories.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                      No categories found.
-                    </td>
-                  </tr>
-                ) : (
-                  categories.map((category) => (
-                    <tr key={category.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                          {renderCategoryIcon(category.icon)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-textMain font-semibold">
-                        {category.name}
-                      </td>
-                      <td className="px-6 py-4 text-secondary max-w-xs truncate" title={category.description}>
-                        {category.description}
-                      </td>
-                      <td className="px-6 py-4 text-secondary text-xs">
-                        {category.createdAt ? new Date(category.createdAt).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        }) : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-4">
-                        <button
-                          onClick={() => navigate(`/admin/categories/${category.id}/edit`)}
-                          className="text-xs font-bold text-primary hover:text-[#575727] transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(category.id, category.name)}
-                          className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end items-center gap-2 mt-6">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors bg-white shadow-sm"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-secondary">Page {page} of {totalPages}</span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors bg-white shadow-sm"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {/* Reusable DataTable */}
+      <DataTable
+        columns={columns}
+        data={categories}
+        isLoading={isLoading}
+        emptyMessage="No categories found."
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
     </div>
   );
 };

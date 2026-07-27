@@ -27,7 +27,7 @@ const ViewGigPage: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'roster' | 'applications'>('roster');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
-  const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<GigApplicationDTO['worker'] | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);

@@ -2,7 +2,7 @@ import apiClient from '../../../api/client';
 import { GIG_ROUTES } from '../../../constants/apiRoutes';
 import type { GigResponseDTO, GigListItemDTO, CategoryDTO, GigApplicationDTO } from '../../../types/api.types';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;

@@ -22,9 +22,9 @@ export class AdminGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getGigById = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
-    const result = await this._gigService.getGigById(id);
+  public getGigById = asyncHandler(async (req: Request<{ gigId: string }>, res: Response) => {
+    const { gigId } = req.params;
+    const result = await this._gigService.getGigById(gigId);
 
     const response: ApiResponse = {
       success: true,
@@ -35,11 +35,11 @@ export class AdminGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public toggleFlagGig = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
+  public toggleFlagGig = asyncHandler(async (req: Request<{ gigId: string }>, res: Response) => {
+    const { gigId } = req.params;
     const { isFlagged } = req.body;
 
-    const result = await this._gigService.toggleFlagGig(id, !!isFlagged);
+    const result = await this._gigService.toggleFlagGig(gigId, !!isFlagged);
 
     const response: ApiResponse = {
       success: true,
@@ -50,9 +50,9 @@ export class AdminGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public deleteGig = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
-    await this._gigService.deleteGig(id);
+  public deleteGig = asyncHandler(async (req: Request<{ gigId: string }>, res: Response) => {
+    const { gigId } = req.params;
+    await this._gigService.deleteGig(gigId);
 
     const response: ApiResponse = {
       success: true,
@@ -62,8 +62,8 @@ export class AdminGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public updateApplicationStatus = asyncHandler(async (req: Request<{ id: string; appId: string }>, res: Response) => {
-    const { id, appId } = req.params;
+  public updateApplicationStatus = asyncHandler(async (req: Request<{ gigId: string; appId: string }>, res: Response) => {
+    const { gigId, appId } = req.params;
     const dto = toUpdateApplicationStatusRequestDTO(req.body);
 
     if (dto.status !== "accepted" && dto.status !== "rejected") {
@@ -74,7 +74,7 @@ export class AdminGigController {
       return;
     }
 
-    const result = await this._gigService.updateApplicationStatus(id, appId, dto.status);
+    const result = await this._gigService.updateApplicationStatus(gigId, appId, dto.status);
 
     const response: ApiResponse = {
       success: true,

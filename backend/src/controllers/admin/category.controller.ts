@@ -40,9 +40,9 @@ export class AdminCategoryController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getCategoryById = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
-    const category = await this._categoryService.getCategoryById(id);
+  public getCategoryById = asyncHandler(async (req: Request<{ categoryId: string }>, res: Response) => {
+    const { categoryId } = req.params;
+    const category = await this._categoryService.getCategoryById(categoryId);
 
     const response: ApiResponse = {
       success: true,
@@ -66,10 +66,10 @@ export class AdminCategoryController {
     res.status(HttpStatus.CREATED).json(response);
   });
 
-  public updateCategory = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
+  public updateCategory = asyncHandler(async (req: Request<{ categoryId: string }>, res: Response) => {
+    const { categoryId } = req.params;
     const updateData = req.body;
-    const category = await this._categoryService.updateCategory(id, updateData);
+    const category = await this._categoryService.updateCategory(categoryId, updateData);
 
     const response: ApiResponse = {
       success: true,
@@ -80,9 +80,9 @@ export class AdminCategoryController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public deleteCategory = asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const { id } = req.params;
-    await this._categoryService.deleteCategory(id);
+  public deleteCategory = asyncHandler(async (req: Request<{ categoryId: string }>, res: Response) => {
+    const { categoryId } = req.params;
+    await this._categoryService.deleteCategory(categoryId);
 
     const response: ApiResponse = {
       success: true,

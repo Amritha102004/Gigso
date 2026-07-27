@@ -338,8 +338,8 @@ const AdminGigDetailsPage: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {(gig.roles || []).map((role: any) => (
-                            <tr key={role.id || role._id}>
+                          {(gig.roles || []).map((role: AdminGigRole) => (
+                            <tr key={role.id}>
                               <td className="px-4 py-3 font-semibold text-textMain">{role.roleName}</td>
                               <td className="px-4 py-3 text-center text-secondary font-medium">{role.spots}</td>
                               <td className="px-4 py-3 text-right font-bold text-primary">₹{role.payPerPerson}</td>
@@ -359,10 +359,10 @@ const AdminGigDetailsPage: React.FC = () => {
                 <div className="space-y-6">
                   <h3 className="text-sm font-bold text-textMain uppercase tracking-wider">Manage Roles</h3>
                   <div className="space-y-4">
-                    {(gig.roles || []).map((role: any) => {
+                    {(gig.roles || []).map((role: AdminGigRole) => {
                       const percent = Math.min(100, Math.round(((role.filledSpots || 0) / role.spots) * 100));
                       return (
-                        <div key={role.id || role._id} className="p-4 bg-gray-50/50 border border-gray-100 rounded-xl space-y-3 shadow-inner">
+                        <div key={role.id} className="p-4 bg-gray-50/50 border border-gray-100 rounded-xl space-y-3 shadow-inner">
                           <div className="flex justify-between items-center">
                             <h4 className="font-bold text-textMain">{role.roleName}</h4>
                             <span className="text-xs font-bold text-primary">₹{role.payPerPerson}</span>

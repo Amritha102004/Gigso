@@ -1,0 +1,16 @@
+export const MESSAGES = {
+  NETWORK_ERROR: 'Network connection failed. Please check your internet connection or try again later.',
+  UNAUTHORIZED: 'Session expired. Please log in again.',
+  FORBIDDEN: 'You are not authorized to perform this action.',
+  BAD_REQUEST: 'Invalid request. Please check your input.',
+  NOT_FOUND: 'Requested resource not found.',
+  SERVER_ERROR: 'Server error. Please try again later.',
+  GENERIC_ERROR: 'An unexpected error occurred. Please try again.',
+  SUCCESS: 'Action completed successfully.',
+  SAVE_DRAFT_SUCCESS: 'Draft saved successfully.',
+  GIG_CREATE_SUCCESS: 'Gig posted successfully.',
+  GIG_UPDATE_SUCCESS: 'Gig updated successfully.',
+  GIG_DELETE_SUCCESS: 'Gig deleted successfully.',
+  APPLICATION_SUBMITTED: 'Application submitted successfully.',
+  APPLICATION_WITHDRAWN: 'Application withdrawn successfully.',
+};

@@ -1,6 +1,25 @@
 import type { IGig, IGigRole, ICategory } from "../interfaces/gig.interface";
 import type { GigResponseDTO, GigListItemDTO, GigRoleDTO } from "../dtos/gig.dto";
 import { toCategoryDTO } from "./category.mapper";
+import type { Types } from "mongoose";
+
+interface IPopulatedOwner {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+}
+
+const isCategoryPopulated = (val: unknown): val is ICategory => {
+  return typeof val === "object" && val !== null && "name" in val;
+};
+
+const isRolesPopulated = (val: unknown): val is IGigRole[] => {
+  return Array.isArray(val) && val.length > 0 && typeof val[0] === "object" && val[0] !== null && "roleName" in val[0];
+};
+
+const isOwnerPopulated = (val: unknown): val is IPopulatedOwner => {
+  return typeof val === "object" && val !== null && "name" in val && "email" in val;
+};
 
 export const toGigRoleDTO = (role: IGigRole, filledSpots?: number): GigRoleDTO => {
   return {
@@ -14,24 +33,30 @@ export const toGigRoleDTO = (role: IGigRole, filledSpots?: number): GigRoleDTO =
 };
 
 export const toGigResponseDTO = (gig: IGig, roleFilledCounts?: Record<string, number>): GigResponseDTO => {
-  const category = gig.categoryId as any as ICategory;
-  const roles = (gig.roles || []) as any[] as IGigRole[];
-  const owner = gig.ownerId as any;
+  const rawCategory: unknown = gig.categoryId;
+  const rawRoles: unknown = gig.roles;
+  const rawOwner: unknown = gig.ownerId;
+
+  const category = isCategoryPopulated(rawCategory) ? rawCategory : null;
+  const roles = isRolesPopulated(rawRoles) ? rawRoles : null;
+  const owner = isOwnerPopulated(rawOwner) ? rawOwner : null;
 
   return {
     id: gig._id.toString(),
-    ownerId: owner && typeof owner.name === "string"
+    ownerId: owner
       ? { id: owner._id.toString(), name: owner.name, email: owner.email }
       : gig.ownerId.toString(),
     title: gig.title,
     description: gig.description,
-    category: category && typeof category.name === "string" 
+    category: category 
       ? toCategoryDTO(category) 
       : { id: gig.categoryId?.toString() || "", name: "Uncategorized", description: "", icon: "" },
     location: gig.location,
     eventDate: gig.eventDate.toISOString(),
     startTime: gig.startTime,
-    roles: roles.map((r) => toGigRoleDTO(r, roleFilledCounts ? roleFilledCounts[r._id.toString()] : undefined)),
+    roles: roles
+      ? roles.map((r) => toGigRoleDTO(r, roleFilledCounts ? roleFilledCounts[r._id.toString()] : undefined))
+      : [],
     totalBudget: gig.totalBudget,
     status: gig.status,
     paymentStatus: gig.paymentStatus,
@@ -46,18 +71,22 @@ export const toGigListItemDTO = (
   pendingApplicationsCount?: number,
   filledSpotsCount?: number
 ): GigListItemDTO => {
-  const category = gig.categoryId as any as ICategory;
-  const roles = (gig.roles || []) as any[] as IGigRole[];
-  const owner = gig.ownerId as any;
+  const rawCategory: unknown = gig.categoryId;
+  const rawRoles: unknown = gig.roles;
+  const rawOwner: unknown = gig.ownerId;
 
-  const totalRoles = roles.length;
-  const totalSpots = roles.reduce((sum, role) => sum + role.spots, 0);
+  const category = isCategoryPopulated(rawCategory) ? rawCategory : null;
+  const roles = isRolesPopulated(rawRoles) ? rawRoles : null;
+  const owner = isOwnerPopulated(rawOwner) ? rawOwner : null;
+
+  const totalRoles = roles ? roles.length : 0;
+  const totalSpots = roles ? roles.reduce((sum, role) => sum + role.spots, 0) : 0;
   const filledSpots = filledSpotsCount ?? 0;
 
   return {
     id: gig._id.toString(),
     title: gig.title,
-    category: category && typeof category.name === "string" 
+    category: category 
       ? toCategoryDTO(category) 
       : { id: gig.categoryId?.toString() || "", name: "Uncategorized", description: "", icon: "" },
     eventDate: gig.eventDate.toISOString(),
@@ -68,7 +97,7 @@ export const toGigListItemDTO = (
     location: gig.location,
     totalBudget: gig.totalBudget,
     isFlagged: gig.isFlagged,
-    ownerId: owner && typeof owner.name === "string"
+    ownerId: owner
       ? { id: owner._id.toString(), name: owner.name, email: owner.email }
       : gig.ownerId.toString(),
     pendingApplicationsCount,

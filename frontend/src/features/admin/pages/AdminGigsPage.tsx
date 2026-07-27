@@ -19,6 +19,8 @@ import categoryService from '../services/category.service';
 import type { CategoryDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { DataTable } from '../../../components/DataTable';
+import type { Column } from '../../../components/DataTable';
 
 const AdminGigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -257,12 +259,128 @@ const AdminGigsPage: React.FC = () => {
     );
   };
 
+  const columns: Column<AdminGig>[] = [
+    {
+      header: 'Gig Title',
+      accessor: (gig) => {
+        const gigId = (gig.id || '').toString();
+        return (
+          <div>
+            <div className="font-bold text-textMain leading-tight">{gig.title}</div>
+            <div className="text-[10px] text-secondary font-mono mt-0.5 uppercase">
+              ID: GIG-{gigId ? gigId.substring(Math.max(0, gigId.length - 4)) : ''}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Provider',
+      accessor: (gig) => (
+        <span className="font-semibold text-secondary">
+          {gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Unknown Owner'}
+        </span>
+      ),
+    },
+    {
+      header: 'Category',
+      accessor: (gig) => (
+        <span className="inline-block px-2.5 py-0.5 bg-primary/5 text-primary rounded-full font-bold uppercase tracking-wider text-[9px]">
+          {gig.category?.name || 'Category'}
+        </span>
+      ),
+    },
+    {
+      header: 'Location',
+      accessor: (gig) => <span className="font-medium text-secondary">{gig.location}</span>,
+    },
+    {
+      header: 'Date',
+      accessor: (gig) => (
+        <span className="font-semibold text-textMain">
+          {new Date(gig.eventDate).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })}
+        </span>
+      ),
+    },
+    {
+      header: 'Fulfillment',
+      accessor: (gig) => {
+        const fulfill = getFulfillmentInfo(gig);
+        return (
+          <div className="w-28 space-y-1">
+            <div className="flex justify-between text-[9px] font-bold text-secondary">
+              <span>{fulfill.text}</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full ${fulfill.isFilled ? 'bg-blue-600' : 'bg-primary/70'}`}
+                style={{ width: `${Math.min(100, fulfill.percent)}%` }}
+              />
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Status',
+      accessor: (gig) => getStatusBadge(gig),
+    },
+    {
+      header: 'Actions',
+      className: 'text-center',
+      accessor: (gig) => {
+        const gigId = (gig.id || '').toString();
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate(`/admin/gigs/${gigId}`)}
+              title="View Details"
+              className="p-1.5 text-secondary hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+            >
+              <EyeIcon className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={() => handleToggleFlag(gigId, !!gig.isFlagged)}
+              title={gig.isFlagged ? "Unflag Gig" : "Flag for Review"}
+              className={`p-1.5 rounded-lg transition-all ${
+                gig.isFlagged 
+                  ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                  : 'text-secondary hover:text-amber-600 hover:bg-amber-50/50'
+              }`}
+            >
+              {gig.isFlagged ? (
+                <FlagIconSolid className="w-4 h-4" />
+              ) : (
+                <FlagIcon className="w-4 h-4" />
+              )}
+            </button>
+
+            <button
+              onClick={() => handleDelete(gigId)}
+              title="Delete Gig"
+              className="p-1.5 text-secondary hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="flex-1 p-8 sm:p-10 bg-[#FAF9F6] h-full overflow-y-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-textMain tracking-tight">Gigs Management</h1>
+          <h1 className="text-2xl font-bold text-textMain tracking-tight">
+            Gigs Management <span className="text-secondary font-normal text-sm">({total})</span>
+          </h1>
           <p className="text-secondary text-sm mt-1">ADMIN &gt; GIGS</p>
         </div>
 
@@ -356,161 +474,17 @@ const AdminGigsPage: React.FC = () => {
       {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold rounded-xl mb-6">{error}</div>}
 
       {/* Gigs Grid Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-secondary uppercase tracking-wider">
-                <th className="px-6 py-4">Gig Title</th>
-                <th className="px-6 py-4">Provider</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Location</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Fulfillment</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-xs">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-secondary font-medium">
-                    Loading gigs list...
-                  </td>
-                </tr>
-              ) : filteredGigs.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-secondary font-medium">
-                    No gigs found matching the filters.
-                  </td>
-                </tr>
-              ) : (
-                filteredGigs.map((gig) => {
-                  const fulfill = getFulfillmentInfo(gig);
-                  const gigId = (gig.id || '').toString();
-                  return (
-                    <tr key={gigId} className="hover:bg-gray-50/10">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-textMain leading-tight">{gig.title}</div>
-                        <div className="text-[10px] text-secondary font-mono mt-0.5 uppercase">
-                          ID: GIG-{gigId ? gigId.substring(Math.max(0, gigId.length - 4)) : ''}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-secondary">
-                        {gig.ownerId && typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Unknown Owner'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-block px-2.5 py-0.5 bg-primary/5 text-primary rounded-full font-bold uppercase tracking-wider text-[9px]">
-                          {gig.category?.name || 'Category'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-secondary">
-                        {gig.location}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-textMain">
-                        {new Date(gig.eventDate).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="w-28 space-y-1">
-                          <div className="flex justify-between text-[9px] font-bold text-secondary">
-                            <span>{fulfill.text}</span>
-                          </div>
-                          <div className="w-full bg-gray-100 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${fulfill.isFilled ? 'bg-blue-600' : 'bg-primary/70'}`}
-                              style={{ width: `${Math.min(100, fulfill.percent)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(gig)}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => navigate(`/admin/gigs/${gigId}`)}
-                            title="View Details"
-                            className="p-1.5 text-secondary hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-                          >
-                            <EyeIcon className="w-4 h-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleToggleFlag(gigId, !!gig.isFlagged)}
-                            title={gig.isFlagged ? "Unflag Gig" : "Flag for Review"}
-                            className={`p-1.5 rounded-lg transition-all ${
-                              gig.isFlagged 
-                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
-                                : 'text-secondary hover:text-amber-600 hover:bg-amber-50/50'
-                            }`}
-                          >
-                            {gig.isFlagged ? (
-                              <FlagIconSolid className="w-4 h-4" />
-                            ) : (
-                              <FlagIcon className="w-4 h-4" />
-                            )}
-                          </button>
-
-                          <button
-                            onClick={() => handleDelete(gigId)}
-                            title="Delete Gig"
-                            className="p-1.5 text-secondary hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-secondary font-medium">
-              Showing {(page - 1) * LIMIT + 1} to {Math.min(page * LIMIT, total)} of {total} gigs
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                disabled={page === 1}
-                className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold hover:bg-gray-50 transition-all disabled:opacity-40"
-              >
-                &lt;
-              </button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    page === i + 1
-                      ? 'bg-primary text-white'
-                      : 'border border-gray-200 text-secondary hover:bg-gray-50'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={page === totalPages}
-                className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold hover:bg-gray-50 transition-all disabled:opacity-40"
-              >
-                &gt;
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Reusable DataTable */}
+      <DataTable
+        columns={columns}
+        data={filteredGigs}
+        isLoading={isLoading}
+        emptyMessage="No gigs found matching the filters."
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        whitespaceNowrap={false}
+      />
 
       {/* Platform Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
