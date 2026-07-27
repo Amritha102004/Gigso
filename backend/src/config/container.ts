@@ -59,7 +59,7 @@ export const ownerGigService = new OwnerGigService(
   gigApplicationRepository
 );
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
-export const workerGigService = new WorkerGigService(gigRepository, categoryRepository);
+export const workerGigService = new WorkerGigService(gigRepository, categoryRepository, gigApplicationRepository);
 export const applicationService = new ApplicationService(
   gigApplicationRepository,
   gigRepository,

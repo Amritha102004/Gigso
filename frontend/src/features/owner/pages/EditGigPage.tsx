@@ -53,8 +53,15 @@ const EditGigPage: React.FC = () => {
         if (gigRes.success && gigRes.data) {
           const g = gigRes.data;
           
-          if (g.status !== 'draft') {
-            setError('Only draft gigs can be edited.');
+          if (g.status === 'active') {
+            const appRes = await gigService.getGigApplications(gigId);
+            if (appRes.success && appRes.data && appRes.data.length > 0) {
+              setError('Cannot edit gig once applications have been submitted.');
+              setLoading(false);
+              return;
+            }
+          } else if (g.status !== 'draft') {
+            setError('Only draft or active gigs without applications can be edited.');
             setLoading(false);
             return;
           }

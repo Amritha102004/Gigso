@@ -76,7 +76,11 @@ export class OwnerGigService implements IOwnerGigService {
 
     return gigs.map((gig) => {
       const gigCount = counts.find((c) => c.gigId === gig._id.toString());
-      return toGigListItemDTO(gig, gigCount ? gigCount.pendingCount : undefined);
+      return toGigListItemDTO(
+        gig,
+        gigCount ? gigCount.pendingCount : undefined,
+        gigCount ? gigCount.acceptedCount : undefined
+      );
     });
   }
 
@@ -85,13 +89,24 @@ export class OwnerGigService implements IOwnerGigService {
     if (!gig || gig.ownerId.toString() !== ownerId) {
       throw new AppError("Gig not found or unauthorized access", 404);
     }
-    return toGigResponseDTO(gig);
+    const roleCounts = await this._applicationRepo.getAcceptedCountsByRolesForGig(gigId);
+    const countMap: Record<string, number> = {};
+    for (const rc of roleCounts) {
+      countMap[rc.roleId] = rc.count;
+    }
+    return toGigResponseDTO(gig, countMap);
   }
 
   async updateGig(gigId: string, ownerId: string, input: UpdateGigRequestDTO): Promise<GigResponseDTO> {
     const gig = await this._gigRepo.findById(gigId);
     if (!gig || gig.ownerId.toString() !== ownerId) {
       throw new AppError("Gig not found or unauthorized access", 404);
+    }
+
+    const applications = await this._applicationRepo.findByGigId(gigId);
+    const hasActiveOrPending = applications.some((app) => app.status === "pending" || app.status === "accepted");
+    if (hasActiveOrPending) {
+      throw new AppError("Cannot edit gig once active or pending applications have been submitted", 400);
     }
 
     const updateData: Partial<IGig> = {};

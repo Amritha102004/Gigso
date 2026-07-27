@@ -28,8 +28,13 @@ export class ApplicationService implements IApplicationService {
       throw new AppError("Specified role does not belong to this gig", 400);
     }
 
-    // 3. Prevent duplicate applications
+    // 3. Prevent duplicate applications or applying if already accepted/hired for another role in this gig
     const existing = await this._applicationRepo.findByGigIdAndWorkerId(gigId, workerId);
+    const hasAcceptedRole = existing.some((app) => app.status === "accepted");
+    if (hasAcceptedRole) {
+      throw new AppError("You have already been hired/accepted for a role in this gig", 400);
+    }
+
     const hasAppliedToRole = existing.some((app) => app.roleId.toString() === roleId);
     if (hasAppliedToRole) {
       throw new AppError("You have already applied for this role", 400);
@@ -122,6 +127,24 @@ export class ApplicationService implements IApplicationService {
         }
       } catch (err) {
         console.error("Failed to auto-reject other applications for the same gig:", err);
+      }
+
+      // Check if all roles of this gig are fully filled
+      try {
+        const roles = await this._gigRoleRepo.findByGigId(app.gigId.toString());
+        let allFilled = true;
+        for (const role of roles) {
+          const acceptedCount = await this._applicationRepo.findAcceptedCountForRole(role._id.toString());
+          if (acceptedCount < role.spots) {
+            allFilled = false;
+            break;
+          }
+        }
+        if (allFilled) {
+          await this._gigRepo.update(app.gigId.toString(), { status: "completed" });
+        }
+      } catch (err) {
+        console.error("Failed to transition gig to completed status:", err);
       }
     }
 

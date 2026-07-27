@@ -8,4 +8,5 @@ export interface IGigApplicationRepository extends IBaseRepository<IGigApplicati
   findPendingCountForGig(gigId: string): Promise<number>;
   findAcceptedCountForRole(roleId: string): Promise<number>;
   getCountsForGigs(gigIds: string[]): Promise<{ gigId: string; pendingCount: number; acceptedCount: number }[]>;
+  getAcceptedCountsByRolesForGig(gigId: string): Promise<{ roleId: string; count: number }[]>;
 }

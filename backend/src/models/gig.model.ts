@@ -49,7 +49,7 @@ const gigSchema: Schema<IGig> = new Schema<IGig>(
     },
     status: {
       type: String,
-      enum: ["draft", "active", "completed", "cancelled", "paid"],
+      enum: ["draft", "active", "completed", "cancelled", "closed", "paid"],
       default: "draft",
     },
     paymentStatus: {

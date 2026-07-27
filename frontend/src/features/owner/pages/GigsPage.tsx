@@ -10,7 +10,8 @@ import {
   CheckCircleIcon,
   DocumentTextIcon,
   CalendarIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { GigListItemDTO } from '../../../types/api.types';
@@ -80,13 +81,15 @@ const GigsPage: React.FC = () => {
     const matchesSearch = 
       gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gig.category.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'all' || gig.status === activeTab;
+    const matchesTab = activeTab === 'all' || 
+      (activeTab === 'closed' ? (gig.status === 'closed' || gig.status === 'cancelled') : gig.status === activeTab);
     return matchesSearch && matchesTab;
   });
 
   const totalGigs = gigs.length;
   const activeCount = gigs.filter(g => g.status === 'active').length;
   const completedCount = gigs.filter(g => g.status === 'completed').length;
+  const closedCount = gigs.filter(g => g.status === 'closed' || g.status === 'cancelled').length;
   const draftCount = gigs.filter(g => g.status === 'draft').length;
 
   return (
@@ -107,7 +110,7 @@ const GigsPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-white border border-gray-100 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="p-3 bg-primary/10 text-primary rounded-xl">
             <BriefcaseIcon className="w-6 h-6" />
@@ -136,6 +139,15 @@ const GigsPage: React.FC = () => {
           </div>
         </div>
         <div className="bg-white border border-gray-100 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
+            <XCircleIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-rose-600">{closedCount}</div>
+            <div className="text-xs text-secondary font-medium">Closed</div>
+          </div>
+        </div>
+        <div className="bg-white border border-gray-100 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="p-3 bg-gray-50 text-gray-500 rounded-xl">
             <DocumentTextIcon className="w-6 h-6" />
           </div>
@@ -150,7 +162,7 @@ const GigsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         {/* Tabs */}
         <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100 w-full sm:w-auto">
-          {['all', 'active', 'completed', 'draft'].map((tab) => (
+          {['all', 'active', 'completed', 'closed', 'draft'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -274,23 +286,23 @@ const GigsPage: React.FC = () => {
                                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full" />
                                 )}
                               </button>
+                              {(gig.status === 'draft' || (gig.status === 'active' && gig.filledSpots === 0 && (gig.pendingApplicationsCount ?? 0) === 0)) && (
+                                <button
+                                  onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
+                                  title="Edit Gig"
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
+                                >
+                                  <PencilSquareIcon className="w-4 h-4" />
+                                </button>
+                              )}
                               {gig.status === 'draft' && (
-                                <>
-                                  <button
-                                    onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
-                                    title="Edit Gig"
-                                    className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all"
-                                  >
-                                    <PencilSquareIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(gig.id)}
-                                    title="Delete Gig"
-                                    className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-rose-600 transition-all"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() => handleDelete(gig.id)}
+                                  title="Delete Gig"
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-rose-600 transition-all"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
                               )}
                             </div>
                           </td>

@@ -208,23 +208,23 @@ const ViewGigPage: React.FC = () => {
 
         {/* Action button in header */}
         <div className="flex flex-wrap gap-3 self-start md:self-auto">
+          {(gig.status === 'draft' || (gig.status === 'active' && applications.length === 0)) && (
+            <button
+              onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
+              className="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-textMain transition-all"
+            >
+              Edit Details
+            </button>
+          )}
           {gig.status === 'draft' && (
-            <>
-              <button
-                onClick={() => navigate(`/owner/gigs/${gig.id}/edit`)}
-                className="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-textMain transition-all"
-              >
-                Edit Details
-              </button>
-              <button
-                onClick={handlePublish}
-                disabled={actionLoading}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-[#575727] transition-all shadow-sm disabled:opacity-50"
-              >
-                <PaperAirplaneIcon className="w-4 h-4" />
-                Publish Gig
-              </button>
-            </>
+            <button
+              onClick={handlePublish}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-[#575727] transition-all shadow-sm disabled:opacity-50"
+            >
+              <PaperAirplaneIcon className="w-4 h-4" />
+              Publish Gig
+            </button>
           )}
 
           {gig.status === 'active' && (

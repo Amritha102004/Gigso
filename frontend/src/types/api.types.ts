@@ -90,6 +90,7 @@ export interface GigRoleDTO {
   roleName: string;
   spots: number;
   payPerPerson: number;
+  filledSpots: number;
 }
 
 export interface GigResponseDTO {
@@ -103,7 +104,7 @@ export interface GigResponseDTO {
   startTime: string;
   roles: GigRoleDTO[];
   totalBudget: number;
-  status: 'draft' | 'active' | 'completed' | 'cancelled' | 'paid';
+  status: 'draft' | 'active' | 'completed' | 'cancelled' | 'closed' | 'paid';
   paymentStatus: 'unpaid' | 'paid';
   isFlagged?: boolean;
   createdAt: string;
@@ -115,7 +116,7 @@ export interface GigListItemDTO {
   title: string;
   category: CategoryDTO;
   eventDate: string;
-  status: 'draft' | 'active' | 'completed' | 'cancelled' | 'paid';
+  status: 'draft' | 'active' | 'completed' | 'cancelled' | 'closed' | 'paid';
   totalRoles: number;
   filledSpots: number;
   totalSpots: number;

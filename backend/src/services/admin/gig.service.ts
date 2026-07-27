@@ -32,7 +32,7 @@ export class AdminGigService implements IAdminGigService {
   }> {
     const { gigs, total } = await this._gigRepo.findAllGigs(filters, page, limit);
     return {
-      gigs: gigs.map(toGigListItemDTO),
+      gigs: gigs.map((g) => toGigListItemDTO(g)),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,

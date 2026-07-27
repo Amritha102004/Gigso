@@ -16,9 +16,7 @@ export interface GetUsersParams {
   search?: string;
 }
 
-export interface AdminGigRole extends GigRoleDTO {
-  filledSpots?: number;
-}
+export interface AdminGigRole extends GigRoleDTO {}
 
 export interface AdminGig extends Omit<GigResponseDTO, 'roles'> {
   roles: AdminGigRole[];

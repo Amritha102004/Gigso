@@ -2,17 +2,18 @@ import type { IGig, IGigRole, ICategory } from "../interfaces/gig.interface";
 import type { GigResponseDTO, GigListItemDTO, GigRoleDTO } from "../dtos/gig.dto";
 import { toCategoryDTO } from "./category.mapper";
 
-export const toGigRoleDTO = (role: IGigRole): GigRoleDTO => {
+export const toGigRoleDTO = (role: IGigRole, filledSpots?: number): GigRoleDTO => {
   return {
     id: role._id.toString(),
     gigId: role.gigId.toString(),
     roleName: role.roleName,
     spots: role.spots,
     payPerPerson: role.payPerPerson,
+    filledSpots: filledSpots ?? 0,
   };
 };
 
-export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
+export const toGigResponseDTO = (gig: IGig, roleFilledCounts?: Record<string, number>): GigResponseDTO => {
   const category = gig.categoryId as any as ICategory;
   const roles = (gig.roles || []) as any[] as IGigRole[];
   const owner = gig.ownerId as any;
@@ -30,7 +31,7 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
     location: gig.location,
     eventDate: gig.eventDate.toISOString(),
     startTime: gig.startTime,
-    roles: roles.map(toGigRoleDTO),
+    roles: roles.map((r) => toGigRoleDTO(r, roleFilledCounts ? roleFilledCounts[r._id.toString()] : undefined)),
     totalBudget: gig.totalBudget,
     status: gig.status,
     paymentStatus: gig.paymentStatus,
@@ -40,14 +41,18 @@ export const toGigResponseDTO = (gig: IGig): GigResponseDTO => {
   };
 };
 
-export const toGigListItemDTO = (gig: IGig, pendingApplicationsCount?: number): GigListItemDTO => {
+export const toGigListItemDTO = (
+  gig: IGig,
+  pendingApplicationsCount?: number,
+  filledSpotsCount?: number
+): GigListItemDTO => {
   const category = gig.categoryId as any as ICategory;
   const roles = (gig.roles || []) as any[] as IGigRole[];
   const owner = gig.ownerId as any;
 
   const totalRoles = roles.length;
   const totalSpots = roles.reduce((sum, role) => sum + role.spots, 0);
-  const filledSpots = 0;
+  const filledSpots = filledSpotsCount ?? 0;
 
   return {
     id: gig._id.toString(),

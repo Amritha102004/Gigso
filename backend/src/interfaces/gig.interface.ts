@@ -27,7 +27,7 @@ export interface IGig extends Document {
   startTime: string;
   roles: Types.ObjectId[];
   totalBudget: number;
-  status: "draft" | "active" | "completed" | "cancelled" | "paid";
+  status: "draft" | "active" | "completed" | "cancelled" | "closed" | "paid";
   paymentStatus: "unpaid" | "paid";
   isDeleted: boolean;
   isFlagged?: boolean;

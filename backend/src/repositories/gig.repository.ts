@@ -17,7 +17,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
         eventDate: { $lt: now },
         isDeleted: false
       },
-      { status: "completed" }
+      { status: "closed" }
     ).exec();
   }
 

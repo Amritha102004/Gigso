@@ -84,4 +84,15 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
       };
     });
   }
+
+  async getAcceptedCountsByRolesForGig(gigId: string): Promise<{ roleId: string; count: number }[]> {
+    const results = await this._model.aggregate([
+      { $match: { gigId: new Types.ObjectId(gigId), status: "accepted" } },
+      { $group: { _id: "$roleId", count: { $sum: 1 } } }
+    ]);
+    return results.map((r) => ({
+      roleId: r._id.toString(),
+      count: r.count,
+    }));
+  }
 }

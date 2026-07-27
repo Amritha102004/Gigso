@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { AuthRequest } from "../../middlewares/auth.middleware";
 import type { IWorkerGigService } from "../../interfaces/services/worker/gig.service.interface";
 import { HttpStatus } from "../../utils/http-status.enum";
 import type { ApiResponse } from "../../types/api-response.type";
@@ -21,9 +22,10 @@ export class WorkerGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getGigById = asyncHandler(async (req: Request, res: Response) => {
+  public getGigById = asyncHandler(async (req: AuthRequest, res: Response) => {
     const gigId = req.params.gigId as string;
-    const gig = await this._gigService.getGigById(gigId);
+    const workerId = req.user?._id.toString();
+    const gig = await this._gigService.getGigById(gigId, workerId);
 
     const response: ApiResponse = {
       success: true,

@@ -221,7 +221,7 @@ const GigDetailPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold uppercase tracking-wider text-[10px]">
-                        {role.spots} {role.spots === 1 ? 'spot' : 'spots'} left
+                        {Math.max(0, role.spots - role.filledSpots)} {Math.max(0, role.spots - role.filledSpots) === 1 ? 'spot' : 'spots'} left
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -254,6 +254,20 @@ const GigDetailPage: React.FC = () => {
                             );
                           }
                         }
+
+                        const isHiredOnThisGig = userApplications.some((a) => a.gigId === gig.id && a.status === 'accepted');
+                        if (isHiredOnThisGig) {
+                          return (
+                            <button
+                              disabled
+                              className="px-4 py-1.5 bg-gray-100 text-gray-400 font-bold rounded-lg cursor-not-allowed border border-gray-200"
+                              title="You have already been hired for a role in this gig"
+                            >
+                              Apply
+                            </button>
+                          );
+                        }
+
                         return (
                           <button
                             onClick={() => handleApplyClick(role.id, role.roleName)}
