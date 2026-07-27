@@ -295,7 +295,7 @@ const ViewGigPage: React.FC = () => {
                               {role.roleName} ({confirmedApps.length} / {role.spots})
                             </h4>
                             <span className="text-[10px] text-secondary font-semibold">
-                              Payout: ₹{role.payPerPerson}/hr
+                              Payout: ₹{role.payPerPerson}
                             </span>
                           </div>
 
@@ -447,14 +447,22 @@ const ViewGigPage: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
             <h3 className="text-sm font-bold text-textMain uppercase tracking-wider border-b border-gray-100 pb-3">Financials</h3>
             
-            <div className="space-y-4">
+            <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-secondary font-medium">Payout Status:</span>
-                <span className="text-xs font-bold text-textMain uppercase">{gig.paymentStatus}</span>
+                <span className="text-secondary font-medium">Payout Status:</span>
+                <span className="font-bold text-textMain uppercase">{gig.paymentStatus}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+                <span className="text-secondary font-medium">Workers' Payout:</span>
+                <span className="font-bold text-textMain">₹{gig.totalBudget.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-secondary font-medium">Estimated Budget:</span>
-                <span className="text-base font-black text-primary">₹{gig.totalBudget.toLocaleString()}</span>
+                <span className="text-secondary font-medium">Platform Fee (10%):</span>
+                <span className="font-bold text-textMain">₹{Math.round(gig.totalBudget * 0.1).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-dashed border-gray-100 pt-3 text-primary font-bold">
+                <span>Total Payable:</span>
+                <span className="text-base font-black text-primary">₹{Math.round(gig.totalBudget * 1.1).toLocaleString()}</span>
               </div>
             </div>
           </div>

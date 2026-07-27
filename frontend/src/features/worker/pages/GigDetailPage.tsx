@@ -217,7 +217,7 @@ const GigDetailPage: React.FC = () => {
                       {role.roleName}
                     </td>
                     <td className="px-6 py-4 font-bold text-primary">
-                      ₹{role.payPerPerson}/hr
+                      ₹{role.payPerPerson}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold uppercase tracking-wider text-[10px]">

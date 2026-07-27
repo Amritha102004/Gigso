@@ -333,7 +333,7 @@ const AdminGigDetailsPage: React.FC = () => {
                           <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-secondary uppercase tracking-wider">
                             <th className="px-4 py-3">Role Name</th>
                             <th className="px-4 py-3 text-center">Spots</th>
-                            <th className="px-4 py-3 text-right">Pay Rate</th>
+                            <th className="px-4 py-3 text-right">Payout</th>
                             <th className="px-4 py-3 text-center">Filled</th>
                           </tr>
                         </thead>
@@ -342,7 +342,7 @@ const AdminGigDetailsPage: React.FC = () => {
                             <tr key={role.id || role._id}>
                               <td className="px-4 py-3 font-semibold text-textMain">{role.roleName}</td>
                               <td className="px-4 py-3 text-center text-secondary font-medium">{role.spots}</td>
-                              <td className="px-4 py-3 text-right font-bold text-primary">₹{role.payPerPerson}/hr</td>
+                              <td className="px-4 py-3 text-right font-bold text-primary">₹{role.payPerPerson}</td>
                               <td className="px-4 py-3 text-center font-bold text-secondary">
                                 {Math.round(((role.filledSpots || 0) / role.spots) * 100)}%
                               </td>
@@ -365,7 +365,7 @@ const AdminGigDetailsPage: React.FC = () => {
                         <div key={role.id || role._id} className="p-4 bg-gray-50/50 border border-gray-100 rounded-xl space-y-3 shadow-inner">
                           <div className="flex justify-between items-center">
                             <h4 className="font-bold text-textMain">{role.roleName}</h4>
-                            <span className="text-xs font-bold text-primary">₹{role.payPerPerson}/hr</span>
+                            <span className="text-xs font-bold text-primary">₹{role.payPerPerson}</span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex justify-between text-[10px] text-secondary font-bold">

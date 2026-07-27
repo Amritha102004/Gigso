@@ -327,8 +327,8 @@ const MyGigsPage: React.FC = () => {
                     {/* Right Side: Price & Actions */}
                     <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
                       <div className="text-right">
-                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">Pay Rate</span>
-                        <span className="font-bold text-primary text-sm">₹{app.role?.payPerPerson}/hr</span>
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block">Payout</span>
+                        <span className="font-bold text-primary text-sm">₹{app.role?.payPerPerson}</span>
                       </div>
 
                       <div className="flex items-center gap-2">
