@@ -1,21 +1,6 @@
-import axios from 'axios';
+import apiClient from '../../../api/client';
 import { GIG_ROUTES } from '../../../constants/apiRoutes';
 import type { GigResponseDTO, GigListItemDTO, CategoryDTO, GigApplicationDTO } from '../../../types/api.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-
-const gigApi = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
-
-gigApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => Promise.reject(error));
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -42,34 +27,34 @@ export const workerGigService = {
       if (filters.date) params.date = filters.date;
     }
 
-    const response = await gigApi.get<ApiResponse<GigListItemDTO[]>>(GIG_ROUTES.WORKER_GIGS, { params });
+    const response = await apiClient.get<ApiResponse<GigListItemDTO[]>>(GIG_ROUTES.WORKER_GIGS, { params });
     return response.data;
   },
 
   getGigById: async (id: string) => {
-    const response = await gigApi.get<ApiResponse<GigResponseDTO>>(GIG_ROUTES.WORKER_GIG_BY_ID(id));
+    const response = await apiClient.get<ApiResponse<GigResponseDTO>>(GIG_ROUTES.WORKER_GIG_BY_ID(id));
     return response.data;
   },
 
   getCategories: async () => {
-    const response = await gigApi.get<ApiResponse<CategoryDTO[]>>(`${GIG_ROUTES.WORKER_GIGS}/categories`);
+    const response = await apiClient.get<ApiResponse<CategoryDTO[]>>(`${GIG_ROUTES.WORKER_GIGS}/categories`);
     return response.data;
   },
 
   applyForGigRole: async (gigId: string, roleId: string) => {
-    const response = await gigApi.post<ApiResponse<GigApplicationDTO>>(GIG_ROUTES.WORKER_GIG_APPLY(gigId), { roleId });
+    const response = await apiClient.post<ApiResponse<GigApplicationDTO>>(GIG_ROUTES.WORKER_GIG_APPLY(gigId), { roleId });
     return response.data;
   },
 
   getWorkerApplications: async (status?: string) => {
     const params: Record<string, string> = {};
     if (status) params.status = status;
-    const response = await gigApi.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.WORKER_MY_GIGS, { params });
+    const response = await apiClient.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.WORKER_MY_GIGS, { params });
     return response.data;
   },
 
   withdrawApplication: async (applicationId: string) => {
-    const response = await gigApi.delete<ApiResponse<void>>(`${GIG_ROUTES.WORKER_MY_GIGS}/${applicationId}`);
+    const response = await apiClient.delete<ApiResponse<void>>(`${GIG_ROUTES.WORKER_MY_GIGS}/${applicationId}`);
     return response.data;
   },
 };

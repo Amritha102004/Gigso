@@ -16,6 +16,13 @@ const Login: React.FC = () => {
   const { loginState } = useAuth();
   const { showToast } = useToast();
 
+  React.useEffect(() => {
+    if (localStorage.getItem('sessionExpiredToast') === 'true') {
+      showToast('Session expired. Please log in again.', 'warning');
+      localStorage.removeItem('sessionExpiredToast');
+    }
+  }, [showToast]);
+
   const validate = () => {
     const errors: { email?: string; password?: string } = {};
     if (!formData.email) errors.email = 'Email is required';

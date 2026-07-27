@@ -1,21 +1,6 @@
-import axios from 'axios';
+import apiClient from '../../../api/client';
 import { GIG_ROUTES } from '../../../constants/apiRoutes';
 import type { GigResponseDTO, GigListItemDTO, CategoryDTO, GigApplicationDTO } from '../../../types/api.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-
-const gigApi = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
-
-gigApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => Promise.reject(error));
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -54,53 +39,53 @@ export interface UpdateGigPayload {
 
 export const gigService = {
   createGig: async (data: CreateGigPayload) => {
-    const response = await gigApi.post<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIGS, data);
+    const response = await apiClient.post<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIGS, data);
     return response.data;
   },
 
   getMyGigs: async (status?: string) => {
     const url = status ? `${GIG_ROUTES.OWNER_GIGS}?status=${status}` : GIG_ROUTES.OWNER_GIGS;
-    const response = await gigApi.get<ApiResponse<GigListItemDTO[]>>(url);
+    const response = await apiClient.get<ApiResponse<GigListItemDTO[]>>(url);
     return response.data;
   },
 
   getGigById: async (id: string) => {
-    const response = await gigApi.get<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_BY_ID(id));
+    const response = await apiClient.get<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_BY_ID(id));
     return response.data;
   },
 
   updateGig: async (id: string, data: UpdateGigPayload) => {
-    const response = await gigApi.put<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_BY_ID(id), data);
+    const response = await apiClient.put<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_BY_ID(id), data);
     return response.data;
   },
 
   deleteGig: async (id: string) => {
-    const response = await gigApi.delete<ApiResponse>(GIG_ROUTES.OWNER_GIG_BY_ID(id));
+    const response = await apiClient.delete<ApiResponse>(GIG_ROUTES.OWNER_GIG_BY_ID(id));
     return response.data;
   },
 
   publishGig: async (id: string) => {
-    const response = await gigApi.patch<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_PUBLISH(id));
+    const response = await apiClient.patch<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_PUBLISH(id));
     return response.data;
   },
 
   markAsCompleted: async (id: string) => {
-    const response = await gigApi.patch<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_COMPLETE(id));
+    const response = await apiClient.patch<ApiResponse<GigResponseDTO>>(GIG_ROUTES.OWNER_GIG_COMPLETE(id));
     return response.data;
   },
 
   getCategories: async () => {
-    const response = await gigApi.get<ApiResponse<CategoryDTO[]>>(GIG_ROUTES.CATEGORIES);
+    const response = await apiClient.get<ApiResponse<CategoryDTO[]>>(GIG_ROUTES.CATEGORIES);
     return response.data;
   },
 
   getGigApplications: async (gigId: string) => {
-    const response = await gigApi.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.OWNER_GIG_APPLICATIONS(gigId));
+    const response = await apiClient.get<ApiResponse<GigApplicationDTO[]>>(GIG_ROUTES.OWNER_GIG_APPLICATIONS(gigId));
     return response.data;
   },
 
   updateApplicationStatus: async (gigId: string, applicationId: string, status: 'accepted' | 'rejected') => {
-    const response = await gigApi.patch<ApiResponse<GigApplicationDTO>>(
+    const response = await apiClient.patch<ApiResponse<GigApplicationDTO>>(
       GIG_ROUTES.OWNER_GIG_APPLICATION_STATUS(gigId, applicationId),
       { status }
     );

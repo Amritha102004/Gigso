@@ -11,6 +11,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/Toast';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoute from './routes/AdminRoute';
+import GuestRoute from './routes/GuestRoute';
 import AdminLayout from './features/admin/components/AdminLayout';
 import OwnersPage from './features/admin/pages/OwnersPage';
 import WorkersPage from './features/admin/pages/WorkersPage';
@@ -43,12 +44,16 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/role-selection" element={<RoleSelection />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/verify-otp" element={<OtpVerification />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Guest-only routes */}
+          <Route element={<GuestRoute />}>
+            <Route path="/role-selection" element={<RoleSelection />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/verify-otp" element={<OtpVerification />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Route>
 
           {/* Secure Admin Pathways */}
           <Route path="/admin" element={<AdminRoute />}>
