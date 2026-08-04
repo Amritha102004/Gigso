@@ -14,17 +14,12 @@ export class MessageService {
   ) {}
 
   async sendMessage(
-    gigId: string,
     senderId: string,
     receiverId: string,
     message: string,
-    attachments?: string[]
+    attachments?: string[],
+    gigId?: string
   ): Promise<IMessage> {
-    const gig = await this._gigRepo.findById(gigId);
-    if (!gig) {
-      throw new Error("GIG_NOT_FOUND");
-    }
-
     const newMessage = await this._messageRepo.create({
       gigId: gigId as any,
       senderId: senderId as any,
@@ -47,10 +42,10 @@ export class MessageService {
     return newMessage;
   }
 
-  async getMessages(gigId: string, userA: string, userB: string): Promise<IMessage[]> {
+  async getMessages(userA: string, userB: string): Promise<IMessage[]> {
     // Mark messages sent by userB to userA as read
-    await this._messageRepo.markAsRead(gigId, userB, userA);
-    return await this._messageRepo.findMessagesBetween(gigId, userA, userB);
+    await this._messageRepo.markAsRead(userB, userA);
+    return await this._messageRepo.findMessagesBetween(userA, userB);
   }
 
   async getChatRooms(userId: string): Promise<any[]> {
@@ -58,20 +53,14 @@ export class MessageService {
     const populatedRooms = [];
 
     for (const room of rooms) {
-      const gigId = room._id.gigId.toString();
       const senderStr = room._id.conversationId.senderId.toString();
       const receiverStr = room._id.conversationId.receiverId.toString();
       const counterpartyId = senderStr === userId ? receiverStr : senderStr;
 
-      const [gig, counterparty] = await Promise.all([
-        this._gigRepo.findById(gigId),
-        this._userRepo.findById(counterpartyId),
-      ]);
+      const counterparty = await this._userRepo.findById(counterpartyId);
 
-      if (gig && counterparty) {
+      if (counterparty) {
         populatedRooms.push({
-          gigId,
-          gigTitle: gig.title,
           counterpartyId,
           counterpartyName: counterparty.name,
           counterpartyRole: counterparty.role,

@@ -6,7 +6,7 @@ const messageSchema: Schema<IMessage> = new Schema<IMessage>(
     gigId: {
       type: Schema.Types.ObjectId,
       ref: "Gig",
-      required: true,
+      required: false,
     },
     senderId: {
       type: Schema.Types.ObjectId,
@@ -37,7 +37,7 @@ const messageSchema: Schema<IMessage> = new Schema<IMessage>(
   }
 );
 
-messageSchema.index({ gigId: 1, senderId: 1, receiverId: 1 });
+messageSchema.index({ senderId: 1, receiverId: 1 });
 messageSchema.index({ createdAt: 1 });
 
 export const MessageModel = mongoose.model<IMessage>("Message", messageSchema);

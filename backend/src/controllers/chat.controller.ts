@@ -18,10 +18,10 @@ export class ChatController {
   });
 
   public getMessages = asyncHandler(
-    async (req: AuthRequest<{ gigId: string; counterpartyId: string }>, res: Response) => {
+    async (req: AuthRequest<{ counterpartyId: string }>, res: Response) => {
       const userId = req.user!._id.toString();
-      const { gigId, counterpartyId } = req.params;
-      const messages = await this._messageService.getMessages(gigId, userId, counterpartyId);
+      const { counterpartyId } = req.params;
+      const messages = await this._messageService.getMessages(userId, counterpartyId);
       res.status(HttpStatus.OK).json({
         success: true,
         message: "Messages fetched successfully",
@@ -30,17 +30,16 @@ export class ChatController {
     }
   );
 
-  public sendMessage = asyncHandler(async (req: AuthRequest<{ gigId: string }>, res: Response) => {
+  public sendMessage = asyncHandler(async (req: AuthRequest, res: Response) => {
     const senderId = req.user!._id.toString();
-    const { gigId } = req.params;
-    const { receiverId, message, attachments } = req.body;
+    const { receiverId, message, attachments, gigId } = req.body;
 
     const newMessage = await this._messageService.sendMessage(
-      gigId,
       senderId,
       receiverId,
       message,
-      attachments
+      attachments,
+      gigId
     );
 
     res.status(HttpStatus.CREATED).json({

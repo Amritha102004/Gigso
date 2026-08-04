@@ -6,8 +6,8 @@ import { useToast } from '../../../context/ToastContext';
 import { PaperClipIcon, PaperAirplaneIcon, InboxIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface ChatRoom {
-  gigId: string;
-  gigTitle: string;
+  gigId?: string;
+  gigTitle?: string;
   counterpartyId: string;
   counterpartyName: string;
   counterpartyRole: string;
@@ -18,7 +18,7 @@ interface ChatRoom {
 
 interface MessageItem {
   _id: string;
-  gigId: string;
+  gigId?: string;
   senderId: string;
   receiverId: string;
   message: string;
@@ -55,9 +55,9 @@ const MessagesPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchRooms = async (autoSelectId?: {
-    gigId: string;
+    gigId?: string;
     counterpartyId: string;
-    gigTitle: string;
+    gigTitle?: string;
     counterpartyName: string;
   }) => {
     try {
@@ -71,7 +71,7 @@ const MessagesPage: React.FC = () => {
         // Preserve temporary room at the top of list if it is not saved to the DB yet
         if (currentActive && !autoSelectId) {
           const exists = chatRooms.some(
-            (r) => r.gigId === currentActive.gigId && r.counterpartyId === currentActive.counterpartyId
+            (r) => r.counterpartyId === currentActive.counterpartyId
           );
           if (!exists) {
             finalRooms = [currentActive, ...chatRooms];
@@ -83,7 +83,7 @@ const MessagesPage: React.FC = () => {
         // Auto select a room if query params are present
         if (autoSelectId) {
           const matched = chatRooms.find(
-            (r) => r.gigId === autoSelectId.gigId && r.counterpartyId === autoSelectId.counterpartyId
+            (r) => r.counterpartyId === autoSelectId.counterpartyId
           );
           if (matched) {
             setActiveRoom(matched);
@@ -112,16 +112,16 @@ const MessagesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const gigIdParam = searchParams.get('gigId');
+    const gigIdParam = searchParams.get('gigId') || undefined;
     const ownerIdParam = searchParams.get('ownerId');
     const workerIdParam = searchParams.get('workerId');
     const counterpartyId = ownerIdParam || workerIdParam;
     
-    const gigTitleParam = searchParams.get('gigTitle') || 'Gig Chat';
+    const gigTitleParam = searchParams.get('gigTitle') || undefined;
     const counterpartyNameParam = searchParams.get('counterpartyName') || searchParams.get('ownerName') || searchParams.get('workerName') || 'Contact';
 
-    if (gigIdParam && counterpartyId) {
-      const paramKey = `${gigIdParam}-${counterpartyId}`;
+    if (counterpartyId) {
+      const paramKey = gigIdParam ? `${gigIdParam}-${counterpartyId}` : counterpartyId;
       if (processedParamsRef.current !== paramKey) {
         processedParamsRef.current = paramKey;
         fetchRooms({
@@ -141,16 +141,16 @@ const MessagesPage: React.FC = () => {
     const interval = setInterval(() => {
       fetchRooms();
       if (activeRoom) {
-        fetchMessages(activeRoom.gigId, activeRoom.counterpartyId, false);
+        fetchMessages(activeRoom.counterpartyId, false);
       }
     }, 4000);
     return () => clearInterval(interval);
   }, [activeRoom]);
 
-  const fetchMessages = async (gigId: string, counterpartyId: string, showSpinner = true) => {
+  const fetchMessages = async (counterpartyId: string, showSpinner = true) => {
     if (showSpinner) setIsLoadingMessages(true);
     try {
-      const response = await apiClient.get(`/chat/${gigId}/${counterpartyId}`);
+      const response = await apiClient.get(`/chat/${counterpartyId}`);
       if (response.data && response.data.data) {
         setMessages(response.data.data.messages);
       }
@@ -163,7 +163,7 @@ const MessagesPage: React.FC = () => {
 
   useEffect(() => {
     if (activeRoom) {
-      fetchMessages(activeRoom.gigId, activeRoom.counterpartyId, true);
+      fetchMessages(activeRoom.counterpartyId, true);
     }
   }, [activeRoom]);
 
@@ -210,9 +210,10 @@ const MessagesPage: React.FC = () => {
         receiverId: activeRoom.counterpartyId,
         message: inputText.trim() || 'Sent an attachment',
         attachments,
+        gigId: activeRoom.gigId,
       };
 
-      const response = await apiClient.post(`/chat/${activeRoom.gigId}`, payload);
+      const response = await apiClient.post('/chat', payload);
       if (response.data && response.data.data) {
         const newMsg = response.data.data.message;
         setMessages((prev) => [...prev, newMsg]);
@@ -243,10 +244,10 @@ const MessagesPage: React.FC = () => {
             <div className="p-8 text-center text-xs text-secondary">No conversations yet.</div>
           ) : (
             rooms.map((room, idx) => {
-              const isSelected = activeRoom?.gigId === room.gigId && activeRoom?.counterpartyId === room.counterpartyId;
+              const isSelected = activeRoom?.counterpartyId === room.counterpartyId;
               return (
                 <div
-                  key={`${room.gigId}-${room.counterpartyId}-${idx}`}
+                  key={`${room.counterpartyId}-${idx}`}
                   onClick={() => {
                     setActiveRoom(room);
                     setSearchParams({});
@@ -262,9 +263,11 @@ const MessagesPage: React.FC = () => {
                         {new Date(room.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-[10px] text-secondary font-semibold uppercase tracking-wider mb-0.5 truncate">
-                      {room.gigTitle}
-                    </p>
+                    {room.gigTitle && (
+                      <p className="text-[10px] text-secondary font-semibold uppercase tracking-wider mb-0.5 truncate">
+                        {room.gigTitle}
+                      </p>
+                    )}
                     <p className="text-[11px] text-secondary truncate">{room.lastMessage}</p>
                   </div>
                   {room.unreadCount > 0 && !isSelected && (
@@ -285,9 +288,11 @@ const MessagesPage: React.FC = () => {
             <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 shadow-sm">
               <div className="min-w-0">
                 <p className="font-bold text-sm text-textMain truncate">{activeRoom.counterpartyName}</p>
-                <p className="text-[10px] text-secondary font-semibold uppercase tracking-wide truncate">
-                  Regarding: {activeRoom.gigTitle}
-                </p>
+                {activeRoom.gigTitle && (
+                  <p className="text-[10px] text-secondary font-semibold uppercase tracking-wide truncate">
+                    Regarding: {activeRoom.gigTitle}
+                  </p>
+                )}
               </div>
             </div>
 

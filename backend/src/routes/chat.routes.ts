@@ -9,7 +9,7 @@ router.use(authenticateJWT);
 router.use(authorizeRoles("worker", "owner"));
 
 router.get("/rooms", chatController.getChatRooms.bind(chatController));
-router.get("/:gigId/:counterpartyId", chatController.getMessages.bind(chatController));
-router.post("/:gigId", chatController.sendMessage.bind(chatController));
+router.get("/:counterpartyId", chatController.getMessages.bind(chatController));
+router.post("/", chatController.sendMessage.bind(chatController));
 
 export const chatRoutes = router;
