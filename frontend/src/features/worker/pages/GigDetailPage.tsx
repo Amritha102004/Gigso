@@ -325,6 +325,16 @@ const GigDetailPage: React.FC = () => {
 
             <div className="space-y-2 pt-2 border-t border-gray-100">
               <button
+                onClick={() => {
+                  const ownerId = typeof gig.ownerId === 'object' ? gig.ownerId.id : gig.ownerId;
+                  const ownerName = typeof gig.ownerId === 'object' ? gig.ownerId.name : 'Owner';
+                  navigate(`/worker/messages?gigId=${gig.id}&ownerId=${ownerId}&gigTitle=${encodeURIComponent(gig.title)}&ownerName=${encodeURIComponent(ownerName)}`);
+                }}
+                className="w-full py-2.5 bg-white border border-primary text-primary hover:bg-primary/5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+              >
+                Message Owner
+              </button>
+              <button
                 onClick={() => showToast('Share functionality coming soon!', 'info')}
                 className="w-full py-2.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-[#575727] transition-all shadow-sm flex items-center justify-center gap-1.5"
               >

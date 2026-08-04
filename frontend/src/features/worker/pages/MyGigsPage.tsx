@@ -11,6 +11,7 @@ import {
 import workerGigService from '../services/gig.service';
 import type { GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import apiClient from '../../../api/client';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
 
@@ -21,6 +22,11 @@ const MyGigsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Announcements modal states
+  const [activeUpdatesGig, setActiveUpdatesGig] = useState<{ id: string; title: string } | null>(null);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState<boolean>(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -49,6 +55,22 @@ const MyGigsPage: React.FC = () => {
       showToast(getErrorMessage(err, 'Error loading assignments'), 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenUpdates = async (gigId: string, gigTitle: string) => {
+    setActiveUpdatesGig({ id: gigId, title: gigTitle });
+    setLoadingAnnouncements(true);
+    try {
+      const res = await apiClient.get(`/announcements/${gigId}`);
+      if (res.data && res.data.data) {
+        setAnnouncements(res.data.data.announcements);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to fetch announcements.', 'error');
+    } finally {
+      setLoadingAnnouncements(false);
     }
   };
 
@@ -340,13 +362,25 @@ const MyGigsPage: React.FC = () => {
                             Review
                           </button>
                         ) : app.status === 'accepted' ? (
-                          <button
-                            onClick={() => showToast('Chat functionality will be added in Phase 5!', 'info')}
-                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all flex items-center gap-1.5"
-                          >
-                            <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
-                            Chat
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleOpenUpdates(app.gigId, app.gig?.title || 'Gig')}
+                              className="px-4 py-2 border border-primary/20 hover:bg-primary/5 font-bold text-xs text-primary rounded-xl shadow-sm transition-all"
+                            >
+                              Updates
+                            </button>
+                            <button
+                              onClick={() => {
+                                const ownerId = typeof app.gig?.ownerId === 'object' ? app.gig?.ownerId?.id : app.gig?.ownerId;
+                                const ownerName = typeof app.gig?.ownerId === 'object' ? app.gig?.ownerId?.name : 'Owner';
+                                navigate(`/worker/messages?gigId=${app.gigId}&ownerId=${ownerId}&gigTitle=${encodeURIComponent(app.gig?.title || 'Gig')}&ownerName=${encodeURIComponent(ownerName)}`);
+                              }}
+                              className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                            >
+                              <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
+                              Chat
+                            </button>
+                          </div>
                         ) : null}
 
                         <button
@@ -389,6 +423,60 @@ const MyGigsPage: React.FC = () => {
           Contact Support
         </button>
       </div>
+      {/* Announcements Modal */}
+      {activeUpdatesGig && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-gray-100 shadow-2xl relative flex flex-col max-h-[80vh]">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="font-bold text-textMain text-base">Gig Announcements</h3>
+                <p className="text-[10px] text-secondary font-semibold uppercase tracking-wider mt-0.5">
+                  {activeUpdatesGig.title}
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveUpdatesGig(null)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-secondary hover:text-textMain transition-all font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+              {loadingAnnouncements ? (
+                <div className="text-center text-xs text-secondary animate-pulse">Loading updates...</div>
+              ) : announcements.length === 0 ? (
+                <p className="text-xs text-secondary italic text-center py-6">No announcements posted for this gig yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {announcements.map((ann) => (
+                    <div key={ann._id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl space-y-2">
+                      <p className="text-xs text-textMain leading-relaxed whitespace-pre-wrap">{ann.message}</p>
+                      <span className="text-[9px] text-gray-400 block text-right">
+                        Posted: {new Date(ann.createdAt).toLocaleString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-100 pt-3 flex justify-end">
+              <button
+                onClick={() => setActiveUpdatesGig(null)}
+                className="px-4 py-2 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/95 transition-all shadow-sm active:scale-95"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

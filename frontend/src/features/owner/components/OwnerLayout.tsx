@@ -9,6 +9,7 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
+import { NotificationBell } from '../../../components/NotificationBell';
 
 const OwnerLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -90,9 +91,19 @@ const OwnerLayout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Navbar */}
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
+          <div></div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto bg-background">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

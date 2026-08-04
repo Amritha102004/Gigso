@@ -6,6 +6,9 @@ import { CategoryRepository } from "../repositories/category.repository";
 import { GigRepository } from "../repositories/gig.repository";
 import { GigRoleRepository } from "../repositories/gigRole.repository";
 import { GigApplicationRepository } from "../repositories/application.repository";
+import { NotificationRepository } from "../repositories/notification.repository";
+import { MessageRepository } from "../repositories/message.repository";
+import { AnnouncementRepository } from "../repositories/announcement.repository";
 import { ENV } from "./env.config";
 
 // Services
@@ -19,6 +22,9 @@ import { AdminCategoryService } from "../services/admin/category.service";
 import { WorkerGigService } from "../services/worker/gig.service";
 import { ApplicationService } from "../services/application.service";
 import { AdminGigService } from "../services/admin/gig.service";
+import { NotificationService } from "../services/notification.service";
+import { MessageService } from "../services/message.service";
+import { AnnouncementService } from "../services/announcement.service";
 
 // Controllers
 import { AuthController } from "../controllers/auth/auth.controller";
@@ -30,6 +36,9 @@ import { AdminCategoryController } from "../controllers/admin/category.controlle
 import { WorkerGigController } from "../controllers/worker/gig.controller";
 import { ApplicationController } from "../controllers/application.controller";
 import { AdminGigController } from "../controllers/admin/gig.controller";
+import { NotificationController } from "../controllers/notification.controller";
+import { ChatController } from "../controllers/chat.controller";
+import { AnnouncementController } from "../controllers/announcement.controller";
 
 // Repositories
 export const userRepository = new UserRepository();
@@ -40,8 +49,12 @@ export const categoryRepository = new CategoryRepository();
 export const gigRepository = new GigRepository();
 export const gigRoleRepository = new GigRoleRepository();
 export const gigApplicationRepository = new GigApplicationRepository();
+export const notificationRepository = new NotificationRepository();
+export const messageRepository = new MessageRepository();
+export const announcementRepository = new AnnouncementRepository();
 
 // Services
+export const notificationService = new NotificationService(notificationRepository);
 export const emailService = new EmailService();
 export const authService = new AuthService(
   userRepository,
@@ -64,7 +77,8 @@ export const applicationService = new ApplicationService(
   gigApplicationRepository,
   gigRepository,
   gigRoleRepository,
-  workerProfileRepository
+  workerProfileRepository,
+  notificationService
 );
 export const adminGigService = new AdminGigService(
   gigRepository,
@@ -72,6 +86,18 @@ export const adminGigService = new AdminGigService(
   ownerProfileRepository,
   gigApplicationRepository,
   applicationService
+);
+export const messageService = new MessageService(
+  messageRepository,
+  gigRepository,
+  userRepository,
+  notificationService
+);
+export const announcementService = new AnnouncementService(
+  announcementRepository,
+  gigRepository,
+  gigApplicationRepository,
+  notificationService
 );
 
 // Controllers
@@ -84,3 +110,6 @@ export const adminCategoryController = new AdminCategoryController(adminCategory
 export const workerGigController = new WorkerGigController(workerGigService);
 export const applicationController = new ApplicationController(applicationService);
 export const adminGigController = new AdminGigController(adminGigService);
+export const notificationController = new NotificationController(notificationService);
+export const chatController = new ChatController(messageService);
+export const announcementController = new AnnouncementController(announcementService);

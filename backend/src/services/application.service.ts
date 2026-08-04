@@ -6,13 +6,15 @@ import type { GigApplicationDTO } from "../dtos/application.dto";
 import { toGigApplicationDTO } from "../mappers/application.mapper";
 import { Types } from "mongoose";
 import { AppError } from "../utils/errors";
+import type { NotificationService } from "./notification.service";
 
 export class ApplicationService implements IApplicationService {
   constructor(
     private _applicationRepo: IGigApplicationRepository,
     private _gigRepo: IGigRepository,
     private _gigRoleRepo: IGigRoleRepository,
-    private _workerProfileRepo: IWorkerProfileRepository
+    private _workerProfileRepo: IWorkerProfileRepository,
+    private _notificationService: NotificationService
   ) {}
 
   async applyForGigRole(workerId: string, gigId: string, roleId: string): Promise<GigApplicationDTO> {
@@ -111,6 +113,18 @@ export class ApplicationService implements IApplicationService {
     const updated = await this._applicationRepo.update(applicationId, { status });
     if (!updated) {
       throw new AppError("Failed to update application status", 500);
+    }
+
+    try {
+      const statusText = status === "accepted" ? "accepted" : "rejected";
+      await this._notificationService.createNotification(
+        app.workerId.toString(),
+        "Application Status Update",
+        `Your application for the gig "${gig.title}" has been ${statusText}.`,
+        "application_status"
+      );
+    } catch (err) {
+      console.error("Failed to trigger application status update notification:", err);
     }
 
     // If accepted, auto-reject other pending applications by this worker for the same gig

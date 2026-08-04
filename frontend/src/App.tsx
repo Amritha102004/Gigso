@@ -36,6 +36,7 @@ import GigsPage from './features/owner/pages/GigsPage';
 import CreateGigPage from './features/owner/pages/CreateGigPage';
 import ViewGigPage from './features/owner/pages/ViewGigPage';
 import EditGigPage from './features/owner/pages/EditGigPage';
+import MessagesPage from './features/chat/pages/MessagesPage';
 
 function App() {
   return (
@@ -88,6 +89,7 @@ function App() {
               <Route path="browse" element={<BrowseGigsPage />} />
               <Route path="my-gigs" element={<MyGigsPage />} />
               <Route path="gigs/:gigId" element={<GigDetailPage />} />
+              <Route path="messages" element={<MessagesPage />} />
             </Route>
           </Route>
 
@@ -100,6 +102,7 @@ function App() {
               <Route path="gigs/create" element={<CreateGigPage />} />
               <Route path="gigs/:gigId" element={<ViewGigPage />} />
               <Route path="gigs/:gigId/edit" element={<EditGigPage />} />
+              <Route path="messages" element={<MessagesPage />} />
             </Route>
           </Route>
         </Routes>

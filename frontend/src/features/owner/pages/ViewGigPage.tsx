@@ -12,6 +12,7 @@ import {
 import gigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import apiClient from '../../../api/client';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
 
@@ -24,10 +25,15 @@ const ViewGigPage: React.FC = () => {
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'applications'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'applications' | 'updates'>('roster');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<GigApplicationDTO['worker'] | null>(null);
+  
+  // Announcement states
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [newAnnouncement, setNewAnnouncement] = useState<string>('');
+  const [isSubmittingAnnouncement, setIsSubmittingAnnouncement] = useState<boolean>(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -76,10 +82,23 @@ const ViewGigPage: React.FC = () => {
     }
   };
 
+  const fetchAnnouncements = async () => {
+    if (!gigId) return;
+    try {
+      const res = await apiClient.get(`/announcements/${gigId}`);
+      if (res.data && res.data.data) {
+        setAnnouncements(res.data.data.announcements);
+      }
+    } catch (err: unknown) {
+      console.error('Error fetching announcements:', err);
+    }
+  };
+
   useEffect(() => {
     if (gigId) {
       fetchGigDetails();
       fetchApplications();
+      fetchAnnouncements();
     }
   }, [gigId]);
 
@@ -99,6 +118,25 @@ const ViewGigPage: React.FC = () => {
       showToast(getErrorMessage(err, 'Error publishing gig.'), 'error');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handlePostAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAnnouncement.trim() || !gigId) return;
+    try {
+      setIsSubmittingAnnouncement(true);
+      const res = await apiClient.post(`/announcements/${gigId}`, { message: newAnnouncement.trim() });
+      if (res.data && res.data.data) {
+        setAnnouncements((prev) => [res.data.data.announcement, ...prev]);
+        setNewAnnouncement('');
+        showToast('Announcement posted successfully!', 'success');
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      showToast(getErrorMessage(err, 'Failed to post announcement.'), 'error');
+    } finally {
+      setIsSubmittingAnnouncement(false);
     }
   };
 
@@ -273,12 +311,22 @@ const ViewGigPage: React.FC = () => {
                     : 'border-transparent text-secondary hover:text-textMain'
                 }`}
               >
-                Worker Applications
+                Worker Applications ({applications.filter(a => a.status === 'pending').length})
+              </button>
+              <button
+                onClick={() => setActiveSubTab('updates')}
+                className={`flex-1 py-4 text-xs font-bold border-b-2 transition-all ${
+                  activeSubTab === 'updates' 
+                    ? 'border-primary text-primary bg-white' 
+                    : 'border-transparent text-secondary hover:text-textMain'
+                }`}
+              >
+                Gig Updates ({announcements.length})
               </button>
             </div>
 
             <div className="p-6">
-              {activeSubTab === 'roster' ? (
+              {activeSubTab === 'roster' && (
                 <div className="space-y-6">
                   {/* Confirmed Workers Section grouped by role */}
                   <div className="space-y-6">
@@ -343,8 +391,9 @@ const ViewGigPage: React.FC = () => {
                     })}
                   </div>
                 </div>
-              ) : (
-                /* Applications Tab grouped by role with pagination */
+              )}
+
+              {activeSubTab === 'applications' && (
                 <div className="space-y-6">
                   {(() => {
                     const pendingApplications = applications.filter((a) => a.status === 'pending');
@@ -436,6 +485,58 @@ const ViewGigPage: React.FC = () => {
                       </div>
                     );
                   })()}
+                </div>
+              )}
+              {activeSubTab === 'updates' && (
+                <div className="space-y-6">
+                  {/* Announcement List (Clean, scrollable, like chat history) */}
+                  <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                    {announcements.length === 0 ? (
+                      <p className="text-xs text-secondary italic text-center py-8">
+                        No announcements posted for this gig yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {announcements.map((ann) => (
+                          <div key={ann._id} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                            <p className="text-xs text-textMain leading-relaxed whitespace-pre-wrap">{ann.message}</p>
+                            <span className="text-[9px] text-gray-400 block text-right">
+                              Posted: {new Date(ann.createdAt).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Post new update form (Placed at the bottom) */}
+                  <form onSubmit={handlePostAnnouncement} className="space-y-3 pt-4 border-t border-gray-100">
+                    <label className="text-xs font-bold text-textMain uppercase tracking-wider block">
+                      Broadcast New Update / Announcement
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Write message to all accepted workers (e.g. Bring a water bottle, gate changes...)"
+                        value={newAnnouncement}
+                        onChange={(e) => setNewAnnouncement(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-xs text-textMain outline-none focus:border-primary shadow-inner"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isSubmittingAnnouncement || !newAnnouncement.trim()}
+                        className="px-4 py-2 bg-primary text-white font-bold text-xs rounded-xl hover:bg-[#575727] transition-all disabled:opacity-50 flex items-center gap-1.5 active:scale-95 shrink-0"
+                      >
+                        <PaperAirplaneIcon className="w-3.5 h-3.5" />
+                        Send
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
             </div>
