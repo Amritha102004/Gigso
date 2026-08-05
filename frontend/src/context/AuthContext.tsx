@@ -11,6 +11,8 @@ export interface User {
   profileImage?: string;
   isApproved?: boolean;
   isProfileCompleted?: boolean;
+  stripeAccountId?: string;
+  stripeOnboardingCompleted?: boolean;
 }
 
 interface AuthContextType {

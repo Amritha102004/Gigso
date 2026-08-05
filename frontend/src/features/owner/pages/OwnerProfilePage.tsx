@@ -384,36 +384,6 @@ const OwnerProfilePage: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            {/* Payment Settings Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="text-base font-bold text-textMain mb-4">Payment Settings</h3>
-              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#635bff] flex items-center justify-center text-white font-black text-xl select-none">
-                    S
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-textMain leading-tight">Stripe Account</h4>
-                    <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Connected</span>
-                  </div>
-                </div>
-                <CheckCircleIcon className="w-5 h-5 text-[#635bff]" />
-              </div>
-              <div className="mt-4 space-y-2.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-secondary">Last Payout</span>
-                  <span className="font-bold text-textMain">₹2,450.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary">Pending</span>
-                  <span className="font-bold text-textMain">₹840.00</span>
-                </div>
-              </div>
-              <button className="mt-5 w-full py-2.5 bg-white border border-gray-200 text-textMain text-sm font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                Manage Payouts
-              </button>
-            </div>
-
             {/* Pro Tip Card */}
             <div className="bg-[#f4f4ef] rounded-2xl p-6 border border-[#6b704c]/10 flex gap-3 items-start">
               <LightBulbIcon className="w-5 h-5 text-[#6b704c] flex-shrink-0 mt-0.5" />

@@ -10,6 +10,8 @@ export interface UserResponseDTO {
   isApproved: boolean;
   isSuspended: boolean;
   isProfileCompleted: boolean;
+  stripeAccountId?: string;
+  stripeOnboardingCompleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -14,4 +14,6 @@ export const ENV = {
   NODEMAILER_PASSWORD: process.env.NODEMAILER_PASSWORD || "",
   OTP_EXPIRY_MINUTES: parseInt(process.env.OTP_EXPIRY_MINUTES || "5", 10),
   NODE_ENV: process.env.NODE_ENV || "development",
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "sk_test_51Pzzzzzzzzzzzzzzzzzzzz",
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
 };

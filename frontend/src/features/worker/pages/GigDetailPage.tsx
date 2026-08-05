@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import workerGigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
+import { useAuth } from '../../../context/AuthContext';
 import MapPreview from '../../../components/MapPreview';
 import { getErrorMessage } from '../../../utils/error';
 import {
@@ -20,6 +21,7 @@ const GigDetailPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -74,6 +76,15 @@ const GigDetailPage: React.FC = () => {
 
   const handleApplyClick = async (roleId: string, roleName: string) => {
     if (!gig) return;
+    if (!user?.stripeOnboardingCompleted) {
+      const confirmSetup = window.confirm(
+        "To apply for gigs, you must first connect your Stripe account to receive payouts. Would you like to go to your Earnings page to connect Stripe now?"
+      );
+      if (confirmSetup) {
+        navigate('/worker/earnings');
+      }
+      return;
+    }
     try {
       const res = await workerGigService.applyForGigRole(gig.id, roleId);
       if (res.success) {

@@ -37,6 +37,10 @@ import CreateGigPage from './features/owner/pages/CreateGigPage';
 import ViewGigPage from './features/owner/pages/ViewGigPage';
 import EditGigPage from './features/owner/pages/EditGigPage';
 import MessagesPage from './features/chat/pages/MessagesPage';
+import EarningsPage from './features/worker/pages/EarningsPage';
+import PaymentsPage from './features/owner/pages/PaymentsPage';
+import PaymentSuccessPage from './features/owner/pages/PaymentSuccessPage';
+import PaymentFailurePage from './features/owner/pages/PaymentFailurePage';
 
 function App() {
   return (
@@ -90,6 +94,7 @@ function App() {
               <Route path="my-gigs" element={<MyGigsPage />} />
               <Route path="gigs/:gigId" element={<GigDetailPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="earnings" element={<EarningsPage />} />
             </Route>
           </Route>
 
@@ -103,6 +108,9 @@ function App() {
               <Route path="gigs/:gigId" element={<ViewGigPage />} />
               <Route path="gigs/:gigId/edit" element={<EditGigPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="payments" element={<PaymentsPage />} />
+              <Route path="payments/success" element={<PaymentSuccessPage />} />
+              <Route path="payments/failure" element={<PaymentFailurePage />} />
             </Route>
           </Route>
         </Routes>

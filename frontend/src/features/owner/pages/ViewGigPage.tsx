@@ -7,7 +7,8 @@ import {
   ClockIcon,
   UserGroupIcon,
   CheckIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
@@ -21,12 +22,14 @@ const ViewGigPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+
   
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'roster' | 'applications' | 'updates'>('roster');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<GigApplicationDTO['worker'] | null>(null);
   
@@ -50,6 +53,8 @@ const ViewGigPage: React.FC = () => {
       setActiveSubTab(state.activeTab);
     }
   }, [location.state]);
+
+
 
   const fetchGigDetails = async () => {
     if (!gigId) return;
@@ -140,9 +145,52 @@ const ViewGigPage: React.FC = () => {
     }
   };
 
+  const checkCancelAllowed = () => {
+    if (!gig) return false;
+    const acceptedCount = applications.filter(a => a.status === 'accepted').length;
+    if (acceptedCount === 0) return true;
+
+    const eventStart = new Date(gig.eventDate);
+    const match = gig.startTime.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (match) {
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const ampm = match[3];
+      if (ampm) {
+        if (ampm.toUpperCase() === 'PM' && hours < 12) hours += 12;
+        if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+      }
+      eventStart.setHours(hours, minutes, 0, 0);
+    }
+
+    const msDiff = eventStart.getTime() - Date.now();
+    const daysLeft = msDiff / (1000 * 60 * 60 * 24);
+    return daysLeft >= 2;
+  };
+
+  const handleCancel = async () => {
+    if (!gig) return;
+    if (!window.confirm('Are you sure you want to cancel this gig? Accepted workers will be notified and their applications will be rejected. This action cannot be undone.')) {
+      return;
+    }
+    try {
+      setActionLoading(true);
+      const res = await apiClient.delete(`/owner/gigs/${gig.id}`);
+      if (res.data && res.data.success) {
+        showToast('Gig has been successfully cancelled.', 'success');
+        fetchGigDetails();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(getErrorMessage(err, 'Failed to cancel gig.'), 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (!gig) return;
-    if (!window.confirm('Are you sure you want to mark this gig as completed? This will lock roles and payout requests.')) {
+    if (!window.confirm('Are you sure you want to close applications for this gig? Hired workers will be kept in the roster, and new applications will be locked.')) {
       return;
     }
     try {
@@ -150,13 +198,13 @@ const ViewGigPage: React.FC = () => {
       const res = await gigService.markAsCompleted(gig.id);
       if (res.success && res.data) {
         setGig(res.data);
-        showToast('Gig marked as completed.', 'success');
+        showToast('Gig has been successfully closed.', 'success');
       } else {
-        showToast(res.message || 'Failed to complete gig.', 'error');
+        showToast(res.message || 'Failed to close gig.', 'error');
       }
     } catch (err: unknown) {
       console.error(err);
-      showToast(getErrorMessage(err, 'Error completing gig.'), 'error');
+      showToast(getErrorMessage(err, 'Error closing gig.'), 'error');
     } finally {
       setActionLoading(false);
     }
@@ -201,9 +249,22 @@ const ViewGigPage: React.FC = () => {
   }
 
   let statusColor = 'bg-gray-100 text-gray-700';
-  if (gig.status === 'active') statusColor = 'bg-blue-50 text-blue-700 border border-blue-100';
-  if (gig.status === 'completed') statusColor = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-  if (gig.status === 'cancelled') statusColor = 'bg-rose-50 text-rose-700 border border-rose-100';
+  let statusText: string = gig.status;
+  if (gig.status === 'active') {
+    statusColor = 'bg-blue-50 text-blue-700 border border-blue-100';
+    statusText = 'active';
+  } else if (gig.status === 'completed') {
+    if (gig.paymentStatus === 'unpaid') {
+      statusColor = 'bg-amber-50 text-amber-700 border border-amber-100';
+      statusText = 'payment pending';
+    } else {
+      statusColor = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+      statusText = 'completed';
+    }
+  } else if (gig.status === 'cancelled') {
+    statusColor = 'bg-rose-50 text-rose-700 border border-rose-100';
+    statusText = 'cancelled';
+  }
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -219,7 +280,7 @@ const ViewGigPage: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusColor}`}>
-              {gig.status}
+              {statusText}
             </span>
           </div>
           <h1 className="text-2xl font-black text-textMain">{gig.title}</h1>
@@ -272,7 +333,18 @@ const ViewGigPage: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
             >
               <CheckIcon className="w-4 h-4" />
-              Mark as Completed
+              Close Gig
+            </button>
+          )}
+
+          {(gig.status === 'active' || gig.status === 'closed') && checkCancelAllowed() && (
+            <button
+              onClick={handleCancel}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-rose-600 text-white font-bold rounded-xl text-xs hover:bg-rose-700 transition-all shadow-sm disabled:opacity-50"
+            >
+              <XMarkIcon className="w-4 h-4" />
+              Cancel Gig
             </button>
           )}
         </div>
@@ -566,6 +638,14 @@ const ViewGigPage: React.FC = () => {
                 <span className="text-base font-black text-primary">₹{Math.round(gig.totalBudget * 1.1).toLocaleString()}</span>
               </div>
             </div>
+            {(gig.status === 'closed' || gig.status === 'completed') && gig.paymentStatus === 'unpaid' && (
+              <button
+                onClick={() => navigate(`/owner/payments?gigId=${gig.id}`)}
+                className="mt-4 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl disabled:opacity-50 transition-colors shadow-sm uppercase tracking-wider block text-center"
+              >
+                Review & Make Payment
+              </button>
+            )}
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">

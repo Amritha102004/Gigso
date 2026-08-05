@@ -101,5 +101,6 @@ export const toGigListItemDTO = (
       ? { id: owner._id.toString(), name: owner.name, email: owner.email }
       : gig.ownerId.toString(),
     pendingApplicationsCount,
+    paymentStatus: gig.paymentStatus,
   };
 };

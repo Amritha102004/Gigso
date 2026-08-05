@@ -12,6 +12,8 @@ export interface IUser extends Document {
   isApproved: boolean;
   isSuspended: boolean;
   isProfileCompleted: boolean;
+  stripeAccountId?: string;
+  stripeOnboardingCompleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

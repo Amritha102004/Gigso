@@ -52,6 +52,14 @@ const userSchema: Schema<IUser> = new Schema<IUser>(
     isProfileCompleted: {
         type: Boolean,
         default: false
+    },
+    stripeAccountId: {
+      type: String,
+      default: null,
+    },
+    stripeOnboardingCompleted: {
+      type: Boolean,
+      default: false,
     }
   },
   {

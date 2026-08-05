@@ -12,6 +12,8 @@ export const toUserResponse = (user: IUser): UserResponseDTO => {
     isApproved: user.isApproved,
     isSuspended: user.isSuspended,
     isProfileCompleted: user.isProfileCompleted,
+    stripeAccountId: user.stripeAccountId || undefined,
+    stripeOnboardingCompleted: user.stripeOnboardingCompleted || undefined,
     createdAt: user.createdAt?.toISOString(),
     updatedAt: user.updatedAt?.toISOString(),
   };

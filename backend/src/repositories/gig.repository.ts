@@ -3,26 +3,106 @@ import { GigModel } from "../models/gig.model";
 import type { IGig, IGigRole } from "../interfaces/gig.interface";
 import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
 import { BaseRepository } from "./base.repository";
+import { GigApplicationModel } from "../models/application.model";
+import { NotificationModel } from "../models/notification.model";
 
 export class GigRepository extends BaseRepository<IGig> implements IGigRepository {
   constructor() {
     super(GigModel);
   }
 
-  private async _updateExpiredGigs(): Promise<void> {
+  private async _syncGigStates(): Promise<void> {
     const now = new Date();
-    await this._model.updateMany(
-      {
-        status: "active",
-        eventDate: { $lt: now },
-        isDeleted: false
-      },
-      { status: "closed" }
-    ).exec();
+    const gigs = await this._model.find({
+      status: { $in: ["active", "closed"] },
+      isDeleted: false,
+    }).populate("roles").exec();
+
+    for (const gig of gigs) {
+      try {
+        const eventStart = new Date(gig.eventDate);
+        const match = gig.startTime.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        if (match) {
+          let hours = parseInt(match[1], 10);
+          const minutes = parseInt(match[2], 10);
+          const ampm = match[3];
+          if (ampm) {
+            if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
+            if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
+          }
+          eventStart.setHours(hours, minutes, 0, 0);
+        }
+
+        const msDiff = eventStart.getTime() - Date.now();
+        const hoursLeft = msDiff / (1000 * 60 * 60);
+
+        const acceptedCount = await GigApplicationModel.countDocuments({
+          gigId: gig._id,
+          status: "accepted",
+        });
+
+        let totalSpots = 0;
+        if (gig.roles && gig.roles.length > 0) {
+          for (const role of gig.roles as any[]) {
+            totalSpots += role.spots || 0;
+          }
+        }
+
+        let newStatus: string | null = null;
+
+        if (hoursLeft <= 0) {
+          if (acceptedCount > 0) {
+            newStatus = "completed";
+          } else {
+            newStatus = "cancelled";
+          }
+        } else if (hoursLeft <= 5) {
+          if (acceptedCount > 0) {
+            newStatus = "closed";
+          } else {
+            newStatus = "cancelled";
+          }
+        } else {
+          if (gig.status === "active" && totalSpots > 0 && acceptedCount >= totalSpots) {
+            newStatus = "closed";
+          }
+        }
+
+        if (newStatus && newStatus !== gig.status) {
+          await this._model.updateOne({ _id: gig._id }, { status: newStatus }).exec();
+
+          if (newStatus === "cancelled" && acceptedCount > 0) {
+            const acceptedApps = await GigApplicationModel.find({
+              gigId: gig._id,
+              status: "accepted"
+            }).exec();
+
+            for (const app of acceptedApps) {
+              app.status = "rejected";
+              await app.save();
+
+              await NotificationModel.create({
+                userId: app.workerId,
+                title: "Gig Cancelled",
+                message: `The gig "${gig.title}" has been automatically cancelled because there were no applicants 5 hours before event time.`,
+                type: "gig_cancelled"
+              });
+            }
+
+            await GigApplicationModel.updateMany(
+              { gigId: gig._id, status: "pending" },
+              { status: "rejected" }
+            ).exec();
+          }
+        }
+      } catch (err) {
+        console.error(`Error syncing state for gig ${gig._id}:`, err);
+      }
+    }
   }
 
   override async findById(id: string): Promise<IGig | null> {
-    await this._updateExpiredGigs();
+    await this._syncGigStates();
     return await this._model.findOne({ _id: id, isDeleted: false })
       .populate("categoryId")
       .populate("roles")
@@ -30,7 +110,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
   }
 
   async findByOwnerId(ownerId: string, filters?: { status?: string }): Promise<IGig[]> {
-    await this._updateExpiredGigs();
+    await this._syncGigStates();
     const query: {
       ownerId: Types.ObjectId;
       isDeleted: boolean;
@@ -53,7 +133,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     minPay?: number;
     date?: string;
   }): Promise<IGig[]> {
-    await this._updateExpiredGigs();
+    await this._syncGigStates();
     const query: {
       status: string;
       isDeleted: boolean;
@@ -121,7 +201,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     page: number,
     limit: number
   ): Promise<{ gigs: IGig[]; total: number }> {
-    await this._updateExpiredGigs();
+    await this._syncGigStates();
     const query: {
       isDeleted: boolean;
       categoryId?: Types.ObjectId;
@@ -170,7 +250,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
   }
 
   async findGigDetailsById(id: string): Promise<IGig | null> {
-    await this._updateExpiredGigs();
+    await this._syncGigStates();
     return await this._model.findOne({ _id: id, isDeleted: false })
       .populate("categoryId")
       .populate("ownerId", "name email role profileImage")

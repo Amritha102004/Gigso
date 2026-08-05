@@ -6,11 +6,12 @@ import authService from '../../auth/services/auth.service';
 import InputField from '../../../components/InputField';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
-import { MapPinIcon, PencilSquareIcon, StarIcon, PhoneIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon, PencilSquareIcon, StarIcon, PhoneIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 import { getErrorMessage } from '../../../utils/error';
+import apiClient from '../../../api/client';
 
 const WorkerProfilePage: React.FC = () => {
-  const { user, loginState } = useAuth();
+  const { user, token, loginState } = useAuth();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<WorkerProfileResponseDTO | null>(null);
@@ -18,6 +19,24 @@ const WorkerProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+
+  const handleStripeOnboard = async () => {
+    try {
+      setIsOnboarding(true);
+      const res = await apiClient.post('/payments/connect');
+      if (res.data && res.data.data && res.data.data.url) {
+        window.location.href = res.data.data.url;
+      } else {
+        showToast('Failed to generate onboarding URL', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error connecting with Stripe', 'error');
+    } finally {
+      setIsOnboarding(false);
+    }
+  };
 
   // Edit states
   const [workerName, setWorkerName] = useState('');
@@ -54,7 +73,24 @@ const WorkerProfilePage: React.FC = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+    const checkStripeConnection = async () => {
+      if (user && user.stripeAccountId && !user.stripeOnboardingCompleted) {
+        try {
+          const res = await apiClient.get('/payments/connect/status');
+          if (res.data && res.data.success && res.data.data?.stripeOnboardingCompleted) {
+            showToast('Stripe Connected Account successfully verified!', 'success');
+            const localToken = token || localStorage.getItem('accessToken');
+            if (res.data.data.user && localToken) {
+              loginState(res.data.data.user, localToken);
+            }
+          }
+        } catch (err) {
+          console.error("Auto check stripe connect status failed:", err);
+        }
+      }
+    };
+    checkStripeConnection();
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -314,6 +350,41 @@ const WorkerProfilePage: React.FC = () => {
           </div>
 
           <div className="space-y-6">
+            {/* Payment Settings Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-base font-bold text-textMain mb-4">Payment Settings</h3>
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#635bff] flex items-center justify-center text-white font-black text-xl select-none">
+                    S
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-textMain leading-tight">Stripe Account</h4>
+                    {user?.stripeOnboardingCompleted ? (
+                      <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Connected</span>
+                    ) : (
+                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Not Connected</span>
+                    )}
+                  </div>
+                </div>
+                {user?.stripeOnboardingCompleted && (
+                  <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                )}
+              </div>
+              {!user?.stripeOnboardingCompleted && (
+                <p className="text-xs text-secondary mt-3 leading-relaxed">
+                  To apply for gigs and receive payouts, you must link your Stripe account.
+                </p>
+              )}
+              <button
+                onClick={handleStripeOnboard}
+                disabled={isOnboarding}
+                className="mt-4 w-full py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-sm"
+              >
+                {isOnboarding ? 'Connecting...' : user?.stripeOnboardingCompleted ? 'Update Stripe Connect' : 'Setup Connect Account'}
+              </button>
+            </div>
+
             {/* Skills */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-textMain mb-4">Skills</h2>

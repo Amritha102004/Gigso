@@ -14,13 +14,15 @@ import { toCategoryDTO } from "../../mappers/category.mapper";
 import { AppError } from "../../utils/errors";
 
 import type { IGig } from "../../interfaces/gig.interface";
+import { NotificationService } from "../notification.service";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
     private _categoryRepo: ICategoryRepository,
     private _gigRepo: IGigRepository,
     private _gigRoleRepo: IGigRoleRepository,
-    private _applicationRepo: IGigApplicationRepository
+    private _applicationRepo: IGigApplicationRepository,
+    private _notificationService: NotificationService
   ) {}
 
   async createGig(ownerId: string, input: CreateGigRequestDTO): Promise<GigResponseDTO> {
@@ -152,7 +154,56 @@ export class OwnerGigService implements IOwnerGigService {
     if (!gig || gig.ownerId.toString() !== ownerId) {
       throw new AppError("Gig not found or unauthorized access", 404);
     }
-    return await this._gigRepo.softDelete(gigId);
+
+    if (gig.status === "draft") {
+      return await this._gigRepo.softDelete(gigId);
+    }
+
+    const apps = await this._applicationRepo.findByGigId(gigId);
+    const acceptedApps = apps.filter((app) => app.status === "accepted");
+    const acceptedCount = acceptedApps.length;
+
+    if (acceptedCount > 0) {
+      const eventStart = new Date(gig.eventDate);
+      const match = gig.startTime.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (match) {
+        let hours = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        const ampm = match[3];
+        if (ampm) {
+          if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
+          if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
+        }
+        eventStart.setHours(hours, minutes, 0, 0);
+      }
+
+      const msDiff = eventStart.getTime() - Date.now();
+      const daysLeft = msDiff / (1000 * 60 * 60 * 24);
+
+      if (daysLeft < 2) {
+        throw new AppError("Cannot cancel a gig with accepted applicants less than 2 days before the event", 400);
+      }
+
+      for (const app of acceptedApps) {
+        const wId = (app.workerId as any)._id?.toString() || app.workerId.toString();
+        await this._applicationRepo.update(app._id.toString(), { status: "rejected" });
+
+        await this._notificationService.createNotification(
+          wId,
+          "Gig Cancelled",
+          `Your application for "${gig.title}" has been rejected because the owner cancelled the gig.`,
+          "gig_cancelled"
+        );
+      }
+    }
+
+    const pendingApps = apps.filter((app) => app.status === "pending");
+    for (const app of pendingApps) {
+      await this._applicationRepo.update(app._id.toString(), { status: "rejected" });
+    }
+
+    await this._gigRepo.update(gigId, { status: "cancelled" });
+    return true;
   }
 
   async publishGig(gigId: string, ownerId: string): Promise<GigResponseDTO> {
@@ -182,13 +233,13 @@ export class OwnerGigService implements IOwnerGigService {
       throw new AppError("Gig not found or unauthorized access", 404);
     }
     if (gig.status !== "active") {
-      throw new AppError("Only active gigs can be marked as completed", 400);
+      throw new AppError("Only active gigs can be closed manually", 400);
     }
 
-    await this._gigRepo.update(gigId, { status: "completed" });
+    await this._gigRepo.update(gigId, { status: "closed" });
     const updated = await this._gigRepo.findById(gigId);
     if (!updated) {
-      throw new Error("Gig not found after completion");
+      throw new Error("Gig not found after closing");
     }
     return toGigResponseDTO(updated);
   }

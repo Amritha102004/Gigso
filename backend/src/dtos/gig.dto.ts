@@ -20,7 +20,7 @@ export interface GigResponseDTO {
   startTime: string;
   roles: GigRoleDTO[];
   totalBudget: number;
-  status: "draft" | "active" | "completed" | "cancelled" | "closed" | "paid";
+  status: "draft" | "active" | "completed" | "cancelled" | "closed";
   paymentStatus: "unpaid" | "paid";
   isFlagged?: boolean;
   createdAt: string;
@@ -32,7 +32,7 @@ export interface GigListItemDTO {
   title: string;
   category: CategoryDTO;
   eventDate: string;
-  status: "draft" | "active" | "completed" | "cancelled" | "closed" | "paid";
+  status: "draft" | "active" | "completed" | "cancelled" | "closed";
   totalRoles: number;
   filledSpots: number;
   totalSpots: number;
@@ -41,6 +41,7 @@ export interface GigListItemDTO {
   isFlagged?: boolean;
   ownerId?: string | { id: string; name: string; email: string; };
   pendingApplicationsCount?: number;
+  paymentStatus?: "unpaid" | "paid";
 }
 
 export interface CreateGigRoleInputDTO {

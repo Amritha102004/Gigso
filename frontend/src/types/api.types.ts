@@ -125,6 +125,7 @@ export interface GigListItemDTO {
   isFlagged?: boolean;
   ownerId?: string | { id: string; name: string; email: string; };
   pendingApplicationsCount?: number;
+  paymentStatus?: 'unpaid' | 'paid';
 }
 
 export interface WorkerProfileInfoDTO {

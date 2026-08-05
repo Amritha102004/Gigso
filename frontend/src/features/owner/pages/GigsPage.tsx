@@ -227,9 +227,22 @@ const GigsPage: React.FC = () => {
                       const percentFilled = gig.totalSpots > 0 ? Math.round((gig.filledSpots / gig.totalSpots) * 100) : 0;
                       
                       let statusBadge = 'bg-gray-100 text-gray-700';
-                      if (gig.status === 'active') statusBadge = 'bg-blue-50 text-blue-700 border border-blue-100';
-                      if (gig.status === 'completed') statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                      if (gig.status === 'cancelled') statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100';
+                      let statusText: string = gig.status;
+                      if (gig.status === 'active') {
+                        statusBadge = 'bg-blue-50 text-blue-700 border border-blue-100';
+                        statusText = 'active';
+                      } else if (gig.status === 'completed') {
+                        if (gig.paymentStatus === 'unpaid') {
+                          statusBadge = 'bg-amber-50 text-amber-700 border border-amber-100';
+                          statusText = 'payment pending';
+                        } else {
+                          statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+                          statusText = 'completed';
+                        }
+                      } else if (gig.status === 'cancelled') {
+                        statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100';
+                        statusText = 'cancelled';
+                      }
 
                       return (
                         <tr key={gig.id} className="hover:bg-gray-50/30 transition-colors">
@@ -250,7 +263,7 @@ const GigsPage: React.FC = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusBadge}`}>
-                              {gig.status}
+                              {statusText}
                             </span>
                           </td>
                           <td className="px-6 py-4 max-w-[200px]">
