@@ -41,6 +41,9 @@ import EarningsPage from './features/worker/pages/EarningsPage';
 import PaymentsPage from './features/owner/pages/PaymentsPage';
 import PaymentSuccessPage from './features/owner/pages/PaymentSuccessPage';
 import PaymentFailurePage from './features/owner/pages/PaymentFailurePage';
+import AdminPaymentsDashboard from './features/admin/pages/AdminPaymentsDashboard';
+import AdminTransactionsList from './features/admin/pages/AdminTransactionsList';
+import AdminTransactionDetails from './features/admin/pages/AdminTransactionDetails';
 
 function App() {
   return (
@@ -71,6 +74,9 @@ function App() {
               <Route path="categories/:categoryId/edit" element={<AddCategoryPage />} />
               <Route path="gigs" element={<AdminGigsPage />} />
               <Route path="gigs/:gigId" element={<AdminGigDetailsPage />} />
+              <Route path="payments" element={<AdminPaymentsDashboard />} />
+              <Route path="payments/transactions" element={<AdminTransactionsList />} />
+              <Route path="payments/transactions/:transactionId" element={<AdminTransactionDetails />} />
             </Route>
           </Route>
 

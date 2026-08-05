@@ -257,4 +257,11 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
       .populate("roles")
       .exec();
   }
+
+  async findGigIdsByTitle(searchQuery: string): Promise<string[]> {
+    const gigs = await this._model.find({
+      title: { $regex: searchQuery, $options: "i" }
+    }, { _id: 1 }).exec();
+    return gigs.map(g => g._id.toString());
+  }
 }
