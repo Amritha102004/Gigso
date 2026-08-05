@@ -16,6 +16,7 @@ import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../api/client';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
+import WorkerReviewFlowModal from '../../../components/WorkerReviewFlowModal';
 
 const ViewGigPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
@@ -29,6 +30,7 @@ const ViewGigPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'roster' | 'applications' | 'updates'>('roster');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
 
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<GigApplicationDTO['worker'] | null>(null);
@@ -345,6 +347,14 @@ const ViewGigPage: React.FC = () => {
             >
               <XMarkIcon className="w-4 h-4" />
               Cancel Gig
+            </button>
+          )}
+          {gig.status === 'completed' && (
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-[#575727] transition-all shadow-sm"
+            >
+              Review Workers
             </button>
           )}
         </div>
@@ -756,6 +766,15 @@ const ViewGigPage: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {gig && (
+        <WorkerReviewFlowModal
+          isOpen={isReviewOpen}
+          onClose={() => setIsReviewOpen(false)}
+          gigId={gig.id}
+          gigTitle={gig.title}
+        />
       )}
     </div>
   );

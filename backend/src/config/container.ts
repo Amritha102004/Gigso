@@ -11,6 +11,9 @@ import { MessageRepository } from "../repositories/message.repository";
 import { AnnouncementRepository } from "../repositories/announcement.repository";
 import { PaymentRepository } from "../repositories/payment.repository";
 import { WorkerPaymentRepository } from "../repositories/workerPayment.repository";
+import { ReviewRepository } from "../repositories/review.repository";
+import { ReviewService } from "../services/review.service";
+import { ReviewController } from "../controllers/review.controller";
 import { ENV } from "./env.config";
 
 // Services
@@ -58,6 +61,7 @@ export const messageRepository = new MessageRepository();
 export const announcementRepository = new AnnouncementRepository();
 export const paymentRepository = new PaymentRepository();
 export const workerPaymentRepository = new WorkerPaymentRepository();
+export const reviewRepository = new ReviewRepository();
 
 // Services
 export const notificationService = new NotificationService(notificationRepository);
@@ -114,6 +118,11 @@ export const paymentService = new PaymentService(
   gigApplicationRepository,
   notificationService
 );
+export const reviewService = new ReviewService(
+  reviewRepository,
+  gigRepository,
+  gigApplicationRepository
+);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -129,3 +138,4 @@ export const notificationController = new NotificationController(notificationSer
 export const chatController = new ChatController(messageService);
 export const announcementController = new AnnouncementController(announcementService);
 export const paymentController = new PaymentController(paymentService);
+export const reviewController = new ReviewController(reviewService);

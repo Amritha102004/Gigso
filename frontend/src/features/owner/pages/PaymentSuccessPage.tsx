@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../api/client';
 import { CheckCircleIcon, StarIcon, HomeIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import WorkerReviewFlowModal from '../../../components/WorkerReviewFlowModal';
 
 const PaymentSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -12,7 +13,9 @@ const PaymentSuccessPage: React.FC = () => {
 
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState<{
+    gigId: string;
     gigTitle: string;
     totalAmount: number;
     transactionId: string;
@@ -32,6 +35,7 @@ const PaymentSuccessPage: React.FC = () => {
         if (res.data && res.data.success) {
           const payment = res.data.data.payment;
           setPaymentDetails({
+            gigId: payment.gigId?._id || payment.gigId,
             gigTitle: payment.gigId?.title || 'Creative Campaign Assets',
             totalAmount: payment.totalAmount || 0,
             transactionId: payment.transactionId || sessionId,
@@ -116,7 +120,7 @@ const PaymentSuccessPage: React.FC = () => {
         {/* Buttons List */}
         <div className="w-full space-y-3 pt-2">
           <button
-            onClick={() => navigate('/owner/gigs')}
+            onClick={() => setIsReviewOpen(true)}
             className="w-full py-3 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 uppercase tracking-wider"
           >
             <StarIcon className="w-4 h-4" />
@@ -145,6 +149,15 @@ const PaymentSuccessPage: React.FC = () => {
           Need help? <a href="mailto:support@gigso.com" className="text-primary font-bold hover:underline">Contact Gigso Support</a>
         </div>
       </div>
+
+      {paymentDetails && (
+        <WorkerReviewFlowModal
+          isOpen={isReviewOpen}
+          onClose={() => setIsReviewOpen(false)}
+          gigId={paymentDetails.gigId}
+          gigTitle={paymentDetails.gigTitle}
+        />
+      )}
     </div>
   );
 };

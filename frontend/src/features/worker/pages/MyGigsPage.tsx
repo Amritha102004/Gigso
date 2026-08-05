@@ -14,6 +14,7 @@ import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../api/client';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
+import ReviewModal from '../../../components/ReviewModal';
 
 const MyGigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,14 @@ const MyGigsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Review states
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState<{
+    gigId: string;
+    ownerId: string;
+    ownerName: string;
+  } | null>(null);
 
   // Announcements modal states
   const [activeUpdatesGig, setActiveUpdatesGig] = useState<{ id: string; title: string } | null>(null);
@@ -356,7 +365,24 @@ const MyGigsPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {status === 'completed' ? (
                           <button
-                            onClick={() => showToast('Reviews will be available in next phase!', 'info')}
+                            onClick={() => {
+                              const ownerId = typeof app.gig?.ownerId === 'object' 
+                                ? (app.gig.ownerId.id) 
+                                : app.gig?.ownerId;
+                              const ownerName = typeof app.gig?.ownerId === 'object' 
+                                ? app.gig.ownerId.name 
+                                : 'Owner';
+                              if (ownerId) {
+                                setReviewTarget({
+                                  gigId: app.gigId,
+                                  ownerId,
+                                  ownerName
+                                });
+                                setIsReviewOpen(true);
+                              } else {
+                                showToast('Owner details not available.', 'error');
+                              }
+                            }}
                             className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all"
                           >
                             Review
@@ -476,6 +502,19 @@ const MyGigsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {reviewTarget && (
+        <ReviewModal
+          isOpen={isReviewOpen}
+          onClose={() => {
+            setIsReviewOpen(false);
+            setReviewTarget(null);
+          }}
+          gigId={reviewTarget.gigId}
+          reviewedUserId={reviewTarget.ownerId}
+          reviewedUserName={reviewTarget.ownerName}
+        />
       )}
     </div>
   );

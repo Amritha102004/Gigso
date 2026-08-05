@@ -20,6 +20,10 @@ const WorkerProfilePage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
+  
+  // Review states
+  const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
+  const [reviews, setReviews] = useState<any[]>([]);
 
   const handleStripeOnboard = async () => {
     try {
@@ -107,6 +111,22 @@ const WorkerProfilePage: React.FC = () => {
         setWorkerName(user.name || '');
         setPhoneNumber(user.phone || '');
         setProfileImage(user.profileImage || '');
+
+        const userId = user._id || user.id;
+        if (userId) {
+          try {
+            const summaryRes = await apiClient.get(`/reviews/summary/${userId}`);
+            if (summaryRes.data && summaryRes.data.success) {
+              setRatingSummary(summaryRes.data.data.summary);
+            }
+            const reviewsRes = await apiClient.get(`/reviews/user/${userId}`);
+            if (reviewsRes.data && reviewsRes.data.success) {
+              setReviews(reviewsRes.data.data.reviews || []);
+            }
+          } catch (revErr) {
+            console.error("Failed to load reviews:", revErr);
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to load profile", err);
@@ -401,19 +421,20 @@ const WorkerProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Performance (Mocked) */}
+            {/* Performance (Real data) */}
             <div className="bg-primary rounded-2xl p-6 text-white shadow-sm">
               <h2 className="text-lg font-bold mb-4">Performance</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm opacity-80">Rating</p>
                   <p className="text-2xl font-bold flex items-center gap-1">
-                    4.9 <StarIcon className="w-5 h-5 text-yellow-400" />
+                    {ratingSummary.average > 0 ? ratingSummary.average : 'N/A'} 
+                    <StarIcon className="w-5 h-5 text-yellow-400" />
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm opacity-80">Gigs Done</p>
-                  <p className="text-2xl font-bold">124</p>
+                  <p className="text-sm opacity-80">Total Reviews</p>
+                  <p className="text-2xl font-bold">{ratingSummary.count}</p>
                 </div>
               </div>
             </div>
@@ -433,6 +454,45 @@ const WorkerProfilePage: React.FC = () => {
                 </ul>
               ) : (
                 <p className="text-sm text-secondary">No portfolio links added.</p>
+              )}
+            </div>
+
+            {/* Reviews & Feedback List Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-textMain mb-4">Reviews & Feedback</h2>
+              {reviews.length === 0 ? (
+                <p className="text-sm text-secondary italic">No reviews received yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((rev: any) => (
+                    <div key={rev._id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-textMain">{rev.reviewerId?.name || 'Anonymous'}</span>
+                          <span className="text-[9px] font-bold text-secondary uppercase tracking-wider">
+                            ({rev.reviewerId?.role})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <StarIcon
+                              key={star}
+                              className={`w-3.5 h-3.5 ${
+                                star <= rev.rating ? 'text-amber-400' : 'text-gray-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-secondary mt-1 leading-relaxed whitespace-pre-line">
+                        {rev.comment || 'No comment provided.'}
+                      </p>
+                      <span className="text-[9px] text-gray-400 block mt-1.5">
+                        Gig: {rev.gigId?.title || 'Creative Task'} &middot; {new Date(rev.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

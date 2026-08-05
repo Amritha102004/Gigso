@@ -7,6 +7,7 @@ import InputField from '../../../components/InputField';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import { useToast } from '../../../context/ToastContext';
 import { getErrorMessage } from '../../../utils/error';
+import apiClient from '../../../api/client';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -31,6 +32,10 @@ const OwnerProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Review states
+  const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
+  const [reviews, setReviews] = useState<any[]>([]);
 
   // Form states
   const [businessName, setBusinessName] = useState('');
@@ -96,6 +101,22 @@ const OwnerProfilePage: React.FC = () => {
         setOwnerName(user.name || '');
         setPhoneNumber(user.phone || '');
         setProfileImage(user.profileImage || '');
+
+        const userId = user._id || user.id;
+        if (userId) {
+          try {
+            const summaryRes = await apiClient.get(`/reviews/summary/${userId}`);
+            if (summaryRes.data && summaryRes.data.success) {
+              setRatingSummary(summaryRes.data.data.summary);
+            }
+            const reviewsRes = await apiClient.get(`/reviews/user/${userId}`);
+            if (reviewsRes.data && reviewsRes.data.success) {
+              setReviews(reviewsRes.data.data.reviews || []);
+            }
+          } catch (revErr) {
+            console.error("Failed to load reviews:", revErr);
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to load profile', err);
@@ -416,12 +437,53 @@ const OwnerProfilePage: React.FC = () => {
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
             <span className="text-xs font-bold text-secondary uppercase tracking-wider">Avg Rating</span>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-3xl font-black text-textMain">4.9</span>
+              <span className="text-3xl font-black text-textMain">
+                {ratingSummary.average > 0 ? ratingSummary.average : 'N/A'}
+              </span>
               <span className="text-xs text-secondary font-medium flex items-center gap-1">
-                <StarIcon className="w-3.5 h-3.5 text-yellow-400" /> Based on 84 reviews
+                <StarIcon className="w-3.5 h-3.5 text-yellow-400" /> Based on {ratingSummary.count} reviews
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Reviews & Feedback List Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-6">
+          <h2 className="text-lg font-black text-textMain tracking-tight mb-4">Reviews & Feedback</h2>
+          {reviews.length === 0 ? (
+            <p className="text-sm text-secondary italic">No reviews received yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((rev: any) => (
+                <div key={rev._id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-textMain">{rev.reviewerId?.name || 'Anonymous'}</span>
+                      <span className="text-[9px] font-bold text-secondary uppercase tracking-wider">
+                        ({rev.reviewerId?.role})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <StarIcon
+                          key={star}
+                          className={`w-3.5 h-3.5 ${
+                            star <= rev.rating ? 'text-yellow-400' : 'text-gray-200'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-secondary mt-1 leading-relaxed whitespace-pre-line">
+                    {rev.comment || 'No comment provided.'}
+                  </p>
+                  <span className="text-[9px] text-gray-400 block mt-1.5 font-mono">
+                    Gig: {rev.gigId?.title || 'Creative Task'} &middot; {new Date(rev.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
