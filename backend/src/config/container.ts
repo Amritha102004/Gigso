@@ -11,6 +11,8 @@ import { MessageRepository } from "../repositories/message.repository";
 import { AnnouncementRepository } from "../repositories/announcement.repository";
 import { PaymentRepository } from "../repositories/payment.repository";
 import { WorkerPaymentRepository } from "../repositories/workerPayment.repository";
+import { AdminPaymentService } from "../services/adminPayment.service";
+import { AdminPaymentController } from "../controllers/adminPayment.controller";
 import { ENV } from "./env.config";
 
 // Services
@@ -114,6 +116,13 @@ export const paymentService = new PaymentService(
   gigApplicationRepository,
   notificationService
 );
+export const adminPaymentService = new AdminPaymentService(
+  paymentRepository,
+  workerPaymentRepository,
+  gigRepository,
+  userRepository,
+  gigApplicationRepository
+);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -129,3 +138,4 @@ export const notificationController = new NotificationController(notificationSer
 export const chatController = new ChatController(messageService);
 export const announcementController = new AnnouncementController(announcementService);
 export const paymentController = new PaymentController(paymentService);
+export const adminPaymentController = new AdminPaymentController(adminPaymentService);
