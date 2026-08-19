@@ -42,7 +42,7 @@ export const toResendOtpRequestDTO = (body: Record<string, unknown>): ResendOtpR
 });
 
 export const toResetPasswordRequestDTO = (body: Record<string, unknown>): ResetPasswordRequestDTO => ({
-  token: String(body["token"] || "").trim(),
+  token: String(body["token"] || body["otp"] || "").trim(),
   newPassword: String(body["newPassword"] || ""),
 });
 
