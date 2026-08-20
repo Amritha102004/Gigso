@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { PaymentModel } from "../models/payment.model";
 import type { IPayment } from "../interfaces/payment.interface";
 import { BaseRepository } from "./base.repository";
@@ -145,5 +146,17 @@ export class PaymentRepository extends BaseRepository<IPayment> {
       averagePlatformFee: 10.0, // Platform fee is a standard 10% constant rate in our system
       pendingPayouts,
     };
+  }
+
+  async countTotalSpentForOwner(ownerId: string, startDate?: Date): Promise<number> {
+    const match: any = { ownerId: new Types.ObjectId(ownerId), paymentStatus: "paid" };
+    if (startDate) {
+      match.createdAt = { $gte: startDate };
+    }
+    const result = await this._model.aggregate([
+      { $match: match },
+      { $group: { _id: null, totalSpent: { $sum: "$totalAmount" } } }
+    ]).exec();
+    return result[0]?.totalSpent || 0;
   }
 }

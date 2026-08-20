@@ -15,6 +15,7 @@ import { AppError } from "../../utils/errors";
 
 import type { IGig } from "../../interfaces/gig.interface";
 import { NotificationService } from "../notification.service";
+import type { PaymentRepository } from "../../repositories/payment.repository";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
@@ -22,7 +23,8 @@ export class OwnerGigService implements IOwnerGigService {
     private _gigRepo: IGigRepository,
     private _gigRoleRepo: IGigRoleRepository,
     private _applicationRepo: IGigApplicationRepository,
-    private _notificationService: NotificationService
+    private _notificationService: NotificationService,
+    private _paymentRepo: PaymentRepository
   ) {}
 
   async createGig(ownerId: string, input: CreateGigRequestDTO): Promise<GigResponseDTO> {
@@ -247,5 +249,132 @@ export class OwnerGigService implements IOwnerGigService {
   async getCategories(): Promise<CategoryDTO[]> {
     const categories = await this._categoryRepo.findAll();
     return categories.map(toCategoryDTO);
+  }
+
+  async getOwnerDashboardStats(ownerId: string, range: string = "30"): Promise<any> {
+    // 1. Calculate startDate for timeline filters
+    let startDate: Date | undefined = undefined;
+    if (range && range !== "all") {
+      const days = Number(range) || 30;
+      startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    }
+
+    // 2. Active Gigs Count (currently open gigs)
+    const activeGigsCount = await (this._gigRepo as any).countActiveGigs(ownerId);
+
+    // 3. Retrieve all gigs for this owner
+    const gigs = await (this._gigRepo as any)._model.find({ ownerId: new Types.ObjectId(ownerId), isDeleted: false }, { _id: 1 }).exec();
+    const gigIds = gigs.map((g: any) => g._id);
+
+    // 4. Stale applications fix: Count pending applications ONLY for currently active (live) gigs
+    const activeGigs = await (this._gigRepo as any)._model.find({
+      ownerId: new Types.ObjectId(ownerId),
+      status: "active",
+      isDeleted: false,
+    }, { _id: 1 }).exec();
+    const activeGigIds = activeGigs.map((g: any) => g._id);
+    const pendingReviews = await (this._applicationRepo as any)._model.countDocuments({
+      gigId: { $in: activeGigIds },
+      status: "pending",
+    });
+
+    // 5. Total Crew Hired (date-filtered by timeline range)
+    const hiredCrewQuery: any = { gigId: { $in: gigIds }, status: "accepted" };
+    if (startDate) {
+      hiredCrewQuery.createdAt = { $gte: startDate };
+    }
+    const totalStaffHired = await (this._applicationRepo as any)._model.countDocuments(hiredCrewQuery);
+
+    // 6. Total Escrow Spent (date-filtered by timeline range)
+    const totalSpent = await this._paymentRepo.countTotalSpentForOwner(ownerId, startDate);
+
+    // 7. Recent Gigs List (for table tracker)
+    const rawGigs = await (this._gigRepo as any).findRecentGigs(ownerId, 5);
+    const recentGigs = [];
+    for (const g of rawGigs) {
+      const acceptedCount = await (this._applicationRepo as any)._model.countDocuments({
+        gigId: g._id,
+        status: "accepted",
+      });
+      let totalSpots = 0;
+      const populatedGig = await (g as any).populate("roles");
+      if (populatedGig.roles) {
+        for (const r of populatedGig.roles as any[]) {
+          totalSpots += r.spots || 0;
+        }
+      }
+      recentGigs.push({
+        ...toGigResponseDTO(g),
+        spotsFilled: acceptedCount,
+        totalSpots,
+      });
+    }
+
+    // 8. Upcoming Events (Active gigs scheduled in the future)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const rawUpcomingGigs = await (this._gigRepo as any)._model.find({
+      ownerId: new Types.ObjectId(ownerId),
+      status: "active",
+      eventDate: { $gte: today },
+      isDeleted: false,
+    })
+      .sort({ eventDate: 1 })
+      .limit(5)
+      .exec();
+
+    const upcomingGigs = [];
+    for (const g of rawUpcomingGigs) {
+      const acceptedCount = await (this._applicationRepo as any)._model.countDocuments({
+        gigId: g._id,
+        status: "accepted",
+      });
+      let totalSpots = 0;
+      const populatedGig = await (g as any).populate("roles");
+      if (populatedGig.roles) {
+        for (const r of populatedGig.roles as any[]) {
+          totalSpots += r.spots || 0;
+        }
+      }
+      upcomingGigs.push({
+        id: g._id,
+        title: g.title,
+        eventDate: g.eventDate,
+        startTime: g.startTime,
+        spotsFilled: acceptedCount,
+        totalSpots,
+      });
+    }
+
+    // 9. Recent Payments (latest 3 successful checkouts)
+    const recentPayments = await (this._paymentRepo as any)._model.find({
+      ownerId: new Types.ObjectId(ownerId),
+      paymentStatus: "paid",
+    })
+      .populate("gigId", "title")
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .exec();
+
+    const formattedPayments = recentPayments.map((p: any) => ({
+      id: p._id,
+      transactionId: p.transactionId,
+      amount: p.totalAmount,
+      fee: p.platformFee,
+      gigTitle: p.gigId?.title || "Staffing Checkout",
+      createdAt: p.createdAt,
+    }));
+
+    return {
+      stats: {
+        activeGigs: activeGigsCount,
+        pendingReviews,
+        hiredCrew: totalStaffHired,
+        totalSpent,
+      },
+      recentGigs,
+      upcomingGigs,
+      recentPayments: formattedPayments,
+    };
   }
 }

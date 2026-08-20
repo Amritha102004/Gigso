@@ -15,4 +15,5 @@ export interface IOwnerGigService {
   publishGig(gigId: string, ownerId: string): Promise<GigResponseDTO>;
   markAsCompleted(gigId: string, ownerId: string): Promise<GigResponseDTO>;
   getCategories(): Promise<CategoryDTO[]>;
+  getOwnerDashboardStats(ownerId: string, range?: string): Promise<any>;
 }

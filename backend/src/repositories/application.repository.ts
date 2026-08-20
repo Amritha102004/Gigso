@@ -95,4 +95,26 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
       count: r.count,
     }));
   }
+
+  async countApplicationsByGigIdsAndStatus(gigIds: Types.ObjectId[], status: "pending" | "accepted"): Promise<number> {
+    if (gigIds.length === 0) return 0;
+    return await this._model.countDocuments({
+      gigId: { $in: gigIds },
+      status,
+    });
+  }
+
+  async findRecentHiredCrew(gigIds: Types.ObjectId[], limit: number = 5): Promise<IGigApplication[]> {
+    if (gigIds.length === 0) return [];
+    return await this._model.find({
+      gigId: { $in: gigIds },
+      status: "accepted",
+    })
+      .populate("workerId", "name email profileImage")
+      .populate("roleId", "roleName payPerPerson")
+      .populate("gigId", "title")
+      .sort({ appliedAt: -1 })
+      .limit(limit)
+      .exec();
+  }
 }

@@ -264,4 +264,24 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
     }, { _id: 1 }).exec();
     return gigs.map(g => g._id.toString());
   }
+
+  async countActiveGigs(ownerId: string): Promise<number> {
+    return await this._model.countDocuments({
+      ownerId: new Types.ObjectId(ownerId),
+      status: "active",
+      isDeleted: false,
+    });
+  }
+
+  async findRecentGigs(ownerId: string, limit: number = 5): Promise<IGig[]> {
+    return await this._model.find({
+      ownerId: new Types.ObjectId(ownerId),
+      isDeleted: false,
+    })
+      .populate("categoryId")
+      .populate("roles")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+  }
 }

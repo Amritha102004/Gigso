@@ -119,4 +119,18 @@ export class OwnerGigController {
 
     res.status(HttpStatus.OK).json(response);
   });
+
+  public getDashboardStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const ownerId = req.user!._id.toString();
+    const range = (req.query.range as string) || "30";
+    const stats = await this._gigService.getOwnerDashboardStats(ownerId, range);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Owner dashboard statistics fetched successfully",
+      data: stats,
+    };
+
+    res.status(HttpStatus.OK).json(response);
+  });
 }

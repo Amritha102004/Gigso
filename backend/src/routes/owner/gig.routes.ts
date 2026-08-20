@@ -16,6 +16,7 @@ router.use(requireApproved);
 router.get("/categories", ownerGigController.getCategories.bind(ownerGigController));
 
 // Gigs
+router.get("/dashboard/stats", ownerGigController.getDashboardStats.bind(ownerGigController));
 router.post("/", validate(createGigSchema), ownerGigController.createGig.bind(ownerGigController));
 router.get("/", ownerGigController.getMyGigs.bind(ownerGigController));
 router.get("/:gigId", ownerGigController.getGigById.bind(ownerGigController));

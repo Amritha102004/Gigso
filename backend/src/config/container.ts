@@ -82,7 +82,8 @@ export const ownerGigService = new OwnerGigService(
   gigRepository,
   gigRoleRepository,
   gigApplicationRepository,
-  notificationService
+  notificationService,
+  paymentRepository
 );
 export const adminCategoryService = new AdminCategoryService(categoryRepository);
 export const workerGigService = new WorkerGigService(gigRepository, categoryRepository, gigApplicationRepository);
