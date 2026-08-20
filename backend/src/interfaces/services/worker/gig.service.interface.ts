@@ -5,4 +5,5 @@ export interface IWorkerGigService {
   browseGigs(filters?: BrowseGigsQueryDTO): Promise<GigListItemDTO[]>;
   getGigById(gigId: string, workerId?: string): Promise<GigResponseDTO>;
   getCategories(): Promise<CategoryDTO[]>;
+  getWorkerDashboardStats(workerId: string, range?: string): Promise<any>;
 }

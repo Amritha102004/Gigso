@@ -281,7 +281,7 @@ export class OwnerGigService implements IOwnerGigService {
     // 5. Total Crew Hired (date-filtered by timeline range)
     const hiredCrewQuery: any = { gigId: { $in: gigIds }, status: "accepted" };
     if (startDate) {
-      hiredCrewQuery.createdAt = { $gte: startDate };
+      hiredCrewQuery.appliedAt = { $gte: startDate };
     }
     const totalStaffHired = await (this._applicationRepo as any)._model.countDocuments(hiredCrewQuery);
 

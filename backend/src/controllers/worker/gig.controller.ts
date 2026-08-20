@@ -36,13 +36,27 @@ export class WorkerGigController {
     res.status(HttpStatus.OK).json(response);
   });
 
-  public getCategories = asyncHandler(async (req: Request, res: Response) => {
+  public getCategories = asyncHandler(async (req: AuthRequest, res: Response) => {
     const categories = await this._gigService.getCategories();
 
     const response: ApiResponse = {
       success: true,
       message: "Categories fetched successfully",
       data: categories,
+    };
+
+    res.status(HttpStatus.OK).json(response);
+  });
+
+  public getDashboardStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const workerId = req.user!._id.toString();
+    const range = (req.query.range as string) || "30";
+    const stats = await this._gigService.getWorkerDashboardStats(workerId, range);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "Worker dashboard statistics fetched successfully",
+      data: stats,
     };
 
     res.status(HttpStatus.OK).json(response);
