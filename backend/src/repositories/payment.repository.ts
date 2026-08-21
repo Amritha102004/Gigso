@@ -31,9 +31,13 @@ export class PaymentRepository extends BaseRepository<IPayment> {
     ).exec();
   }
 
-  async getAdminStats(): Promise<{ totalVolume: number; totalCommission: number; totalNetDistributed: number }> {
+  async getAdminStats(startDate?: Date): Promise<{ totalVolume: number; totalCommission: number; totalNetDistributed: number }> {
+    const match: any = { paymentStatus: "paid" };
+    if (startDate) {
+      match.createdAt = { $gte: startDate };
+    }
     const result = await this._model.aggregate([
-      { $match: { paymentStatus: "paid" } },
+      { $match: match },
       {
         $group: {
           _id: null,

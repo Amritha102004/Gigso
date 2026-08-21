@@ -8,7 +8,8 @@ export class AdminPaymentController {
   constructor(private _adminPaymentService: AdminPaymentService) {}
 
   public getDashboardStats = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const data = await this._adminPaymentService.getDashboardStats();
+    const range = (req.query.range as string) || "30";
+    const data = await this._adminPaymentService.getDashboardStats(range);
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Admin payment stats fetched successfully",
