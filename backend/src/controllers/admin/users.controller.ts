@@ -14,6 +14,7 @@ export class AdminUsersController {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
 
     const filter: UserFilter = {};
     if (role) filter.role = role;
@@ -22,6 +23,19 @@ export class AdminUsersController {
         { name: new RegExp(search, 'i') },
         { email: new RegExp(search, 'i') }
       ];
+    }
+    if (status) {
+      if (status === "suspended") {
+        filter.isSuspended = true;
+      } else if (status === "approved") {
+        filter.isApproved = true;
+        filter.isSuspended = false;
+      } else if (status === "pending") {
+        filter.isApproved = false;
+        filter.isSuspended = false;
+      } else if (status === "active") {
+        filter.isSuspended = false;
+      }
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);
@@ -39,6 +53,7 @@ export class AdminUsersController {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
 
     const filter: UserFilter = { role: "owner" };
     if (search) {
@@ -46,6 +61,19 @@ export class AdminUsersController {
         { name: new RegExp(search, 'i') },
         { email: new RegExp(search, 'i') }
       ];
+    }
+    if (status) {
+      if (status === "suspended") {
+        filter.isSuspended = true;
+      } else if (status === "approved") {
+        filter.isApproved = true;
+        filter.isSuspended = false;
+      } else if (status === "pending") {
+        filter.isApproved = false;
+        filter.isSuspended = false;
+      } else if (status === "active") {
+        filter.isSuspended = false;
+      }
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);
@@ -63,6 +91,7 @@ export class AdminUsersController {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
 
     const filter: UserFilter = { role: "worker" };
     if (search) {
@@ -70,6 +99,13 @@ export class AdminUsersController {
         { name: new RegExp(search, 'i') },
         { email: new RegExp(search, 'i') }
       ];
+    }
+    if (status) {
+      if (status === "suspended") {
+        filter.isSuspended = true;
+      } else if (status === "active") {
+        filter.isSuspended = false;
+      }
     }
 
     const result = await this._usersService.getUsers(filter, page, limit);

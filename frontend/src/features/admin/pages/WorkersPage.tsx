@@ -18,6 +18,7 @@ const WorkersPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -38,18 +39,19 @@ const WorkersPage: React.FC = () => {
     onConfirm: () => {},
   });
 
-  const fetchWorkers = useCallback(async (searchTerm: string, currentPage: number) => {
+  const fetchWorkers = useCallback(async (searchTerm: string, currentPage: number, statusTerm: string) => {
     try {
       setIsLoading(true);
       const data = await adminService.getUsersByRole('worker', {
         page: currentPage,
         limit: LIMIT,
         search: searchTerm || undefined,
+        status: statusTerm !== 'all' ? statusTerm : undefined,
       });
       const mapped: WorkerRow[] = data.users.map((u) => ({ ...u, status: deriveStatus(u) }));
       setWorkers(mapped);
       setTotal(data.total);
-      setTotalPages(data.totalPages);
+      setTotalPages(data.totalPages || Math.ceil(data.total / LIMIT));
       setError('');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch workers';
@@ -59,18 +61,21 @@ const WorkersPage: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchWorkers(search, page);
-  }, [fetchWorkers, page]);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
 
-  // Debounce search
+  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
+      setDebouncedSearch(search);
       setPage(1);
-      fetchWorkers(search, 1);
     }, 400);
     return () => clearTimeout(timer);
-  }, [search, fetchWorkers]);
+  }, [search]);
+
+  // Fetch when page, statusFilter, or debouncedSearch changes
+  useEffect(() => {
+    fetchWorkers(debouncedSearch, page, statusFilter);
+  }, [fetchWorkers, debouncedSearch, page, statusFilter]);
 
   const handleSuspendToggle = (id: string) => {
     const worker = workers.find(w => w._id === id);
@@ -156,23 +161,39 @@ const WorkersPage: React.FC = () => {
     <div className="flex-1 p-8 sm:p-10 bg-[#FAF9F6] h-full overflow-y-auto">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 pb-4 border-b border-gray-200">
         <div>
           <h1 className="text-2xl font-bold text-textMain tracking-tight">Worker Management</h1>
           <p className="text-secondary text-sm mt-1">Manage your workforce</p>
         </div>
-        {/* Search */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search workers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-white/70 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm w-[250px]"
-          />
-          <svg className="w-4 h-4 text-gray-400 absolute left-3.5 top-2.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
+        
+        {/* Filters */}
+        <div className="flex items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="px-3.5 py-2 bg-white/75 border border-gray-200 rounded-lg text-xs font-bold text-secondary focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search workers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-white/70 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm w-[250px]"
+            />
+            <svg className="w-4 h-4 text-gray-400 absolute left-3.5 top-2.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -188,7 +209,7 @@ const WorkersPage: React.FC = () => {
           </div>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="text-secondary text-sm font-semibold mb-2">Active</h3>
+          <h3 className="text-secondary text-sm font-semibold mb-2">Active on Page</h3>
           <div className="flex items-end justify-between">
             <span className="text-3xl font-bold text-textMain">
               {workers.filter((w) => w.status === 'active').length}
@@ -199,7 +220,7 @@ const WorkersPage: React.FC = () => {
           </div>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="text-secondary text-sm font-semibold mb-2">Suspended</h3>
+          <h3 className="text-secondary text-sm font-semibold mb-2">Suspended on Page</h3>
           <div className="flex items-end justify-between">
             <span className="text-3xl font-bold text-textMain">
               {workers.filter((w) => w.status === 'suspended').length}

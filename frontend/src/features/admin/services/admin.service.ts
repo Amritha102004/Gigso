@@ -14,6 +14,7 @@ export interface GetUsersParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
 }
 
 export interface AdminGigRole extends GigRoleDTO {}

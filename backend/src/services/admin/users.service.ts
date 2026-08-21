@@ -7,12 +7,14 @@ import { toUserResponse } from "../../mappers/user.mapper";
 export class UsersService implements IUsersService {
   constructor(private _usersRepo: IUserRepository) {}
 
-  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: UserResponseDTO[]; total: number }> {
+  async getUsers(filter: UserFilter, page: number, limit: number): Promise<{ users: UserResponseDTO[]; total: number; page: number; totalPages: number }> {
     const skip = (page - 1) * limit;
     const { users, total } = await this._usersRepo.findUsers(filter, skip, limit);
     return {
       users: users.map(toUserResponse),
       total,
+      page,
+      totalPages: Math.ceil(total / limit),
     };
   }
 

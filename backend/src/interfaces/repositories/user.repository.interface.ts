@@ -4,6 +4,8 @@ import type { IBaseRepository } from "./base.repository.interface";
 export interface UserFilter {
   role?: string | { $nin: string[] };
   $or?: Array<{ name?: RegExp; email?: RegExp }>;
+  isApproved?: boolean;
+  isSuspended?: boolean;
 }
 
 export interface IUserRepository extends IBaseRepository<IUser> {
