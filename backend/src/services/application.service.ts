@@ -6,7 +6,7 @@ import type { GigApplicationDTO } from "../dtos/application.dto";
 import { toGigApplicationDTO } from "../mappers/application.mapper";
 import { Types } from "mongoose";
 import { AppError } from "../utils/errors";
-import type { NotificationService } from "./notification.service";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 
 export class ApplicationService implements IApplicationService {
   constructor(
@@ -14,7 +14,7 @@ export class ApplicationService implements IApplicationService {
     private _gigRepo: IGigRepository,
     private _gigRoleRepo: IGigRoleRepository,
     private _workerProfileRepo: IWorkerProfileRepository,
-    private _notificationService: NotificationService
+    private _notificationService: INotificationService
   ) {}
 
   async applyForGigRole(workerId: string, gigId: string, roleId: string): Promise<GigApplicationDTO> {

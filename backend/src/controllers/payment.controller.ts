@@ -1,13 +1,12 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { PaymentService } from "../services/payment.service";
+import type { IPaymentService } from "../interfaces/services/payment.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
-import { userRepository, gigRepository, gigApplicationRepository } from "../config/container";
 import { toUserResponse } from "../mappers/user.mapper";
 
 export class PaymentController {
-  constructor(private _paymentService: PaymentService) {}
+  constructor(private _paymentService: IPaymentService) {}
 
   public createConnectAccount = asyncHandler(async (req: AuthRequest, res: Response) => {
     const workerId = req.user!._id.toString();
@@ -22,15 +21,14 @@ export class PaymentController {
 
   public verifyConnectStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
     const workerId = req.user!._id.toString();
-    const completed = await this._paymentService.verifyStripeConnectStatus(workerId);
-    const user = await userRepository.findById(workerId);
+    const result = await this._paymentService.verifyStripeConnectStatus(workerId);
     
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Stripe Connect status verified",
       data: {
-        stripeOnboardingCompleted: completed,
-        user: user ? toUserResponse(user) : undefined
+        stripeOnboardingCompleted: result.completed,
+        user: result.user ? toUserResponse(result.user) : undefined
       },
     });
   });
@@ -78,76 +76,23 @@ export class PaymentController {
 
   public getOwnerPaymentHistory = asyncHandler(async (req: AuthRequest, res: Response) => {
     const ownerId = req.user!._id.toString();
-    const payments = await this._paymentService.getOwnerPayments(ownerId);
-    
-    // Fetch completed but unpaid gigs for the owner
-    const gigs = await gigRepository.findByOwnerId(ownerId);
-    const unpaidGigs = gigs.filter(g => g.status === "completed" && g.paymentStatus === "unpaid");
-
-    const pendingPayments = [];
-    for (const gig of unpaidGigs) {
-      const apps = await gigApplicationRepository.findByGigId(gig._id.toString());
-      const hiredApps = apps.filter(a => a.status === "accepted");
-
-      let subtotal = 0;
-      const workers = hiredApps.map(app => {
-        const role = app.roleId as any;
-        const wUser = app.workerId as any;
-        const amount = role?.payPerPerson || 0;
-        subtotal += amount;
-        return {
-          id: wUser?._id?.toString() || wUser?.id?.toString() || app.workerId.toString(),
-          name: wUser?.name || "Worker",
-          roleName: role?.roleName || "Staff",
-          amount,
-        };
-      });
-
-      const platformFee = Math.round(subtotal * 0.1);
-      const totalAmount = subtotal + platformFee;
-
-      pendingPayments.push({
-        id: gig._id.toString(),
-        title: gig.title,
-        totalBudget: gig.totalBudget,
-        subtotal,
-        platformFee,
-        totalAmount,
-        workers,
-      });
-    }
+    const data = await this._paymentService.getOwnerPaymentHistory(ownerId);
     
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Owner payment history fetched successfully",
-      data: { payments, pendingPayments },
+      data,
     });
   });
 
   public getWorkerEarningsHistory = asyncHandler(async (req: AuthRequest, res: Response) => {
     const workerId = req.user!._id.toString();
-    const payouts = await this._paymentService.getWorkerEarnings(workerId);
-    
-    // Fetch pending payouts from accepted applications on completed unpaid gigs
-    const apps = await gigApplicationRepository.findByWorkerId(workerId, "accepted");
-    const pendingPayouts = [];
-    for (const app of apps) {
-      const gig = app.gigId as any;
-      if (gig && gig.status === "completed" && gig.paymentStatus === "unpaid") {
-        const role = app.roleId as any;
-        pendingPayouts.push({
-          id: app._id.toString(),
-          gigTitle: gig.title,
-          amount: role?.payPerPerson || 0,
-          eventDate: gig.eventDate,
-        });
-      }
-    }
+    const data = await this._paymentService.getWorkerEarningsHistory(workerId);
     
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Worker earnings history fetched successfully",
-      data: { payouts, pendingPayouts },
+      data,
     });
   });
 }

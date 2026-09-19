@@ -1,16 +1,17 @@
-import type { MessageRepository } from "../repositories/message.repository";
-import type { GigRepository } from "../repositories/gig.repository";
-import type { UserRepository } from "../repositories/user.repository";
-import type { NotificationService } from "./notification.service";
+import type { IMessageRepository } from "../interfaces/repositories/communication.repository.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IUserRepository } from "../interfaces/repositories/user.repository.interface";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 import type { IMessage } from "../interfaces/message.interface";
+import type { IMessageService } from "../interfaces/services/communication.service.interface";
 import type { Types } from "mongoose";
 
-export class MessageService {
+export class MessageService implements IMessageService {
   constructor(
-    private _messageRepo: MessageRepository,
-    private _gigRepo: GigRepository,
-    private _userRepo: UserRepository,
-    private _notificationService: NotificationService
+    private _messageRepo: IMessageRepository,
+    private _gigRepo: IGigRepository,
+    private _userRepo: IUserRepository,
+    private _notificationService: INotificationService
   ) {}
 
   async sendMessage(

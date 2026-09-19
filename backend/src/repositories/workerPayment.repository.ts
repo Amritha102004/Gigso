@@ -1,9 +1,10 @@
 import { Types } from "mongoose";
 import { WorkerPaymentModel } from "../models/workerPayment.model";
 import type { IWorkerPayment } from "../interfaces/workerPayment.interface";
+import type { IWorkerPaymentRepository } from "../interfaces/repositories/payment.repository.interface";
 import { BaseRepository } from "./base.repository";
 
-export class WorkerPaymentRepository extends BaseRepository<IWorkerPayment> {
+export class WorkerPaymentRepository extends BaseRepository<IWorkerPayment> implements IWorkerPaymentRepository {
   constructor() {
     super(WorkerPaymentModel);
   }
@@ -20,6 +21,13 @@ export class WorkerPaymentRepository extends BaseRepository<IWorkerPayment> {
 
   async findByPaymentId(paymentId: string): Promise<IWorkerPayment[]> {
     return await this._model.find({ paymentId }).exec();
+  }
+
+  async findDetailsByPaymentId(paymentId: string): Promise<IWorkerPayment[]> {
+    return await this._model.find({ paymentId })
+      .populate("workerId", "name email phone profileImage")
+      .populate("roleId", "roleName payPerPerson")
+      .exec();
   }
 
   async countTotalEarningsForWorker(workerId: string, startDate?: Date): Promise<number> {

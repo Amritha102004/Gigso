@@ -1,13 +1,14 @@
-import type { ReviewRepository } from "../repositories/review.repository";
-import type { GigRepository } from "../repositories/gig.repository";
-import type { GigApplicationRepository } from "../repositories/application.repository";
+import type { IReviewRepository } from "../interfaces/repositories/review.repository.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
 import type { IReview } from "../interfaces/review.interface";
+import type { IReviewService } from "../interfaces/services/review.service.interface";
 
-export class ReviewService {
+export class ReviewService implements IReviewService {
   constructor(
-    private _reviewRepo: ReviewRepository,
-    private _gigRepo: GigRepository,
-    private _appRepo: GigApplicationRepository
+    private _reviewRepo: IReviewRepository,
+    private _gigRepo: IGigRepository,
+    private _appRepo: IGigApplicationRepository
   ) {}
 
   async submitReview(

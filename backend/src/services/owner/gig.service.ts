@@ -14,8 +14,8 @@ import { toCategoryDTO } from "../../mappers/category.mapper";
 import { AppError } from "../../utils/errors";
 
 import type { IGig } from "../../interfaces/gig.interface";
-import { NotificationService } from "../notification.service";
-import type { PaymentRepository } from "../../repositories/payment.repository";
+import type { INotificationService } from "../../interfaces/services/communication.service.interface";
+import type { IPaymentRepository } from "../../interfaces/repositories/payment.repository.interface";
 
 export class OwnerGigService implements IOwnerGigService {
   constructor(
@@ -23,8 +23,8 @@ export class OwnerGigService implements IOwnerGigService {
     private _gigRepo: IGigRepository,
     private _gigRoleRepo: IGigRoleRepository,
     private _applicationRepo: IGigApplicationRepository,
-    private _notificationService: NotificationService,
-    private _paymentRepo: PaymentRepository
+    private _notificationService: INotificationService,
+    private _paymentRepo: IPaymentRepository
   ) {}
 
   async createGig(ownerId: string, input: CreateGigRequestDTO): Promise<GigResponseDTO> {

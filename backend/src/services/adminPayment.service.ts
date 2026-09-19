@@ -1,18 +1,18 @@
-import type { PaymentRepository } from "../repositories/payment.repository";
-import type { WorkerPaymentRepository } from "../repositories/workerPayment.repository";
-import type { GigRepository } from "../repositories/gig.repository";
-import type { UserRepository } from "../repositories/user.repository";
-import type { GigApplicationRepository } from "../repositories/application.repository";
+import type { IPaymentRepository, IWorkerPaymentRepository } from "../interfaces/repositories/payment.repository.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IUserRepository } from "../interfaces/repositories/user.repository.interface";
+import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
 import type { IPayment } from "../interfaces/payment.interface";
 import type { IWorkerPayment } from "../interfaces/workerPayment.interface";
+import type { IAdminPaymentService } from "../interfaces/services/payment.service.interface";
 
-export class AdminPaymentService {
+export class AdminPaymentService implements IAdminPaymentService {
   constructor(
-    private _paymentRepo: PaymentRepository,
-    private _workerPaymentRepo: WorkerPaymentRepository,
-    private _gigRepo: GigRepository,
-    private _userRepo: UserRepository,
-    private _appRepo: GigApplicationRepository
+    private _paymentRepo: IPaymentRepository,
+    private _workerPaymentRepo: IWorkerPaymentRepository,
+    private _gigRepo: IGigRepository,
+    private _userRepo: IUserRepository,
+    private _appRepo: IGigApplicationRepository
   ) {}
 
   async getDashboardStats(range: string = "30"): Promise<any> {
@@ -37,9 +37,9 @@ export class AdminPaymentService {
       gigsQuery.createdAt = { $gte: startDate };
     }
 
-    const totalWorkers = await (this._userRepo as any)._model.countDocuments(workersQuery);
-    const totalOwners = await (this._userRepo as any)._model.countDocuments(ownersQuery);
-    const totalGigs = await (this._gigRepo as any)._model.countDocuments(gigsQuery);
+    const totalWorkers = await this._userRepo.countUsers(workersQuery);
+    const totalOwners = await this._userRepo.countUsers(ownersQuery);
+    const totalGigs = await this._gigRepo.countGigs(gigsQuery);
 
     // 4. Fetch recent transactions
     const recentTransactions = await this._paymentRepo.getAdminRecentTransactions(5);
@@ -56,12 +56,12 @@ export class AdminPaymentService {
         const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
         const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        const gigs = await (this._gigRepo as any)._model.countDocuments({
+        const gigs = await this._gigRepo.countGigs({
           isDeleted: false,
           createdAt: { $gte: startOfMonth, $lte: endOfMonth }
         });
 
-        const apps = await (this._appRepo as any)._model.countDocuments({
+        const apps = await this._appRepo.countApplications({
           appliedAt: { $gte: startOfMonth, $lte: endOfMonth }
         });
 
@@ -81,12 +81,12 @@ export class AdminPaymentService {
         const endOfDay = new Date(d);
         endOfDay.setHours(23, 59, 59, 999);
 
-        const gigs = await (this._gigRepo as any)._model.countDocuments({
+        const gigs = await this._gigRepo.countGigs({
           isDeleted: false,
           createdAt: { $gte: startOfDay, $lte: endOfDay }
         });
 
-        const apps = await (this._appRepo as any)._model.countDocuments({
+        const apps = await this._appRepo.countApplications({
           appliedAt: { $gte: startOfDay, $lte: endOfDay }
         });
 
@@ -156,13 +156,8 @@ export class AdminPaymentService {
       { path: "ownerId", select: "name email phone businessName" }
     ]);
 
-    // Fetch worker payments for this session/invoice
-    const workerPayments = await this._workerPaymentRepo.findOne({ paymentId: payment._id } as any)
-      ? await (this._workerPaymentRepo as any)._model.find({ paymentId: payment._id })
-          .populate("workerId", "name email phone profileImage")
-          .populate("roleId", "roleName payPerPerson")
-          .exec()
-      : [];
+    // Fetch worker payments for this session/invoice using repository abstraction
+    const workerPayments = await this._workerPaymentRepo.findDetailsByPaymentId(payment._id.toString());
 
     return {
       payment: populatedPayment,

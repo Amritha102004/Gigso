@@ -284,4 +284,8 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
       .limit(limit)
       .exec();
   }
+
+  async countGigs(filter: Record<string, unknown> = {}): Promise<number> {
+    return await this._model.countDocuments(filter).exec();
+  }
 }

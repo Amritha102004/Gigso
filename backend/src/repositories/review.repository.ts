@@ -1,9 +1,10 @@
 import { ReviewModel } from "../models/review.model";
 import type { IReview } from "../interfaces/review.interface";
+import type { IReviewRepository } from "../interfaces/repositories/review.repository.interface";
 import { BaseRepository } from "./base.repository";
 import { Types } from "mongoose";
 
-export class ReviewRepository extends BaseRepository<IReview> {
+export class ReviewRepository extends BaseRepository<IReview> implements IReviewRepository {
   constructor() {
     super(ReviewModel);
   }

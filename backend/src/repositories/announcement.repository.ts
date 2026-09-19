@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { GigAnnouncementModel } from "../models/announcement.model";
 import type { IGigAnnouncement } from "../interfaces/announcement.interface";
+import type { IAnnouncementRepository } from "../interfaces/repositories/communication.repository.interface";
 import { BaseRepository } from "./base.repository";
 
-export class AnnouncementRepository extends BaseRepository<IGigAnnouncement> {
+export class AnnouncementRepository extends BaseRepository<IGigAnnouncement> implements IAnnouncementRepository {
   constructor() {
     super(GigAnnouncementModel);
   }

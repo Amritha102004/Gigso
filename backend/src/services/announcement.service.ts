@@ -1,15 +1,16 @@
-import type { AnnouncementRepository } from "../repositories/announcement.repository";
-import type { GigRepository } from "../repositories/gig.repository";
-import type { GigApplicationRepository } from "../repositories/application.repository";
-import type { NotificationService } from "./notification.service";
+import type { IAnnouncementRepository } from "../interfaces/repositories/communication.repository.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 import type { IGigAnnouncement } from "../interfaces/announcement.interface";
+import type { IAnnouncementService } from "../interfaces/services/communication.service.interface";
 
-export class AnnouncementService {
+export class AnnouncementService implements IAnnouncementService {
   constructor(
-    private _announcementRepo: AnnouncementRepository,
-    private _gigRepo: GigRepository,
-    private _applicationRepo: GigApplicationRepository,
-    private _notificationService: NotificationService
+    private _announcementRepo: IAnnouncementRepository,
+    private _gigRepo: IGigRepository,
+    private _applicationRepo: IGigApplicationRepository,
+    private _notificationService: INotificationService
   ) {}
 
   async createAnnouncement(gigId: string, message: string, ownerId: string): Promise<IGigAnnouncement> {

@@ -1,11 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { NotificationService } from "../services/notification.service";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class NotificationController {
-  constructor(private _notificationService: NotificationService) {}
+  constructor(private _notificationService: INotificationService) {}
 
   public getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!._id.toString();

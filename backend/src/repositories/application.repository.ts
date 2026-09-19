@@ -117,4 +117,8 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
       .limit(limit)
       .exec();
   }
+
+  async countApplications(filter: Record<string, unknown> = {}): Promise<number> {
+    return await this._model.countDocuments(filter).exec();
+  }
 }

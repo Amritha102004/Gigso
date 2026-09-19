@@ -1,11 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { AnnouncementService } from "../services/announcement.service";
+import type { IAnnouncementService } from "../interfaces/services/communication.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class AnnouncementController {
-  constructor(private _announcementService: AnnouncementService) {}
+  constructor(private _announcementService: IAnnouncementService) {}
 
   public getAnnouncements = asyncHandler(async (req: AuthRequest<{ gigId: string }>, res: Response) => {
     const userId = req.user!._id.toString();

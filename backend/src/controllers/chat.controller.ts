@@ -1,11 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { MessageService } from "../services/message.service";
+import type { IMessageService } from "../interfaces/services/communication.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class ChatController {
-  constructor(private _messageService: MessageService) {}
+  constructor(private _messageService: IMessageService) {}
 
   public getChatRooms = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!._id.toString();

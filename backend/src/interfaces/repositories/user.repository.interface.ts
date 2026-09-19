@@ -15,4 +15,5 @@ export interface IUserRepository extends IBaseRepository<IUser> {
   findUsers(filter: UserFilter, skip: number, limit: number): Promise<{ users: IUser[], total: number }>;
   findUserByIdWithPassword(id: string): Promise<IUser | null>;
   updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
+  countUsers(filter?: Record<string, unknown>): Promise<number>;
 }

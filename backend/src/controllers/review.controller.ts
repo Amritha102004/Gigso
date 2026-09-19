@@ -1,11 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { ReviewService } from "../services/review.service";
+import type { IReviewService } from "../interfaces/services/review.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class ReviewController {
-  constructor(private _reviewService: ReviewService) {}
+  constructor(private _reviewService: IReviewService) {}
 
   public submitReview = asyncHandler(async (req: AuthRequest, res: Response) => {
     const reviewerId = req.user!._id.toString();

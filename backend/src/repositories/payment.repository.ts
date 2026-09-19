@@ -1,9 +1,10 @@
 import { Types } from "mongoose";
 import { PaymentModel } from "../models/payment.model";
 import type { IPayment } from "../interfaces/payment.interface";
+import type { IPaymentRepository } from "../interfaces/repositories/payment.repository.interface";
 import { BaseRepository } from "./base.repository";
 
-export class PaymentRepository extends BaseRepository<IPayment> {
+export class PaymentRepository extends BaseRepository<IPayment> implements IPaymentRepository {
   constructor() {
     super(PaymentModel);
   }

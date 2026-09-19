@@ -27,4 +27,6 @@ export interface IGigRepository extends IBaseRepository<IGig> {
     limit: number
   ): Promise<{ gigs: IGig[]; total: number }>;
   findGigDetailsById(id: string): Promise<IGig | null>;
+  findGigIdsByTitle(searchQuery: string): Promise<string[]>;
+  countGigs(filter?: Record<string, unknown>): Promise<number>;
 }

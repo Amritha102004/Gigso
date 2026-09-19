@@ -1,24 +1,28 @@
 import Stripe from "stripe";
 import { ENV } from "../config/env.config";
-import type { PaymentRepository } from "../repositories/payment.repository";
-import type { WorkerPaymentRepository } from "../repositories/workerPayment.repository";
-import type { GigRepository } from "../repositories/gig.repository";
-import type { UserRepository } from "../repositories/user.repository";
-import type { GigApplicationRepository } from "../repositories/application.repository";
-import type { NotificationService } from "./notification.service";
+import type { IPaymentRepository, IWorkerPaymentRepository } from "../interfaces/repositories/payment.repository.interface";
+import type { IGigRepository } from "../interfaces/repositories/gig.repository.interface";
+import type { IUserRepository } from "../interfaces/repositories/user.repository.interface";
+import type { IGigApplicationRepository } from "../interfaces/repositories/application.repository.interface";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 import type { IPayment } from "../interfaces/payment.interface";
 import type { IWorkerPayment } from "../interfaces/workerPayment.interface";
+import type {
+  IPaymentService,
+  PendingPaymentItem,
+  PendingWorkerPayoutItem
+} from "../interfaces/services/payment.service.interface";
 
-export class PaymentService {
+export class PaymentService implements IPaymentService {
   private stripe: Stripe;
 
   constructor(
-    private _paymentRepo: PaymentRepository,
-    private _workerPaymentRepo: WorkerPaymentRepository,
-    private _gigRepo: GigRepository,
-    private _userRepo: UserRepository,
-    private _appRepo: GigApplicationRepository,
-    private _notificationService: NotificationService
+    private _paymentRepo: IPaymentRepository,
+    private _workerPaymentRepo: IWorkerPaymentRepository,
+    private _gigRepo: IGigRepository,
+    private _userRepo: IUserRepository,
+    private _appRepo: IGigApplicationRepository,
+    private _notificationService: INotificationService
   ) {
     this.stripe = new Stripe(ENV.STRIPE_SECRET_KEY, {
       apiVersion: "2025-01-27.acacia" as any,
@@ -82,19 +86,19 @@ export class PaymentService {
     return accountLink.url;
   }
 
-  async verifyStripeConnectStatus(workerId: string): Promise<boolean> {
+  async verifyStripeConnectStatus(workerId: string): Promise<{ completed: boolean; user?: any }> {
     const worker = await this._userRepo.findById(workerId);
     if (!worker || !worker.stripeAccountId) {
-      return false;
+      return { completed: false, user: worker };
     }
 
     const account = await this.stripe.accounts.retrieve(worker.stripeAccountId);
     if (account.details_submitted) {
-      await this._userRepo.update(workerId, { stripeOnboardingCompleted: true } as any);
-      return true;
+      const updated = await this._userRepo.update(workerId, { stripeOnboardingCompleted: true } as any);
+      return { completed: true, user: updated || worker };
     }
 
-    return false;
+    return { completed: false, user: worker };
   }
 
   async createCheckoutSession(gigId: string, ownerId: string): Promise<string> {
@@ -289,5 +293,70 @@ export class PaymentService {
 
   async getWorkerEarnings(workerId: string): Promise<IWorkerPayment[]> {
     return await this._workerPaymentRepo.findByWorkerId(workerId);
+  }
+
+  async getOwnerPaymentHistory(ownerId: string): Promise<{ payments: IPayment[]; pendingPayments: PendingPaymentItem[] }> {
+    const payments = await this.getOwnerPayments(ownerId);
+    
+    // Fetch completed but unpaid gigs for the owner
+    const gigs = await this._gigRepo.findByOwnerId(ownerId);
+    const unpaidGigs = gigs.filter((g) => g.status === "completed" && g.paymentStatus === "unpaid");
+
+    const pendingPayments: PendingPaymentItem[] = [];
+    for (const gig of unpaidGigs) {
+      const apps = await this._appRepo.findByGigId(gig._id.toString());
+      const hiredApps = apps.filter((a) => a.status === "accepted");
+
+      let subtotal = 0;
+      const workers = hiredApps.map((app) => {
+        const role = app.roleId as any;
+        const wUser = app.workerId as any;
+        const amount = role?.payPerPerson || 0;
+        subtotal += amount;
+        return {
+          id: wUser?._id?.toString() || wUser?.id?.toString() || app.workerId.toString(),
+          name: wUser?.name || "Worker",
+          roleName: role?.roleName || "Staff",
+          amount,
+        };
+      });
+
+      const platformFee = Math.round(subtotal * 0.1);
+      const totalAmount = subtotal + platformFee;
+
+      pendingPayments.push({
+        id: gig._id.toString(),
+        title: gig.title,
+        totalBudget: gig.totalBudget,
+        subtotal,
+        platformFee,
+        totalAmount,
+        workers,
+      });
+    }
+
+    return { payments, pendingPayments };
+  }
+
+  async getWorkerEarningsHistory(workerId: string): Promise<{ payouts: IWorkerPayment[]; pendingPayouts: PendingWorkerPayoutItem[] }> {
+    const payouts = await this.getWorkerEarnings(workerId);
+    
+    // Fetch pending payouts from accepted applications on completed unpaid gigs
+    const apps = await this._appRepo.findByWorkerId(workerId, "accepted");
+    const pendingPayouts: PendingWorkerPayoutItem[] = [];
+    for (const app of apps) {
+      const gig = app.gigId as any;
+      if (gig && gig.status === "completed" && gig.paymentStatus === "unpaid") {
+        const role = app.roleId as any;
+        pendingPayouts.push({
+          id: app._id.toString(),
+          gigTitle: gig.title,
+          amount: role?.payPerPerson || 0,
+          eventDate: gig.eventDate,
+        });
+      }
+    }
+
+    return { payouts, pendingPayouts };
   }
 }

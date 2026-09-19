@@ -1,11 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import type { AdminPaymentService } from "../services/adminPayment.service";
+import type { IAdminPaymentService } from "../interfaces/services/payment.service.interface";
 import { HttpStatus } from "../utils/http-status.enum";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class AdminPaymentController {
-  constructor(private _adminPaymentService: AdminPaymentService) {}
+  constructor(private _adminPaymentService: IAdminPaymentService) {}
 
   public getDashboardStats = asyncHandler(async (req: AuthRequest, res: Response) => {
     const range = (req.query.range as string) || "30";

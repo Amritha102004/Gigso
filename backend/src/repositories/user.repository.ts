@@ -49,4 +49,8 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   async updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
     return this._model.findByIdAndUpdate(id, updateData, { new: true }).select("-password").exec();
   }
+
+  async countUsers(filter: Record<string, unknown> = {}): Promise<number> {
+    return this._model.countDocuments(filter).exec();
+  }
 }

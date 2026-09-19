@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { MessageModel } from "../models/message.model";
 import type { IMessage } from "../interfaces/message.interface";
+import type { IMessageRepository } from "../interfaces/repositories/communication.repository.interface";
 import { BaseRepository } from "./base.repository";
 
-export class MessageRepository extends BaseRepository<IMessage> {
+export class MessageRepository extends BaseRepository<IMessage> implements IMessageRepository {
   constructor() {
     super(MessageModel);
   }

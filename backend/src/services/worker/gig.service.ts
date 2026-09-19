@@ -2,8 +2,8 @@ import { Types } from "mongoose";
 import type { IWorkerGigService } from "../../interfaces/services/worker/gig.service.interface";
 import type { IGigRepository, ICategoryRepository } from "../../interfaces/repositories/gig.repository.interface";
 import type { IGigApplicationRepository } from "../../interfaces/repositories/application.repository.interface";
-import type { WorkerPaymentRepository } from "../../repositories/workerPayment.repository";
-import type { ReviewRepository } from "../../repositories/review.repository";
+import type { IWorkerPaymentRepository } from "../../interfaces/repositories/payment.repository.interface";
+import type { IReviewRepository } from "../../interfaces/repositories/review.repository.interface";
 import type { BrowseGigsQueryDTO, GigListItemDTO, GigResponseDTO } from "../../dtos/gig.dto";
 import type { CategoryDTO } from "../../dtos/category.dto";
 import { toGigResponseDTO, toGigListItemDTO } from "../../mappers/gig.mapper";
@@ -14,8 +14,8 @@ export class WorkerGigService implements IWorkerGigService {
     private _gigRepo: IGigRepository,
     private _categoryRepo: ICategoryRepository,
     private _applicationRepo: IGigApplicationRepository,
-    private _workerPaymentRepo: WorkerPaymentRepository,
-    private _reviewRepo: ReviewRepository
+    private _workerPaymentRepo: IWorkerPaymentRepository,
+    private _reviewRepo: IReviewRepository
   ) {}
 
   async browseGigs(filters?: BrowseGigsQueryDTO): Promise<GigListItemDTO[]> {

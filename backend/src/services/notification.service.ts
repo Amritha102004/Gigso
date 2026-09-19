@@ -1,9 +1,10 @@
-import type { NotificationRepository } from "../repositories/notification.repository";
+import type { INotificationRepository } from "../interfaces/repositories/communication.repository.interface";
 import type { INotification } from "../interfaces/notification.interface";
+import type { INotificationService } from "../interfaces/services/communication.service.interface";
 import type { Types } from "mongoose";
 
-export class NotificationService {
-  constructor(private _notificationRepo: NotificationRepository) {}
+export class NotificationService implements INotificationService {
+  constructor(private _notificationRepo: INotificationRepository) {}
 
   async createNotification(
     userId: string | Types.ObjectId,

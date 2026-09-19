@@ -1,8 +1,9 @@
 import { NotificationModel } from "../models/notification.model";
 import type { INotification } from "../interfaces/notification.interface";
+import type { INotificationRepository } from "../interfaces/repositories/communication.repository.interface";
 import { BaseRepository } from "./base.repository";
 
-export class NotificationRepository extends BaseRepository<INotification> {
+export class NotificationRepository extends BaseRepository<INotification> implements INotificationRepository {
   constructor() {
     super(NotificationModel);
   }
