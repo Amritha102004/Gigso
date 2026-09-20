@@ -111,13 +111,17 @@ export const toUpdateGigRequestDTO = (body: Record<string, unknown>): UpdateGigR
   status: body["status"] as "draft" | "active" | undefined,
 });
 
-export const toBrowseGigsQueryDTO = (query: Record<string, unknown>): BrowseGigsQueryDTO => ({
-  search: query["search"] !== undefined ? String(query["search"]).trim() : undefined,
-  categoryId: query["categoryId"] !== undefined ? String(query["categoryId"]).trim() : undefined,
-  location: query["location"] !== undefined ? String(query["location"]).trim() : undefined,
-  minPay: query["minPay"] !== undefined ? Number(query["minPay"]) : undefined,
-  date: query["date"] !== undefined ? String(query["date"]).trim() : undefined,
-});
+export const toBrowseGigsQueryDTO = (query: Record<string, unknown>): BrowseGigsQueryDTO => {
+  const cat = query["categoryId"] !== undefined ? query["categoryId"] : query["category"];
+  const catStr = cat !== undefined ? String(cat).trim() : undefined;
+  return {
+    search: query["search"] !== undefined ? String(query["search"]).trim() : undefined,
+    categoryId: catStr && catStr !== "all" && catStr !== "" ? catStr : undefined,
+    location: query["location"] !== undefined ? String(query["location"]).trim() : undefined,
+    minPay: query["minPay"] !== undefined ? Number(query["minPay"]) : undefined,
+    date: query["date"] !== undefined ? String(query["date"]).trim() : undefined,
+  };
+};
 
 export const toAdminGigsQueryDTO = (query: Record<string, unknown>): AdminGigsQueryDTO => ({
   search: query["search"] !== undefined ? String(query["search"]).trim() : undefined,

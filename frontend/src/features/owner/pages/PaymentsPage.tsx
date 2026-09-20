@@ -64,10 +64,13 @@ const PaymentsPage: React.FC = () => {
   const ITEMS_PER_PAGE = 4; // 4 items per page for cards fits beautifully in a 2x2 grid!
 
   useEffect(() => {
-    if (targetGigId) {
+    if (searchParams.get('cancelled') === 'true') {
+      showToast('Payment checkout was cancelled. You can resume checkout anytime.', 'info');
+      setActiveTab('pending');
+    } else if (targetGigId) {
       setActiveTab('pending');
     }
-  }, [targetGigId]);
+  }, [searchParams, targetGigId]);
 
   useEffect(() => {
     fetchPayments();

@@ -11,6 +11,7 @@ interface ApiResponse<T = any> {
 export interface BrowseGigsFilters {
   search?: string;
   category?: string;
+  categoryId?: string;
   location?: string;
   minPay?: number;
   date?: string;
@@ -21,7 +22,11 @@ export const workerGigService = {
     const params: Record<string, string | number> = {};
     if (filters) {
       if (filters.search) params.search = filters.search;
-      if (filters.category) params.category = filters.category;
+      if (filters.categoryId || filters.category) {
+        const cat = filters.categoryId || filters.category!;
+        params.categoryId = cat;
+        params.category = cat;
+      }
       if (filters.location) params.location = filters.location;
       if (filters.minPay !== undefined && filters.minPay > 0) params.minPay = filters.minPay;
       if (filters.date) params.date = filters.date;

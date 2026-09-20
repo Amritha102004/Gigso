@@ -77,8 +77,8 @@ export class WorkerGigService implements IWorkerGigService {
     // 2. Total Earnings (dynamically aggregated)
     const totalEarnings = await this._workerPaymentRepo.countTotalEarningsForWorker(workerId, startDate);
 
-    // 3. Confirmed Shifts Count (accepted applications in the range)
-    const confirmedShiftsQuery: any = { workerId: new Types.ObjectId(workerId), status: "accepted" };
+    // 3. Confirmed Shifts Count (accepted, completed, paid applications in the range)
+    const confirmedShiftsQuery: any = { workerId: new Types.ObjectId(workerId), status: { $in: ["accepted", "completed", "paid"] } };
     if (startDate) {
       confirmedShiftsQuery.appliedAt = { $gte: startDate };
     }

@@ -20,7 +20,7 @@ const gigApplicationSchema: Schema<IGigApplication> = new Schema<IGigApplication
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected"],
+      enum: ["pending", "accepted", "rejected", "completed", "paid"],
       default: "pending",
       required: true,
     },

@@ -141,7 +141,7 @@ export interface GigApplicationDTO {
   gigId: string;
   roleId: string;
   workerId: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'paid';
   appliedAt: string;
   gig?: GigResponseDTO;
   role?: GigRoleDTO;

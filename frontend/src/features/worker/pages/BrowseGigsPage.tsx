@@ -35,9 +35,13 @@ const BrowseGigsPage: React.FC = () => {
   const [date, setDate] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'all' | 'saved' | 'applied'>('all');
 
-  // Trigger filters trigger
+  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  // Trigger filters trigger
+  useEffect(() => {
     setCurrentPage(1);
     fetchGigs();
   }, [category, activeTab]); // Fetch immediately when category or tab changes
@@ -58,6 +62,7 @@ const BrowseGigsPage: React.FC = () => {
       setLoading(true);
       const filters = {
         search: search.trim() || undefined,
+        categoryId: category || undefined,
         category: category || undefined,
         location: location.trim() || undefined,
         minPay: minPay ? Number(minPay) : undefined,
@@ -190,11 +195,14 @@ const BrowseGigsPage: React.FC = () => {
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-xs text-textMain focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white transition-all"
             >
               <option value="">All Categories</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
+              {categories.map((cat) => {
+                const catId = cat.id || (cat as any)._id;
+                return (
+                  <option key={catId} value={catId}>
+                    {cat.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

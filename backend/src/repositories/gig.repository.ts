@@ -38,7 +38,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
         const acceptedCount = await GigApplicationModel.countDocuments({
           gigId: gig._id,
-          status: "accepted",
+          status: { $in: ["accepted", "completed", "paid"] },
         });
 
         let totalSpots = 0;
@@ -70,6 +70,13 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
 
         if (newStatus && newStatus !== gig.status) {
           await this._model.updateOne({ _id: gig._id }, { status: newStatus }).exec();
+
+          if (newStatus === "completed") {
+            await GigApplicationModel.updateMany(
+              { gigId: gig._id, status: "accepted" },
+              { status: "completed" }
+            ).exec();
+          }
 
           if (newStatus === "cancelled" && acceptedCount > 0) {
             const acceptedApps = await GigApplicationModel.find({
@@ -147,7 +154,7 @@ export class GigRepository extends BaseRepository<IGig> implements IGigRepositor
       eventDate?: { $gte: Date; $lte: Date };
     } = { status: "active", isDeleted: false };
 
-    if (filters?.categoryId) {
+    if (filters?.categoryId && Types.ObjectId.isValid(filters.categoryId)) {
       query.categoryId = new Types.ObjectId(filters.categoryId);
     }
 

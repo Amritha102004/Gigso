@@ -4,6 +4,6 @@ export interface IGigApplication extends Document {
   gigId: Types.ObjectId;
   roleId: Types.ObjectId;
   workerId: Types.ObjectId;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "rejected" | "completed" | "paid";
   appliedAt: Date;
 }

@@ -105,36 +105,33 @@ const MyGigsPage: React.FC = () => {
   );
 
   // Helper to check assignment status/period
+  // Helper to check assignment status/period
   const getAssignmentStatus = (app: GigApplicationDTO) => {
+    if (app.status === 'paid' || app.gig?.paymentStatus === 'paid') return 'paid';
+    if (app.status === 'completed') return 'completed';
     if (app.status === 'rejected') return 'rejected';
     if (app.status === 'pending') return 'pending';
 
-    // If accepted, status depends on the gig's date or completion status
+    // If accepted or gig completed:
     if (app.gig?.status === 'completed') return 'completed';
 
     const eventDate = new Date(app.gig?.eventDate || '');
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(23, 59, 59, 999);
 
-    // If date is today, In Progress
-    const eventTime = eventDate.getTime();
-    const todayTime = today.getTime();
-
-    if (eventTime === todayTime) {
-      return 'in_progress';
-    } else if (eventTime < todayTime) {
+    if (eventDate.getTime() < today.getTime()) {
       return 'completed';
-    } else {
-      return 'upcoming';
     }
+
+    return 'upcoming';
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'in_progress':
+      case 'paid':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200 uppercase tracking-wider">
-            In Progress
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+            Paid
           </span>
         );
       case 'upcoming':
@@ -181,8 +178,9 @@ const MyGigsPage: React.FC = () => {
 
     // Tab filter
     if (activeTab === 'upcoming' && status !== 'upcoming') return false;
-    if (activeTab === 'in_progress' && status !== 'in_progress') return false;
     if (activeTab === 'completed' && status !== 'completed') return false;
+    if (activeTab === 'paid' && status !== 'paid') return false;
+    if (activeTab === 'applied' && status !== 'pending' && status !== 'rejected') return false;
 
     // Search query
     if (searchQuery) {
@@ -217,18 +215,24 @@ const MyGigsPage: React.FC = () => {
       {/* Tabs and Search Bar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         {/* Tabs */}
-        <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100 w-full md:w-auto">
-          {['all', 'upcoming', 'in_progress', 'completed'].map((tab) => (
+        <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100 w-full md:w-auto overflow-x-auto">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'upcoming', label: 'Upcoming' },
+            { id: 'completed', label: 'Completed' },
+            { id: 'paid', label: 'Paid' },
+            { id: 'applied', label: 'Applied' },
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg capitalize transition-all ${
-                activeTab === tab
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
+                activeTab === tab.id
                   ? 'bg-white text-textMain shadow-sm border border-gray-100'
                   : 'text-secondary hover:text-textMain'
               }`}
             >
-              {tab.replace('_', ' ')}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -363,31 +367,44 @@ const MyGigsPage: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {status === 'completed' ? (
-                          <button
-                            onClick={() => {
-                              const ownerId = typeof app.gig?.ownerId === 'object' 
-                                ? (app.gig.ownerId.id) 
-                                : app.gig?.ownerId;
-                              const ownerName = typeof app.gig?.ownerId === 'object' 
-                                ? app.gig.ownerId.name 
-                                : 'Owner';
-                              if (ownerId) {
-                                setReviewTarget({
-                                  gigId: app.gigId,
-                                  ownerId,
-                                  ownerName
-                                });
-                                setIsReviewOpen(true);
-                              } else {
-                                showToast('Owner details not available.', 'error');
-                              }
-                            }}
-                            className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all"
-                          >
-                            Review
-                          </button>
-                        ) : app.status === 'accepted' ? (
+                        {status === 'completed' || status === 'paid' ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const ownerId = typeof app.gig?.ownerId === 'object' 
+                                  ? (app.gig.ownerId.id) 
+                                  : app.gig?.ownerId;
+                                const ownerName = typeof app.gig?.ownerId === 'object' 
+                                  ? app.gig.ownerId.name 
+                                  : 'Owner';
+                                if (ownerId) {
+                                  setReviewTarget({
+                                    gigId: app.gigId,
+                                    ownerId,
+                                    ownerName
+                                  });
+                                  setIsReviewOpen(true);
+                                } else {
+                                  showToast('Owner details not available.', 'error');
+                                }
+                              }}
+                              className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all"
+                            >
+                              Review
+                            </button>
+                            <button
+                              onClick={() => {
+                                const ownerId = typeof app.gig?.ownerId === 'object' ? app.gig?.ownerId?.id : app.gig?.ownerId;
+                                const ownerName = typeof app.gig?.ownerId === 'object' ? app.gig?.ownerId?.name : 'Owner';
+                                navigate(`/worker/messages?gigId=${app.gigId}&ownerId=${ownerId}&gigTitle=${encodeURIComponent(app.gig?.title || 'Gig')}&ownerName=${encodeURIComponent(ownerName)}`);
+                              }}
+                              className="px-4 py-2 border border-gray-200 hover:bg-gray-50 font-bold text-xs text-textMain rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                            >
+                              <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
+                              Chat
+                            </button>
+                          </div>
+                        ) : status === 'upcoming' ? (
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleOpenUpdates(app.gigId, app.gig?.title || 'Gig')}

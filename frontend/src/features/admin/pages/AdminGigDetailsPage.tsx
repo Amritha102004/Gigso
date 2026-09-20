@@ -139,7 +139,7 @@ const AdminGigDetailsPage: React.FC = () => {
   const netPayout = totalBudget - serviceFee;
 
   // Split applications
-  const acceptedWorkers = applications.filter(app => app.status === 'accepted');
+  const acceptedWorkers = applications.filter(app => app.status === 'accepted' || app.status === 'completed' || app.status === 'paid');
   const pendingApplicants = applications.filter(app => app.status === 'pending');
 
   let statusColor = 'bg-gray-100 text-gray-700';

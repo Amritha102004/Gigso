@@ -32,7 +32,7 @@ export class ApplicationService implements IApplicationService {
 
     // 3. Prevent duplicate applications or applying if already accepted/hired for another role in this gig
     const existing = await this._applicationRepo.findByGigIdAndWorkerId(gigId, workerId);
-    const hasAcceptedRole = existing.some((app) => app.status === "accepted");
+    const hasAcceptedRole = existing.some((app) => app.status === "accepted" || app.status === "completed" || app.status === "paid");
     if (hasAcceptedRole) {
       throw new AppError("You have already been hired/accepted for a role in this gig", 400);
     }
@@ -155,10 +155,10 @@ export class ApplicationService implements IApplicationService {
           }
         }
         if (allFilled) {
-          await this._gigRepo.update(app.gigId.toString(), { status: "completed" });
+          await this._gigRepo.update(app.gigId.toString(), { status: "closed" });
         }
       } catch (err) {
-        console.error("Failed to transition gig to completed status:", err);
+        console.error("Failed to transition gig to closed status:", err);
       }
     }
 

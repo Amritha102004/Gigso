@@ -21,18 +21,18 @@ const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background text-textMain font-sans">
+    <div className="flex h-screen bg-background text-textMain font-sans overflow-hidden">
       
-      <aside className="w-64 bg-background border-r border-[#E5E7EB] flex flex-col justify-between hidden md:flex">
-        <div>
+      <aside className="w-64 bg-background border-r border-[#E5E7EB] flex flex-col justify-between shrink-0 hidden md:flex h-full">
+        <div className="flex flex-col min-h-0">
           {/* Logo / Header */}
-          <div className="p-6 pb-8">
+          <div className="p-6 pb-6 shrink-0">
             <h1 className="text-xl font-bold tracking-tight text-primary">Gigso Admin</h1>
             <p className="text-xs text-secondary mt-1">SaaS Management</p>
           </div>
 
           {/* Navigation Items */}
-          <nav className="px-4 space-y-1">
+          <nav className="px-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => (
               <NavLink
                 key={item.name}
@@ -56,10 +56,10 @@ const AdminLayout: React.FC = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="p-4">
+        <div className="p-4 shrink-0 border-t border-[#E5E7EB]">
             <button 
                 onClick={handleLogout}
-                className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors mb-6"
+                className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors mb-3"
             >
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -81,7 +81,7 @@ const AdminLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 bg-white flex flex-col min-h-screen border-l border-[#2D3136]/5 md:border-l-0">
+      <main className="flex-1 bg-white flex flex-col h-full overflow-y-auto border-l border-[#2D3136]/5 md:border-l-0">
           <Outlet />
       </main>
 

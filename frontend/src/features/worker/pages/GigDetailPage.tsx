@@ -250,10 +250,10 @@ const GigDetailPage: React.FC = () => {
                               </button>
                             );
                           }
-                          if (app.status === 'accepted') {
+                          if (app.status === 'accepted' || app.status === 'completed' || app.status === 'paid') {
                             return (
                               <span className="inline-block px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 cursor-not-allowed">
-                                Accepted
+                                Hired
                               </span>
                             );
                           }
@@ -266,7 +266,7 @@ const GigDetailPage: React.FC = () => {
                           }
                         }
 
-                        const isHiredOnThisGig = userApplications.some((a) => a.gigId === gig.id && a.status === 'accepted');
+                        const isHiredOnThisGig = userApplications.some((a) => a.gigId === gig.id && (a.status === 'accepted' || a.status === 'completed' || a.status === 'paid'));
                         if (isHiredOnThisGig) {
                           return (
                             <button

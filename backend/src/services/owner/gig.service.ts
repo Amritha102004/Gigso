@@ -279,7 +279,7 @@ export class OwnerGigService implements IOwnerGigService {
     });
 
     // 5. Total Crew Hired (date-filtered by timeline range)
-    const hiredCrewQuery: any = { gigId: { $in: gigIds }, status: "accepted" };
+    const hiredCrewQuery: any = { gigId: { $in: gigIds }, status: { $in: ["accepted", "completed", "paid"] } };
     if (startDate) {
       hiredCrewQuery.appliedAt = { $gte: startDate };
     }
@@ -294,7 +294,7 @@ export class OwnerGigService implements IOwnerGigService {
     for (const g of rawGigs) {
       const acceptedCount = await (this._applicationRepo as any)._model.countDocuments({
         gigId: g._id,
-        status: "accepted",
+        status: { $in: ["accepted", "completed", "paid"] },
       });
       let totalSpots = 0;
       const populatedGig = await (g as any).populate("roles");
@@ -327,7 +327,7 @@ export class OwnerGigService implements IOwnerGigService {
     for (const g of rawUpcomingGigs) {
       const acceptedCount = await (this._applicationRepo as any)._model.countDocuments({
         gigId: g._id,
-        status: "accepted",
+        status: { $in: ["accepted", "completed", "paid"] },
       });
       let totalSpots = 0;
       const populatedGig = await (g as any).populate("roles");

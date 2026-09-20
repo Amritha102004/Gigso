@@ -108,7 +108,7 @@ export class PaymentService implements IPaymentService {
     }
 
     const apps = await this._appRepo.findByGigId(gigId);
-    const hiredApps = apps.filter(a => a.status === "accepted");
+    const hiredApps = apps.filter(a => a.status === "accepted" || a.status === "completed" || a.status === "paid");
 
     if (hiredApps.length === 0) {
       throw new Error("No accepted workers found for this gig");
@@ -148,7 +148,7 @@ export class PaymentService implements IPaymentService {
       ],
       mode: "payment",
       success_url: `${ENV.FRONTEND_URL}/owner/payments/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${ENV.FRONTEND_URL}/owner/payments/failure`,
+      cancel_url: `${ENV.FRONTEND_URL}/owner/payments?cancelled=true&gigId=${gigId}`,
       metadata: {
         gigId,
         ownerId,
@@ -199,7 +199,7 @@ export class PaymentService implements IPaymentService {
     }
 
     const apps = await this._appRepo.findByGigId(gigId);
-    const hiredApps = apps.filter(a => a.status === "accepted");
+    const hiredApps = apps.filter(a => a.status === "accepted" || a.status === "completed" || a.status === "paid");
 
     for (const app of hiredApps) {
       const wId = (app.workerId as any)._id?.toString() || app.workerId.toString();
@@ -215,6 +215,7 @@ export class PaymentService implements IPaymentService {
 
       if (existingWorkerPay) {
         console.log(`Worker payout already processed for worker ${wId} on payment ${payment._id}`);
+        await this._appRepo.update(app._id.toString(), { status: "paid" });
         continue;
       }
 
@@ -245,6 +246,8 @@ export class PaymentService implements IPaymentService {
             }
           }
 
+          await this._appRepo.update(app._id.toString(), { status: "paid" });
+
           await this._notificationService.createNotification(
             wId,
             `Payout Processed`,
@@ -273,6 +276,8 @@ export class PaymentService implements IPaymentService {
             }
           }
 
+          await this._appRepo.update(app._id.toString(), { status: "paid" });
+
           await this._notificationService.createNotification(
             wId,
             `Payout Processed`,
@@ -280,6 +285,8 @@ export class PaymentService implements IPaymentService {
             "payout_processed"
           );
         }
+      } else {
+        await this._appRepo.update(app._id.toString(), { status: "paid" });
       }
     }
 

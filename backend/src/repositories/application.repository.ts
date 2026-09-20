@@ -57,7 +57,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
   async findAcceptedCountForRole(roleId: string): Promise<number> {
     return await this._model.countDocuments({
       roleId: new Types.ObjectId(roleId),
-      status: "accepted"
+      status: { $in: ["accepted", "completed", "paid"] },
     }).exec();
   }
 
@@ -70,7 +70,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
     ]);
 
     const acceptedCounts = await this._model.aggregate([
-      { $match: { gigId: { $in: objectIds }, status: "accepted" } },
+      { $match: { gigId: { $in: objectIds }, status: { $in: ["accepted", "completed", "paid"] } } },
       { $group: { _id: "$gigId", count: { $sum: 1 } } }
     ]);
 
@@ -87,7 +87,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
 
   async getAcceptedCountsByRolesForGig(gigId: string): Promise<{ roleId: string; count: number }[]> {
     const results = await this._model.aggregate([
-      { $match: { gigId: new Types.ObjectId(gigId), status: "accepted" } },
+      { $match: { gigId: new Types.ObjectId(gigId), status: { $in: ["accepted", "completed", "paid"] } } },
       { $group: { _id: "$roleId", count: { $sum: 1 } } }
     ]);
     return results.map((r) => ({
@@ -100,7 +100,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
     if (gigIds.length === 0) return 0;
     return await this._model.countDocuments({
       gigId: { $in: gigIds },
-      status,
+      status: status === "accepted" ? { $in: ["accepted", "completed", "paid"] } : status,
     });
   }
 
@@ -108,7 +108,7 @@ export class GigApplicationRepository extends BaseRepository<IGigApplication> im
     if (gigIds.length === 0) return [];
     return await this._model.find({
       gigId: { $in: gigIds },
-      status: "accepted",
+      status: { $in: ["accepted", "completed", "paid"] },
     })
       .populate("workerId", "name email profileImage")
       .populate("roleId", "roleName payPerPerson")

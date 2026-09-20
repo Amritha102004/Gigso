@@ -149,7 +149,7 @@ const ViewGigPage: React.FC = () => {
 
   const checkCancelAllowed = () => {
     if (!gig) return false;
-    const acceptedCount = applications.filter(a => a.status === 'accepted').length;
+    const acceptedCount = applications.filter(a => a.status === 'accepted' || a.status === 'completed' || a.status === 'paid').length;
     if (acceptedCount === 0) return true;
 
     const eventStart = new Date(gig.eventDate);
@@ -414,7 +414,7 @@ const ViewGigPage: React.FC = () => {
                   <div className="space-y-6">
                     {gig.roles.map((role) => {
                       const confirmedApps = applications.filter(
-                        (a) => a.roleId === role.id && a.status === 'accepted'
+                        (a) => a.roleId === role.id && (a.status === 'accepted' || a.status === 'completed' || a.status === 'paid')
                       );
                       const spotsRemaining = Math.max(0, role.spots - confirmedApps.length);
 
