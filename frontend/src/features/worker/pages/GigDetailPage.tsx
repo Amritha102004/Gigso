@@ -6,6 +6,7 @@ import { useToast } from '../../../context/ToastContext';
 import { useAuth } from '../../../context/AuthContext';
 import MapPreview from '../../../components/MapPreview';
 import { getErrorMessage } from '../../../utils/error';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import {
   MapPinIcon,
   CalendarIcon,
@@ -26,6 +27,20 @@ const GigDetailPage: React.FC = () => {
   const [gig, setGig] = useState<GigResponseDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [userApplications, setUserApplications] = useState<GigApplicationDTO[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     if (gigId) {
@@ -77,12 +92,18 @@ const GigDetailPage: React.FC = () => {
   const handleApplyClick = async (roleId: string, roleName: string) => {
     if (!gig) return;
     if (!user?.stripeOnboardingCompleted) {
-      const confirmSetup = window.confirm(
-        "To apply for gigs, you must first connect your Stripe account to receive payouts. Would you like to go to your Earnings page to connect Stripe now?"
-      );
-      if (confirmSetup) {
-        navigate('/worker/earnings');
-      }
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Stripe Payout Setup Required',
+        message: 'To apply for gigs, you must first connect your Stripe account to receive payouts. Would you like to go to your Earnings page to connect Stripe now?',
+        confirmText: 'Go to Earnings',
+        cancelText: 'Later',
+        type: 'primary',
+        onConfirm: () => {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+          navigate('/worker/earnings');
+        },
+      });
       return;
     }
     try {
@@ -98,23 +119,29 @@ const GigDetailPage: React.FC = () => {
     }
   };
 
-  const handleWithdrawClick = async (applicationId: string, roleName: string) => {
-    const confirmWithdraw = window.confirm(
-      `Are you sure you want to withdraw your application for "${roleName}"?`
-    );
-    if (!confirmWithdraw) return;
-
-    try {
-      const res = await workerGigService.withdrawApplication(applicationId);
-      if (res.success) {
-        showToast(`Successfully withdrew application for: ${roleName}`, 'success');
-        fetchUserApplications();
-      } else {
-        showToast(res.message || 'Failed to withdraw application.', 'error');
-      }
-    } catch (err: unknown) {
-      showToast(getErrorMessage(err, 'Error withdrawing application.'), 'error');
-    }
+  const handleWithdrawClick = (applicationId: string, roleName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Withdraw Application',
+      message: `Are you sure you want to withdraw your application for "${roleName}"?`,
+      confirmText: 'Withdraw',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const res = await workerGigService.withdrawApplication(applicationId);
+          if (res.success) {
+            showToast(`Successfully withdrew application for: ${roleName}`, 'success');
+            fetchUserApplications();
+          } else {
+            showToast(res.message || 'Failed to withdraw application.', 'error');
+          }
+        } catch (err: unknown) {
+          showToast(getErrorMessage(err, 'Error withdrawing application.'), 'error');
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -367,6 +394,17 @@ const GigDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -19,6 +19,7 @@ import apiClient from '../../../api/client';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
 import WorkerReviewFlowModal from '../../../components/WorkerReviewFlowModal';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 const ViewGigPage: React.FC = () => {
   const { gigId } = useParams<{ gigId: string }>();
@@ -39,6 +40,20 @@ const ViewGigPage: React.FC = () => {
   const [aiMatches, setAiMatches] = useState<Record<string, ApplicantMatchResult>>({});
   const [isAnalyzingAI, setIsAnalyzingAI] = useState<boolean>(false);
   const [sortByMatch, setSortByMatch] = useState<boolean>(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   
   // Announcement states
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -175,46 +190,62 @@ const ViewGigPage: React.FC = () => {
     return daysLeft >= 2;
   };
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (!gig) return;
-    if (!window.confirm('Are you sure you want to cancel this gig? Accepted workers will be notified and their applications will be rejected. This action cannot be undone.')) {
-      return;
-    }
-    try {
-      setActionLoading(true);
-      const res = await apiClient.delete(`/owner/gigs/${gig.id}`);
-      if (res.data && res.data.success) {
-        showToast('Gig has been successfully cancelled.', 'success');
-        fetchGigDetails();
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(getErrorMessage(err, 'Failed to cancel gig.'), 'error');
-    } finally {
-      setActionLoading(false);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Cancel Gig Posting',
+      message: 'Are you sure you want to cancel this gig? Accepted workers will be notified and their applications will be rejected. This action cannot be undone.',
+      confirmText: 'Yes, Cancel Gig',
+      cancelText: 'Keep Gig',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await apiClient.delete(`/owner/gigs/${gig.id}`);
+          if (res.data && res.data.success) {
+            showToast('Gig has been successfully cancelled.', 'success');
+            fetchGigDetails();
+          }
+        } catch (err) {
+          console.error(err);
+          showToast(getErrorMessage(err, 'Failed to cancel gig.'), 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (!gig) return;
-    if (!window.confirm('Are you sure you want to close applications for this gig? Hired workers will be kept in the roster, and new applications will be locked.')) {
-      return;
-    }
-    try {
-      setActionLoading(true);
-      const res = await gigService.markAsCompleted(gig.id);
-      if (res.success && res.data) {
-        setGig(res.data);
-        showToast('Gig has been successfully closed.', 'success');
-      } else {
-        showToast(res.message || 'Failed to close gig.', 'error');
-      }
-    } catch (err: unknown) {
-      console.error(err);
-      showToast(getErrorMessage(err, 'Error closing gig.'), 'error');
-    } finally {
-      setActionLoading(false);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Close Gig Applications',
+      message: 'Are you sure you want to close applications for this gig? Hired workers will be kept in the roster, and new applications will be locked.',
+      confirmText: 'Yes, Close Applications',
+      cancelText: 'Cancel',
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await gigService.markAsCompleted(gig.id);
+          if (res.success && res.data) {
+            setGig(res.data);
+            showToast('Gig has been successfully closed.', 'success');
+          } else {
+            showToast(res.message || 'Failed to close gig.', 'error');
+          }
+        } catch (err: unknown) {
+          console.error(err);
+          showToast(getErrorMessage(err, 'Error closing gig.'), 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   const handleStatusUpdate = async (appId: string, status: 'accepted' | 'rejected') => {
@@ -928,6 +959,17 @@ const ViewGigPage: React.FC = () => {
           gigTitle={gig.title}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

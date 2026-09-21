@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../api/client';
@@ -20,6 +20,7 @@ const PaymentSuccessPage: React.FC = () => {
     totalAmount: number;
     transactionId: string;
   } | null>(null);
+  const verifiedSessionRef = useRef<string | null>(null);
 
   useEffect(() => {
     const verifySession = async () => {
@@ -28,6 +29,11 @@ const PaymentSuccessPage: React.FC = () => {
         setIsVerifying(false);
         return;
       }
+
+      if (verifiedSessionRef.current === sessionId) {
+        return;
+      }
+      verifiedSessionRef.current = sessionId;
 
       try {
         setIsVerifying(true);

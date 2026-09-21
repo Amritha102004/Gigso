@@ -6,6 +6,7 @@ import { useToast } from '../../../context/ToastContext';
 import { getErrorMessage } from '../../../utils/error';
 import { DataTable } from '../../../components/DataTable';
 import type { Column } from '../../../components/DataTable';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 // SVG Icon list mapped for display
 export const categoryIconMap: Record<string, (className?: string) => React.ReactNode> = {
@@ -84,6 +85,20 @@ const CategoriesPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const LIMIT = 10;
 
   const fetchCategories = useCallback(async (searchTerm: string, currentPage: number) => {
@@ -118,23 +133,32 @@ const CategoriesPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search, fetchCategories]);
 
-  const handleDelete = async (id: string, name: string) => {
-    const isConfirmed = window.confirm(`Are you sure you want to delete category "${name}"?`);
-    if (!isConfirmed) return;
-
-    try {
-      await categoryService.deleteCategory(id);
-      setError('');
-      // Refetch current page or page 1 if we empty the page
-      const nextCategories = categories.filter((c) => c.id !== id);
-      if (nextCategories.length === 0 && page > 1) {
-        setPage((p) => p - 1);
-      } else {
-        fetchCategories(search, page);
-      }
-    } catch (err: unknown) {
-      showToast(getErrorMessage(err, 'Failed to delete category'), 'error');
-    }
+  const handleDelete = (id: string, name: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete category "${name}"? This action cannot be undone.`,
+      confirmText: 'Delete Category',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await categoryService.deleteCategory(id);
+          setError('');
+          showToast(`Category "${name}" deleted successfully.`, 'success');
+          // Refetch current page or page 1 if we empty the page
+          const nextCategories = categories.filter((c) => c.id !== id);
+          if (nextCategories.length === 0 && page > 1) {
+            setPage((p) => p - 1);
+          } else {
+            fetchCategories(search, page);
+          }
+        } catch (err: unknown) {
+          showToast(getErrorMessage(err, 'Failed to delete category'), 'error');
+        }
+      },
+    });
   };
 
   const columns: Column<CategoryDTO>[] = [
@@ -247,6 +271,17 @@ const CategoriesPage: React.FC = () => {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

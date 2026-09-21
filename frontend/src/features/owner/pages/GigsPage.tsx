@@ -18,6 +18,7 @@ import type { GigListItemDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/Pagination';
 import { getErrorMessage } from '../../../utils/error';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 const GigsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,20 @@ const GigsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -59,22 +74,30 @@ const GigsPage: React.FC = () => {
     fetchGigs();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this gig? This action cannot be undone.')) {
-      return;
-    }
-    try {
-      const response = await gigService.deleteGig(id);
-      if (response.success) {
-        setGigs(prev => prev.filter(g => g.id !== id));
-        showToast('Gig deleted successfully.', 'success');
-      } else {
-        showToast(response.message || 'Failed to delete gig.', 'error');
-      }
-    } catch (err: unknown) {
-      console.error(err);
-      showToast(getErrorMessage(err, 'Error deleting gig.'), 'error');
-    }
+  const handleDelete = (id: string, title?: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Gig Posting',
+      message: `Are you sure you want to delete "${title || 'this gig'}"? This action cannot be undone.`,
+      confirmText: 'Delete Gig',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        try {
+          const response = await gigService.deleteGig(id);
+          if (response.success) {
+            setGigs(prev => prev.filter(g => g.id !== id));
+            showToast('Gig deleted successfully.', 'success');
+          } else {
+            showToast(response.message || 'Failed to delete gig.', 'error');
+          }
+        } catch (err: unknown) {
+          console.error(err);
+          showToast(getErrorMessage(err, 'Error deleting gig.'), 'error');
+        }
+      },
+    });
   };
 
   const filteredGigs = gigs.filter(gig => {
@@ -310,9 +333,9 @@ const GigsPage: React.FC = () => {
                               )}
                               {gig.status === 'draft' && (
                                 <button
-                                  onClick={() => handleDelete(gig.id)}
+                                  onClick={() => handleDelete(gig.id, gig.title)}
                                   title="Delete Gig"
-                                  className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-rose-600 transition-all"
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-secondary hover:text-rose-600 transition-all cursor-pointer"
                                 >
                                   <TrashIcon className="w-4 h-4" />
                                 </button>
@@ -336,6 +359,17 @@ const GigsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

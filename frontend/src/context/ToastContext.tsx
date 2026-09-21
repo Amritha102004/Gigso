@@ -34,13 +34,18 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
       const now = Date.now();
       const key = `${type}-${message}`;
       const lastTriggered = recentToasts.current.get(key);
-      if (lastTriggered && now - lastTriggered < 500) {
+      if (lastTriggered && now - lastTriggered < 2500) {
         return;
       }
       recentToasts.current.set(key, now);
 
       const id = `${now}-${Math.random()}`;
-      setToasts((prev) => [...prev, { id, type, message }]);
+      setToasts((prev) => {
+        if (prev.some((t) => t.type === type && t.message === message)) {
+          return prev;
+        }
+        return [...prev, { id, type, message }];
+      });
       const timer = setTimeout(() => removeToast(id), 4000);
       timers.current.set(id, timer);
     },
