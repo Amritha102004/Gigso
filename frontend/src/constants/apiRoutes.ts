@@ -45,3 +45,7 @@ export const GIG_ROUTES = {
   OWNER_GIG_APPLICATION_STATUS: (gigId: string, appId: string) => `/owner/gigs/${gigId}/applications/${appId}`,
 } as const;
 
+export const AI_ROUTES = {
+  MATCH_APPLICANTS: '/ai/match-applicants',
+} as const;
+

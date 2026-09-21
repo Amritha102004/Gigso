@@ -48,6 +48,8 @@ import { NotificationController } from "../controllers/notification.controller";
 import { ChatController } from "../controllers/chat.controller";
 import { AnnouncementController } from "../controllers/announcement.controller";
 import { PaymentController } from "../controllers/payment.controller";
+import { AIService } from "../services/ai.service";
+import { AIController } from "../controllers/ai.controller";
 
 // Repositories
 export const userRepository = new UserRepository();
@@ -156,3 +158,6 @@ export const announcementController = new AnnouncementController(announcementSer
 export const paymentController = new PaymentController(paymentService);
 export const reviewController = new ReviewController(reviewService);
 export const adminPaymentController = new AdminPaymentController(adminPaymentService);
+
+export const aiService = new AIService();
+export const aiController = new AIController(aiService);

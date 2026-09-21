@@ -8,9 +8,11 @@ import {
   UserGroupIcon,
   CheckIcon,
   PaperAirplaneIcon,
-  XMarkIcon
+  XMarkIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import gigService from '../services/gig.service';
+import { aiService, type ApplicantMatchResult, type MatchApplicantsPayload } from '../services/ai.service';
 import type { GigResponseDTO, GigApplicationDTO } from '../../../types/api.types';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../api/client';
@@ -34,6 +36,9 @@ const ViewGigPage: React.FC = () => {
 
   const [applications, setApplications] = useState<GigApplicationDTO[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<GigApplicationDTO['worker'] | null>(null);
+  const [aiMatches, setAiMatches] = useState<Record<string, ApplicantMatchResult>>({});
+  const [isAnalyzingAI, setIsAnalyzingAI] = useState<boolean>(false);
+  const [sortByMatch, setSortByMatch] = useState<boolean>(false);
   
   // Announcement states
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -229,6 +234,59 @@ const ViewGigPage: React.FC = () => {
       showToast(getErrorMessage(err, 'Error updating application status.'), 'error');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRunAIMatchmaker = async () => {
+    if (!gig) return;
+    const pendingApps = applications.filter((a) => a.status === 'pending');
+    if (pendingApps.length === 0) {
+      showToast('No pending applications to analyze.', 'info');
+      return;
+    }
+
+    try {
+      setIsAnalyzingAI(true);
+      const payload: MatchApplicantsPayload = {
+        gig: {
+          gigId: gig.id,
+          title: gig.title,
+          description: gig.description,
+          category: typeof gig.category === 'object' ? gig.category?.name : gig.category,
+          location: gig.location || '',
+          roleName: gig.roles && gig.roles.length > 0 ? gig.roles[0].roleName : '',
+          requiredSkills: [],
+        },
+        applicants: pendingApps.map((app) => ({
+          applicationId: app.id,
+          workerId: app.worker?._id || '',
+          name: app.worker?.name || 'Worker',
+          bio: app.worker?.profile?.bio || '',
+          skills: app.worker?.profile?.skills || [],
+          experienceYears: 0,
+          averageRating: 4.8,
+          completedGigsCount: 0,
+          roleApplied: app.role?.roleName || '',
+        })),
+      };
+
+      const res = await aiService.matchApplicants(payload);
+      if (res.success && res.data) {
+        const matchMap: Record<string, ApplicantMatchResult> = {};
+        res.data.forEach((m: ApplicantMatchResult) => {
+          matchMap[m.applicationId] = m;
+        });
+        setAiMatches(matchMap);
+        setSortByMatch(true);
+        showToast('AI Match Insights generated successfully! ✨', 'success');
+      } else {
+        showToast(res.message || 'Failed to generate AI match insights.', 'error');
+      }
+    } catch (err: unknown) {
+      console.error('AI Match error:', err);
+      showToast(getErrorMessage(err, 'Failed to generate AI insights.'), 'error');
+    } finally {
+      setIsAnalyzingAI(false);
     }
   };
 
@@ -479,9 +537,20 @@ const ViewGigPage: React.FC = () => {
                 <div className="space-y-6">
                   {(() => {
                     const pendingApplications = applications.filter((a) => a.status === 'pending');
-                    const totalPages = Math.ceil(pendingApplications.length / ITEMS_PER_PAGE);
+                    const hasAiScores = Object.keys(aiMatches).length > 0;
+
+                    let sortedPending = [...pendingApplications];
+                    if (sortByMatch && hasAiScores) {
+                      sortedPending.sort((a, b) => {
+                        const scoreA = aiMatches[a.id]?.matchScore ?? 0;
+                        const scoreB = aiMatches[b.id]?.matchScore ?? 0;
+                        return scoreB - scoreA;
+                      });
+                    }
+
+                    const totalPages = Math.ceil(sortedPending.length / ITEMS_PER_PAGE);
                     const adjustedCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
-                    const paginatedPending = pendingApplications.slice(
+                    const paginatedPending = sortedPending.slice(
                       (adjustedCurrentPage - 1) * ITEMS_PER_PAGE,
                       adjustedCurrentPage * ITEMS_PER_PAGE
                     );
@@ -501,62 +570,145 @@ const ViewGigPage: React.FC = () => {
                     }
 
                     return (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {paginatedPending.map((app) => (
-                            <div
-                              key={app.id}
-                              className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col justify-between gap-4 shadow-sm hover:shadow transition-all"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-3">
-                                  <img
-                                    src={app.worker?.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&fit=crop&q=60'}
-                                    alt={app.worker?.name}
-                                    className="w-10 h-10 rounded-full object-cover border border-gray-100"
-                                  />
-                                  <div>
-                                    <div className="font-bold text-xs text-textMain">{app.worker?.name}</div>
-                                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                                      <span className="px-1.5 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded uppercase">
-                                        {app.role?.roleName}
-                                      </span>
-                                      <span className="text-[10px] text-amber-500 font-bold">
-                                        ★ 4.8
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => setSelectedWorker(app.worker)}
-                                  className="text-[10px] font-bold text-primary hover:underline border border-gray-200 px-2 py-1 rounded-lg"
-                                >
-                                  Profile
-                                </button>
-                              </div>
-
-                              <p className="text-[11px] text-secondary line-clamp-2">
-                                {app.worker?.profile?.bio || 'No worker bio provided yet.'}
-                              </p>
-
-                              <div className="flex items-center gap-2 border-t border-gray-50 pt-3">
-                                <button
-                                  disabled={actionLoading}
-                                  onClick={() => handleStatusUpdate(app.id, 'rejected')}
-                                  className="flex-1 py-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-[11px] rounded-lg transition-all"
-                                >
-                                  Reject
-                                </button>
-                                <button
-                                  disabled={actionLoading}
-                                  onClick={() => handleStatusUpdate(app.id, 'accepted')}
-                                  className="flex-1 py-1.5 bg-primary text-white font-bold text-[11px] rounded-lg hover:bg-[#575727] transition-all"
-                                >
-                                  Approve
-                                </button>
-                              </div>
+                      <div className="space-y-5">
+                        {/* AI Matchmaker Advisory Banner */}
+                        <div className="bg-gradient-to-r from-primary/5 via-emerald-50/50 to-primary/5 border border-primary/20 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                              <SparklesIcon className="w-5 h-5 text-primary" />
                             </div>
-                          ))}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-bold text-textMain">AI Matchmaker & Fit Scorer</h4>
+                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] font-semibold">Advisory Only</span>
+                              </div>
+                              <p className="text-[11px] text-secondary mt-0.5">
+                                AI analyzes candidates against your gig requirements. You retain 100% final authority to Approve or Reject.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                            {hasAiScores && (
+                              <button
+                                onClick={() => setSortByMatch(!sortByMatch)}
+                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                                  sortByMatch 
+                                    ? 'bg-primary text-white border-primary' 
+                                    : 'bg-white text-textMain border-gray-200 hover:bg-gray-50'
+                                }`}
+                              >
+                                <span>Sort by Match</span>
+                                {sortByMatch && <CheckIcon className="w-3.5 h-3.5" />}
+                              </button>
+                            )}
+                            <button
+                              disabled={isAnalyzingAI}
+                              onClick={handleRunAIMatchmaker}
+                              className="px-3.5 py-1.5 rounded-lg text-[11px] font-bold bg-primary hover:bg-[#575727] text-white transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer w-full sm:w-auto"
+                            >
+                              <SparklesIcon className={`w-3.5 h-3.5 ${isAnalyzingAI ? 'animate-spin' : ''}`} />
+                              <span>{isAnalyzingAI ? 'Analyzing...' : hasAiScores ? 'Re-analyze with AI' : 'Analyze Applicants ✨'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {paginatedPending.map((app) => {
+                            const match = aiMatches[app.id];
+                            return (
+                              <div
+                                key={app.id}
+                                className={`bg-white border rounded-xl p-4 flex flex-col justify-between gap-3.5 shadow-sm hover:shadow transition-all ${
+                                  match && match.matchScore >= 85 
+                                    ? 'border-emerald-200 hover:border-emerald-300' 
+                                    : 'border-gray-100 hover:border-gray-200'
+                                }`}
+                              >
+                                <div className="space-y-2.5">
+                                  {/* Top header: Worker info + Profile Button */}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-3">
+                                      <img
+                                        src={app.worker?.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&fit=crop&q=60'}
+                                        alt={app.worker?.name}
+                                        className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                                      />
+                                      <div>
+                                        <div className="font-bold text-xs text-textMain">{app.worker?.name}</div>
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                          <span className="px-1.5 py-0.5 bg-primary/5 text-primary text-[9px] font-bold rounded uppercase">
+                                            {app.role?.roleName}
+                                          </span>
+                                          <span className="text-[10px] text-amber-500 font-bold">
+                                            ★ 4.8
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => setSelectedWorker(app.worker)}
+                                      className="text-[10px] font-bold text-primary hover:underline border border-gray-200 px-2 py-1 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    >
+                                      Profile
+                                    </button>
+                                  </div>
+
+                                  {/* AI Match Advisory Box (if analyzed) */}
+                                  {match ? (
+                                    <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-lg p-2.5 space-y-1.5">
+                                      <div className="flex items-center justify-between">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                                          match.matchScore >= 90
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : match.matchScore >= 80
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : 'bg-amber-100 text-amber-800'
+                                        }`}>
+                                          <SparklesIcon className="w-3 h-3 text-emerald-600" />
+                                          {match.matchScore}% Match • {match.fitRecommendation}
+                                        </span>
+                                        <span className="text-[9px] text-emerald-700/80 font-medium">AI Advisory</span>
+                                      </div>
+                                      <p className="text-[11px] text-gray-700 leading-snug">
+                                        {match.summary}
+                                      </p>
+                                      {match.strengths && match.strengths.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 pt-0.5">
+                                          {match.strengths.map((st, i) => (
+                                            <span key={i} className="text-[9px] font-semibold px-1.5 py-0.5 bg-white rounded border border-emerald-200 text-emerald-900 shadow-2xs">
+                                              ✓ {st}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[11px] text-secondary line-clamp-2">
+                                      {app.worker?.profile?.bio || 'No worker bio provided yet.'}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Manual Owner Decision Action Buttons */}
+                                <div className="flex items-center gap-2 border-t border-gray-50 pt-2.5">
+                                  <button
+                                    disabled={actionLoading}
+                                    onClick={() => handleStatusUpdate(app.id, 'rejected')}
+                                    className="flex-1 py-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-[11px] rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button
+                                    disabled={actionLoading}
+                                    onClick={() => handleStatusUpdate(app.id, 'accepted')}
+                                    className="flex-1 py-1.5 bg-primary text-white font-bold text-[11px] rounded-lg hover:bg-[#575727] transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
+                                  >
+                                    Approve
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
 
                         <Pagination

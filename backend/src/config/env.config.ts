@@ -16,4 +16,5 @@ export const ENV = {
   NODE_ENV: process.env.NODE_ENV || "development",
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "sk_test_51Pzzzzzzzzzzzzzzzzzzzz",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
 };

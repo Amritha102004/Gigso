@@ -17,6 +17,7 @@ import { chatRoutes } from "./routes/chat.routes";
 import { announcementRoutes } from "./routes/announcement.routes";
 import { paymentRoutes } from "./routes/payment.routes";
 import { reviewRoutes } from "./routes/review.routes";
+import { aiRoutes } from "./routes/ai.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/ai", aiRoutes);
 
 app.use(errorMiddleware);
 
